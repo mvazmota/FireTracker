@@ -19,10 +19,11 @@ export default function LoginPage() {
   const { signIn, signUp } = useAuth()
   const [mode, setMode] = useState('signIn')
   const [name, setName] = useState('')
-  // Prefilled from a previous "remember me", so signing out leaves the email ready.
-  const [email, setEmail] = useState(readRememberedEmail)
+  // Prefilled from a previous "remember me" when signing in — never for a new account.
+  const [rememberedEmail] = useState(readRememberedEmail)
+  const [email, setEmail] = useState(rememberedEmail)
   const [password, setPassword] = useState('')
-  const [remember, setRemember] = useState(() => Boolean(readRememberedEmail()))
+  const [remember, setRemember] = useState(() => Boolean(rememberedEmail))
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -36,7 +37,8 @@ export default function LoginPage() {
       const result = isSignUp ? await signUp(name.trim(), email.trim(), password) : await signIn(email.trim(), password)
       if (result?.error) {
         setError(result.error.message || t.authError)
-      } else {
+      } else if (!isSignUp) {
+        // Signing up never touches the remembered address.
         try {
           if (remember) localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim())
           else localStorage.removeItem(REMEMBERED_EMAIL_KEY)
@@ -52,8 +54,11 @@ export default function LoginPage() {
   }
 
   function switchMode() {
-    setMode(isSignUp ? 'signIn' : 'signUp')
+    const nextIsSignUp = !isSignUp
+    setMode(nextIsSignUp ? 'signUp' : 'signIn')
     setError('')
+    // A new account must not inherit the remembered address.
+    setEmail(nextIsSignUp ? '' : rememberedEmail)
   }
 
   return <div className="login-page">
