@@ -156,7 +156,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .search-box:focus-within { border-color: #aec9b2; }
 .search-box input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #46544b; font-size: 9px; }
 .search-box input::placeholder { color: #a6aea8; }
-.table-head, .transaction-row { display: grid; grid-template-columns: minmax(180px, 1.6fr) minmax(105px, .95fr) minmax(90px, .85fr) minmax(70px, .65fr) minmax(90px, .75fr) 70px; align-items: center; gap: 9px; }
+.table-head, .transaction-row { display: grid; grid-template-columns: minmax(170px, 1.55fr) minmax(100px, .9fr) minmax(85px, .8fr) minmax(94px, .82fr) minmax(88px, .74fr) 70px; align-items: center; gap: 9px; }
 .table-head { min-height: 34px; color: #a2aaa4; font-size: 8px; font-weight: 700; letter-spacing: .75px; }
 .table-head span:nth-child(5) { text-align: right; }
 .transaction-row { min-height: 57px; border-top: 1px solid #f0f2ef; }
@@ -251,15 +251,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .transactions-panel { margin-top: 10px; padding: 15px 13px 0; }
   .transaction-controls { align-items: flex-start; flex-direction: column-reverse; gap: 7px; margin-top: 12px; }
   .search-box { width: 100%; height: 31px; margin: 0; }.filter-tabs { width: 100%; gap: 18px; }.filter-tab { padding-bottom: 9px; }
-  .table-head { grid-template-columns: minmax(100px, 1.2fr) minmax(68px, .8fr) minmax(55px, .6fr) minmax(65px, .8fr) 52px; gap: 5px; font-size: 7px; }.table-head span:nth-child(2), .table-head span:nth-child(6) { display: none; }
-  .transaction-row { grid-template-columns: minmax(100px, 1.2fr) minmax(68px, .8fr) minmax(55px, .6fr) minmax(65px, .8fr) 60px; gap: 5px; min-height: 55px; }.transaction-row .category-pill { display: none; }.transaction-main { gap: 7px; }.transaction-icon { width: 30px; height: 30px; }.transaction-title strong { font-size: 9px; }.transaction-title span { font-size: 8px; }.transaction-edit-trigger { font-size: 9px; }.platform-pill { font-size: 8px; }.category-pill { padding: 5px 6px; gap: 4px; font-size: 8px; }.transaction-date { font-size: 9px; }.transaction-amount { font-size: 9px; }.edit-row, .delete-row, .history-row { width: 18px; }
+  .table-head { grid-template-columns: minmax(92px, 1.15fr) minmax(62px, .75fr) minmax(52px, .58fr) minmax(78px, .9fr) 52px; gap: 5px; font-size: 7px; }.table-head span:nth-child(2), .table-head span:nth-child(6) { display: none; }
+  .transaction-row { grid-template-columns: minmax(92px, 1.15fr) minmax(62px, .75fr) minmax(52px, .58fr) minmax(78px, .9fr) 60px; gap: 5px; min-height: 55px; }.transaction-row .category-pill { display: none; }.transaction-main { gap: 7px; }.transaction-icon { width: 30px; height: 30px; }.transaction-title strong { font-size: 9px; }.transaction-title span { font-size: 8px; }.transaction-edit-trigger { font-size: 9px; }.platform-pill { font-size: 8px; }.category-pill { padding: 5px 6px; gap: 4px; font-size: 8px; }.transaction-date { font-size: 9px; }.transaction-amount { font-size: 9px; }.edit-row, .delete-row, .history-row { width: 18px; }
   .table-footer { font-size: 8px; }.page-footer { gap: 10px; font-size: 8px; }
 }
 @media (max-width: 420px) {
   .page-content { padding-right: 13px; padding-left: 13px; }
   .topbar { padding: 0 13px; }.topbar-right { gap: 7px; }.language-switch { gap: 1px; padding: 2px; }.language-option { min-width: 27px; padding: 0 4px; font-size: 8px; }
   .summary-amount { font-size: 19px; }.summary-foot { gap: 4px; font-size: 8px; }
-  .table-head, .transaction-row { grid-template-columns: minmax(90px, 1fr) minmax(50px, .5fr) 64px 56px; gap: 4px; }
+  .table-head, .transaction-row { grid-template-columns: minmax(84px, 1fr) minmax(48px, .5fr) 76px 56px; gap: 4px; }
   .table-head span:nth-child(2), .table-head span:nth-child(3), .transaction-row .category-pill, .transaction-row .platform-pill { display: none; }
   .transaction-title .transaction-platform-mobile { display: block; overflow: hidden; color: #89958d; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
   .transaction-icon { width: 27px; height: 27px; }.category-pill { padding: 4px 5px; }

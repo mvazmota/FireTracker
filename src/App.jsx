@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDownLeft, ArrowLeft, ArrowRight, ArrowUpRight, Bitcoin, CalendarDays, Camera, ChartLine,
-  Check, ChevronDown, CircleHelp, Coffee, CreditCard, Ellipsis, Flame, HandCoins, Landmark,
+  Check, ChevronDown, CircleHelp, Clock, Coffee, CreditCard, Ellipsis, Flame, HandCoins, Landmark,
   Film, ForkKnife, Gift, HeartPulse, House, Pencil, Plus, Search, ShoppingBag,
   ReceiptText, SlidersHorizontal, Sparkles, Tag, TrendingUp, UserRound, Wallet, X,
 } from 'lucide-react'
@@ -19,7 +19,7 @@ const CUSTOM_CATEGORIES_STORAGE_KEY = 'firepath-custom-categories-v1'
 const PROFILE_STORAGE_KEY = 'firepath-user-profile-v1'
 const VISIBILITY_STORAGE_KEY = 'firepath-investment-visibility-v1'
 const SIMULATION_VERSION_KEY = 'firepath-simulation-version-v1'
-const SIMULATION_VERSION = 'three-year-fire-simulation-v2'
+const SIMULATION_VERSION = 'three-year-fire-simulation-v3'
 const DEFAULT_PLATFORMS = ['Bank account', 'Cash', 'Trade Republic', 'Interactive Brokers', 'DEGIRO', 'Coinbase', 'Kraken', 'Mintos', 'PeerBerry', 'Banco Invest']
 const messages = {
   en: {
@@ -31,7 +31,7 @@ const messages = {
     positionHeading: 'Global position', positionSubtitle: 'See how your total position is made up and how it changes over time.', totalPosition: 'TOTAL POSITION', totalAssets: 'TOTAL ASSETS', currentAssets: 'Current position by asset', assetEvolution: 'Position over time', assetEvolutionSubtitle: 'Monthly value for cash and each asset type', period3: '3 mo', period6: '6 mo', period12: '12 mo', period24: '24 mo', periodAll: 'All months', seriesCash: 'Tracked cash', seriesETFs: 'ETFs', seriesCrypto: 'Crypto', seriesP2P: 'P2P', seriesBonds: 'Bonds', seriesSavings: 'Savings',
     profileHeading: 'Your profile', profileSubtitle: 'Your account details and app preferences.', yourName: 'Your name', namePlaceholder: 'Enter your name', saveProfile: 'Save profile', accountCreated: 'Account created', uploadPhoto: 'Upload a profile photo', changePhoto: 'Change photo', removePhoto: 'Remove photo', avatarFileError: 'Choose a PNG, JPG, WebP or GIF image under 8 MB.', avatarReadError: 'That image could not be opened. Try another file.', investmentSpaces: 'Investment spaces', investmentSettings: 'Investment spaces', investmentSettingsSubtitle: 'Choose which asset types appear in your navigation, overview and global position.', visibleSetting: 'Show this section', hiddenAssetsNote: 'Hidden sections keep their data and transactions; they are just removed from your dashboard and global position.',
     cashFlow: 'Cash flow', byWeek: 'Income and expenses, week by week', whereItGoes: 'Where it goes', spendingBreakdown: 'A little breakdown of your spending', thisMonth: 'This month', emptySpending: 'Add an expense to see your spending.', week: 'Week',
-    recent: 'Recent transactions', viewAll: 'View all', allTransactions: 'All transactions', allTransactionsSubtitle: 'Search and filter your complete transaction history.', moneyComingGoing: 'Your money coming and going', addNew: 'Add new', allActivity: 'All activity', investmentActivity: 'Investments', search: 'Search transactions', transaction: 'TRANSACTION', category: 'CATEGORY', platform: 'PLATFORM', date: 'DATE', amount: 'AMOUNT', expense: 'Expense', loadMore: 'Load more', noTransactions: 'No transactions match these filters.', noPlatform: 'No platform', addPlatform: 'Add a platform…', platformName: 'Platform name', platformPlaceholder: 'e.g. Trade Republic', addCategory: 'Add a category…', categoryName: 'Category name', categoryNameError: 'Enter a category name.', useCategories: 'Choose an existing category',
+    recent: 'Recent transactions', viewAll: 'View all', allTransactions: 'All transactions', allTransactionsSubtitle: 'Search and filter your complete transaction history.', moneyComingGoing: 'Your money coming and going', addNew: 'Add new', allActivity: 'All activity', investmentActivity: 'Investments', search: 'Search transactions', transaction: 'TRANSACTION', category: 'CATEGORY', platform: 'PLATFORM', date: 'DATE', time: 'Time', dateTime: 'Date & time', amount: 'AMOUNT', expense: 'Expense', loadMore: 'Load more', noTransactions: 'No transactions match these filters.', noPlatform: 'No platform', addPlatform: 'Add a platform…', platformName: 'Platform name', platformPlaceholder: 'e.g. Trade Republic', addCategory: 'Add a category…', categoryName: 'Category name', categoryNameError: 'Enter a category name.', useCategories: 'Choose an existing category',
     noMatches: 'No matches just yet', freshStart: 'A fresh start', trySearch: 'Try another search, or clear your filters.', firstTransaction: 'Add your first transaction to get this month going.', addATransaction: 'Add a transaction', showing: 'Showing', of: 'of', lookingGood: 'Looking good so far', footer: 'Made for your money, and your peace of mind.', footerMonth: 'Take it one month at a time',
     newTransaction: 'NEW TRANSACTION', editTransaction: 'EDIT TRANSACTION', updateTransaction: 'Update transaction', addToMonth: 'Add to your month', transactionType: 'Transaction type', whatFor: 'What was it for?', titlePlaceholder: 'e.g. Weekly groceries', amountEuro: 'Amount (€)', categoryLabel: 'Category', close: 'Close', saveChanges: 'Save changes', addExpense: 'Add expense', addIncome: 'Add income', edit: 'Edit', delete: 'Delete',
     nameError: 'Give this transaction a name.', amountError: 'Enter an amount greater than zero.', dateError: 'Choose a date in the selected month.', platformRequired: 'Choose or add a platform.',
@@ -56,7 +56,7 @@ const messages = {
     positionHeading: 'Posição global', positionSubtitle: 'Vê como se compõe a tua posição total e como evolui ao longo do tempo.', totalPosition: 'POSIÇÃO TOTAL', totalAssets: 'TOTAL DE ATIVOS', currentAssets: 'Posição atual por ativo', assetEvolution: 'Evolução da posição', assetEvolutionSubtitle: 'Valor mensal do saldo e de cada tipo de ativo', period3: '3 meses', period6: '6 meses', period12: '12 meses', period24: '24 meses', periodAll: 'Todos', seriesCash: 'Saldo registado', seriesETFs: 'ETFs', seriesCrypto: 'Cripto', seriesP2P: 'P2P', seriesBonds: 'Obrigações', seriesSavings: 'Poupanças',
     profileHeading: 'O teu perfil', profileSubtitle: 'Dados da conta e preferências da aplicação.', yourName: 'O teu nome', namePlaceholder: 'Introduz o teu nome', saveProfile: 'Guardar perfil', accountCreated: 'Conta criada', uploadPhoto: 'Carregar foto de perfil', changePhoto: 'Alterar foto', removePhoto: 'Remover foto', avatarFileError: 'Escolhe uma imagem PNG, JPG, WebP ou GIF com menos de 8 MB.', avatarReadError: 'Não foi possível abrir a imagem. Experimenta outro ficheiro.', investmentSpaces: 'Espaços de investimento', investmentSettings: 'Tipos de investimento', investmentSettingsSubtitle: 'Escolhe que tipos de ativos aparecem na navegação, no resumo e na posição global.', visibleSetting: 'Mostrar esta secção', hiddenAssetsNote: 'As secções ocultas mantêm os dados e as transações; apenas deixam de aparecer no resumo e na posição global.',
     cashFlow: 'Fluxo de dinheiro', byWeek: 'Rendimentos e despesas, semana a semana', whereItGoes: 'Onde gastas', spendingBreakdown: 'Um resumo das tuas despesas', thisMonth: 'Este mês', emptySpending: 'Adiciona uma despesa para veres o resumo.', week: 'Semana',
-    recent: 'Transações recentes', viewAll: 'Ver todas', allTransactions: 'Todas as transações', allTransactionsSubtitle: 'Pesquisa e filtra todo o teu histórico de transações.', moneyComingGoing: 'O dinheiro que entra e sai', addNew: 'Adicionar', allActivity: 'Tudo', investmentActivity: 'Investimentos', search: 'Pesquisar transações', transaction: 'TRANSAÇÃO', category: 'CATEGORIA', platform: 'PLATAFORMA', date: 'DATA', amount: 'VALOR', expense: 'Despesa', loadMore: 'Carregar mais', noTransactions: 'Não há transações que correspondam a estes filtros.', noPlatform: 'Sem plataforma', addPlatform: 'Adicionar plataforma…', platformName: 'Nome da plataforma', platformPlaceholder: 'ex.: Trade Republic', addCategory: 'Adicionar categoria…', categoryName: 'Nome da categoria', categoryNameError: 'Introduz o nome da categoria.', useCategories: 'Escolher uma categoria existente',
+    recent: 'Transações recentes', viewAll: 'Ver todas', allTransactions: 'Todas as transações', allTransactionsSubtitle: 'Pesquisa e filtra todo o teu histórico de transações.', moneyComingGoing: 'O dinheiro que entra e sai', addNew: 'Adicionar', allActivity: 'Tudo', investmentActivity: 'Investimentos', search: 'Pesquisar transações', transaction: 'TRANSAÇÃO', category: 'CATEGORIA', platform: 'PLATAFORMA', date: 'DATA', time: 'Hora', dateTime: 'Data e hora', amount: 'VALOR', expense: 'Despesa', loadMore: 'Carregar mais', noTransactions: 'Não há transações que correspondam a estes filtros.', noPlatform: 'Sem plataforma', addPlatform: 'Adicionar plataforma…', platformName: 'Nome da plataforma', platformPlaceholder: 'ex.: Trade Republic', addCategory: 'Adicionar categoria…', categoryName: 'Nome da categoria', categoryNameError: 'Introduz o nome da categoria.', useCategories: 'Escolher uma categoria existente',
     noMatches: 'Ainda não há resultados', freshStart: 'Um novo começo', trySearch: 'Experimenta outra pesquisa ou limpa os filtros.', firstTransaction: 'Adiciona a tua primeira transação deste mês.', addATransaction: 'Adicionar transação', showing: 'A mostrar', of: 'de', lookingGood: 'Tudo em ordem', footer: 'As tuas finanças, com mais tranquilidade.', footerMonth: 'Um mês de cada vez',
     newTransaction: 'NOVA TRANSAÇÃO', editTransaction: 'EDITAR TRANSAÇÃO', updateTransaction: 'Editar transação', addToMonth: 'Adicionar ao mês', transactionType: 'Tipo de transação', whatFor: 'Em que consiste?', titlePlaceholder: 'ex.: Compras de supermercado', amountEuro: 'Valor (€)', categoryLabel: 'Categoria', close: 'Fechar', saveChanges: 'Guardar alterações', addExpense: 'Adicionar despesa', addIncome: 'Adicionar rendimento', edit: 'Editar', delete: 'Eliminar',
     nameError: 'Indica um nome para esta transação.', amountError: 'Introduz um valor superior a zero.', dateError: 'Escolhe uma data do mês selecionado.', platformRequired: 'Escolhe ou adiciona uma plataforma.',
@@ -137,13 +137,16 @@ function threeYearSimulation() {
 
   function addTransaction(month, lastDay, isCurrentMonth, item) {
     if (item.day > lastDay || (isCurrentMonth && item.day > now.getDate())) return false
+    const seed = (Number(month.slice(0, 4)) * 12 + Number(month.slice(5, 7))) + item.key.length * 7 + Math.round(item.amount)
+    const hour = 8 + (seed % 12)
+    const minute = (seed * 7) % 60
     transactions.push({
       id: `scenario-${month}-${item.key}`,
       title: item.title,
       category: item.category,
       type: item.type,
       amount: Math.round(item.amount * 100) / 100,
-      date: `${month}-${String(item.day).padStart(2, '0')}`,
+      date: `${month}-${String(item.day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`,
       platform: item.platform || 'Bank account',
       isDemo: true,
     })
@@ -298,7 +301,8 @@ function loadTransactions() {
   ensureSimulationSeeded()
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    return stored ? JSON.parse(stored) : demoTransactions()
+    const transactions = stored ? JSON.parse(stored) : demoTransactions()
+    return transactions.map((item) => ({ ...item, date: normalizeTransactionDate(item.date) }))
   } catch {
     return demoTransactions()
   }
@@ -404,6 +408,25 @@ function dateKey(date) {
   return `${monthKey(date)}-${String(date.getDate()).padStart(2, '0')}`
 }
 
+function timeStamp(date) {
+  return `${dateKey(date)}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
+}
+
+function normalizeTransactionDate(value) {
+  if (typeof value !== 'string') return value
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T12:00:00`
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return `${value}:00`
+  return value
+}
+
+function formatDateTime(value, locale, withYear = false) {
+  const parsed = new Date(normalizeTransactionDate(value))
+  if (Number.isNaN(parsed.getTime())) return value
+  const options = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }
+  if (withYear) options.year = 'numeric'
+  return new Intl.DateTimeFormat(locale, options).format(parsed)
+}
+
 function portfolioCostBasis(record, type) {
   if (type === 'etfs' || type === 'crypto') return record.units * record.averageCost
   if (type === 'p2p') return record.invested
@@ -446,7 +469,12 @@ function Modal({ language, onClose, onSave, selectedMonth, transaction, platform
   const [platform, setPlatform] = useState(transaction?.platform || '')
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [newCategory, setNewCategory] = useState('')
-  const [date, setDate] = useState(transaction?.date || `${monthKey(selectedMonth)}-${String(Math.min(new Date().getDate(), new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0).getDate())).padStart(2, '0')}`)
+  const now = new Date()
+  const fallbackDay = Math.min(now.getDate(), new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0).getDate())
+  const fallbackDateTime = monthKey(selectedMonth) === monthKey(now) ? timeStamp(now) : `${monthKey(selectedMonth)}-${String(fallbackDay).padStart(2, '0')}T12:00:00`
+  const initialDateTime = transaction?.date ? normalizeTransactionDate(transaction.date) : fallbackDateTime
+  const [date, setDate] = useState(initialDateTime.slice(0, 10))
+  const [time, setTime] = useState(initialDateTime.slice(11, 16))
   const [error, setError] = useState('')
   const customEntries = [...(customCategories[type] || []).map((name) => ({ name })), ...(category && !categories[type].some((item) => item.name === category) && !(customCategories[type] || []).includes(category) ? [{ name: category }] : [])]
   const categoryOptions = [...categories[type], ...customEntries]
@@ -465,7 +493,8 @@ function Modal({ language, onClose, onSave, selectedMonth, transaction, platform
     if (date.slice(0, 7) !== monthKey(selectedMonth)) return setError(t.dateError)
     const finalCategory = creatingCategory ? newCategory.trim() : category
     if (!finalCategory) return setError(t.categoryNameError)
-    onSave({ id: transaction?.id || crypto.randomUUID(), title: title.trim(), category: finalCategory, type, amount: Number(amount), date, platform: platform.trim() })
+    const timeValue = /^\d{2}:\d{2}$/.test(time) ? time : '12:00'
+    onSave({ id: transaction?.id || crypto.randomUUID(), title: title.trim(), category: finalCategory, type, amount: Number(amount), date: `${date}T${timeValue}:00`, platform: platform.trim() })
   }
 
   return (
@@ -483,8 +512,10 @@ function Modal({ language, onClose, onSave, selectedMonth, transaction, platform
             <div><label className="field-label" htmlFor="transaction-amount">{t.amountEuro}</label><div className="amount-input"><span>€</span><input id="transaction-amount" type="number" min="0.01" step="0.01" placeholder="0.00" value={amount} onChange={(event) => setAmount(event.target.value)} /></div></div>
             <div><label className="field-label" htmlFor="transaction-date">{t.date}</label><div className="date-input"><CalendarDays size={16} /><input id="transaction-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} /></div></div>
           </div>
-          <label className="field-label" htmlFor="transaction-category">{t.categoryLabel}</label>
-          {creatingCategory ? <div className="platform-add-row"><input className="platform-custom-input" id="transaction-category" autoFocus placeholder={t.categoryName} value={newCategory} onChange={(event) => setNewCategory(event.target.value)} /><button className="icon-button" type="button" onClick={() => { setCreatingCategory(false); setNewCategory('') }} aria-label={t.useCategories}><X size={16} /></button></div> : <div className="select-wrap"><select id="transaction-category" value={category} onChange={(event) => { if (event.target.value === '__add_category__') { setCreatingCategory(true); setNewCategory('') } else setCategory(event.target.value) }}>{categoryOptions.map((item) => <option key={item.name} value={item.name}>{t.categoryNames[item.name] || item.name}</option>)}<option value="__add_category__">{t.addCategory}</option></select><ChevronDown size={16} /></div>}
+          <div className="form-row">
+            <div><label className="field-label" htmlFor="transaction-time">{t.time}</label><div className="date-input"><Clock size={16} /><input id="transaction-time" type="time" value={time} onChange={(event) => setTime(event.target.value)} /></div></div>
+            <div><label className="field-label" htmlFor="transaction-category">{t.categoryLabel}</label>{creatingCategory ? <div className="platform-add-row"><input className="platform-custom-input" id="transaction-category" autoFocus placeholder={t.categoryName} value={newCategory} onChange={(event) => setNewCategory(event.target.value)} /><button className="icon-button" type="button" onClick={() => { setCreatingCategory(false); setNewCategory('') }} aria-label={t.useCategories}><X size={16} /></button></div> : <div className="select-wrap"><select id="transaction-category" value={category} onChange={(event) => { if (event.target.value === '__add_category__') { setCreatingCategory(true); setNewCategory('') } else setCategory(event.target.value) }}>{categoryOptions.map((item) => <option key={item.name} value={item.name}>{t.categoryNames[item.name] || item.name}</option>)}<option value="__add_category__">{t.addCategory}</option></select><ChevronDown size={16} /></div>}</div>
+          </div>
           <PlatformSelector id="transaction-platform" label={t.platform} value={platform} onChange={setPlatform} platforms={platforms} language={language} />
           {error && <p className="form-error">{error}</p>}
           <button className="submit-button" type="submit">{transaction ? <Check size={17} /> : <Plus size={17} />} {transaction ? t.saveChanges : type === 'income' ? t.addIncome : t.addExpense}</button>
@@ -1174,7 +1205,7 @@ function AllTransactionsPage({ language, transactions, onAdd, onEdit, onDelete }
     <section className="welcome-row"><div><p className="eyebrow">{t.transactions.toUpperCase()}</p><h1>{t.allTransactions}<span>.</span></h1><p className="welcome-sub">{t.allTransactionsSubtitle}</p></div><button className="primary-button" onClick={onAdd}><Plus size={18} /> {t.addTransaction}</button></section>
     <section className="panel transactions-panel all-transactions-panel"><div className="transaction-controls"><div className="filter-tabs" role="tablist" aria-label={t.transactions}>{filters.map(([value, label]) => <button key={value} role="tab" aria-selected={filter === value} className={filter === value ? 'filter-tab active-filter' : 'filter-tab'} onClick={() => { setFilter(value); setLimit(20) }}>{label}</button>)}</div><label className="search-box"><Search size={15} /><input aria-label={t.search} placeholder={t.search} value={query} onChange={(event) => { setQuery(event.target.value); setLimit(20) }} /></label></div>
       <div className="transaction-table"><div className="table-head"><span>{t.transaction}</span><span>{t.category}</span><span>{t.platform}</span><span>{t.date}</span><span>{t.amount}</span><span /></div>
-        {visible.length ? visible.map((item) => { const info = categoryInfo(item.category, item.type); const typeLabel = item.type === 'income' ? t.income.charAt(0) + t.income.slice(1).toLowerCase() : t.expense; return <div className="transaction-row" key={item.id}><div className="transaction-main"><IconBadge icon={info.icon} color={info.color} /><div className="transaction-title"><button className="transaction-edit-trigger" onClick={() => onEdit(item)} aria-label={`${t.edit} ${item.title}`}>{item.title}</button><span>{typeLabel}{item.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span><span className="transaction-platform-mobile">{item.platform || t.noPlatform}</span></div></div><span className="category-pill"><i style={{ background: info.color }} />{t.categoryNames[item.category] || item.category}</span><span className="platform-pill">{item.platform || '—'}</span><span className="transaction-date">{new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(`${item.date}T12:00:00`))}</span><span className={`transaction-amount ${item.type}`}>{item.type === 'income' ? '+' : '−'}{formatCurrency(item.amount, language)}</span><div className="transaction-actions"><button className="edit-row" onClick={() => onEdit(item)} aria-label={`${t.edit} ${item.title}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(item.id)} aria-label={`${t.delete} ${item.title}`} title={t.delete}><X size={15} /></button></div></div> }) : <div className="empty-transactions"><span className="empty-icon"><Coffee size={21} /></span><strong>{t.noTransactions}</strong><p>{t.trySearch}</p></div>}
+        {visible.length ? visible.map((item) => { const info = categoryInfo(item.category, item.type); const typeLabel = item.type === 'income' ? t.income.charAt(0) + t.income.slice(1).toLowerCase() : t.expense; return <div className="transaction-row" key={item.id}><div className="transaction-main"><IconBadge icon={info.icon} color={info.color} /><div className="transaction-title"><button className="transaction-edit-trigger" onClick={() => onEdit(item)} aria-label={`${t.edit} ${item.title}`}>{item.title}</button><span>{typeLabel}{item.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span><span className="transaction-platform-mobile">{item.platform || t.noPlatform}</span></div></div><span className="category-pill"><i style={{ background: info.color }} />{t.categoryNames[item.category] || item.category}</span><span className="platform-pill">{item.platform || '—'}</span><span className="transaction-date">{formatDateTime(item.date, locale, true)}</span><span className={`transaction-amount ${item.type}`}>{item.type === 'income' ? '+' : '−'}{formatCurrency(item.amount, language)}</span><div className="transaction-actions"><button className="edit-row" onClick={() => onEdit(item)} aria-label={`${t.edit} ${item.title}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(item.id)} aria-label={`${t.delete} ${item.title}`} title={t.delete}><X size={15} /></button></div></div> }) : <div className="empty-transactions"><span className="empty-icon"><Coffee size={21} /></span><strong>{t.noTransactions}</strong><p>{t.trySearch}</p></div>}
       </div>
       <div className="all-transactions-footer"><span>{t.showing} <strong>{visible.length}</strong> {t.of} <strong>{filtered.length}</strong> {t.transactions.toLowerCase()}</span>{visible.length < filtered.length && <button className="text-button" onClick={() => setLimit((current) => current + 20)}>{t.loadMore} <ArrowDownLeft size={14} /></button>}</div>
     </section>
@@ -1356,7 +1387,7 @@ function App() {
         const detail = type === 'etfs' || type === 'crypto' ? savedRecord.symbol : savedRecord.name
         const flowLabel = type === 'etfs' ? (flowDelta > 0 ? t.etfPurchase : t.etfSale) : type === 'crypto' ? (flowDelta > 0 ? t.cryptoPurchase : t.cryptoSale) : type === 'p2p' ? (flowDelta > 0 ? t.p2pPurchase : t.p2pSale) : (flowDelta > 0 ? t.bondPurchase : t.bondSale)
         const title = `${flowLabel} · ${detail}`
-        nextTransactions.push({ id: sourceId, title, category: 'Investment', type: flowDelta > 0 ? 'expense' : 'income', amount: Math.abs(flowDelta), date: dateKey(new Date()), platform: savedRecord.platform || '', sourceType: 'portfolio', sourceId: savedRecord.id, investmentType: type, flowDelta })
+        nextTransactions.push({ id: sourceId, title, category: 'Investment', type: flowDelta > 0 ? 'expense' : 'income', amount: Math.abs(flowDelta), date: timeStamp(new Date()), platform: savedRecord.platform || '', sourceType: 'portfolio', sourceId: savedRecord.id, investmentType: type, flowDelta })
       }
       save(nextTransactions)
     }
@@ -1382,7 +1413,7 @@ function App() {
       const priorFlow = transactions.find((item) => item.id === sourceId)?.flowDelta || 0
       const flowDelta = priorFlow + delta
       const nextTransactions = transactions.filter((item) => item.id !== sourceId)
-      if (Math.abs(flowDelta) >= 0.005) nextTransactions.push({ id: sourceId, title: `${flowDelta > 0 ? t.savingsDepositTitle : t.savingsWithdrawalTitle} · ${account.name}`, category: 'Savings', type: flowDelta > 0 ? 'expense' : 'income', amount: Math.abs(flowDelta), date: dateKey(new Date()), platform: account.institution || '', sourceType: 'savings', sourceId: account.id, flowDelta })
+      if (Math.abs(flowDelta) >= 0.005) nextTransactions.push({ id: sourceId, title: `${flowDelta > 0 ? t.savingsDepositTitle : t.savingsWithdrawalTitle} · ${account.name}`, category: 'Savings', type: flowDelta > 0 ? 'expense' : 'income', amount: Math.abs(flowDelta), date: timeStamp(new Date()), platform: account.institution || '', sourceType: 'savings', sourceId: account.id, flowDelta })
       save(nextTransactions)
     }
   }
@@ -1535,7 +1566,7 @@ function App() {
 
           <section className="panel transactions-panel" id="transactions"><div className="transactions-heading"><div><h2>{t.recent}</h2><p>{t.moneyComingGoing}</p></div><div className="transactions-heading-actions"><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {t.addNew}</button><button className="view-all-button" onClick={selectTransactions}>{t.viewAll} <ArrowRight size={14} /></button></div></div>
             <div className="transaction-table"><div className="table-head"><span>{t.transaction}</span><span>{t.category}</span><span>{t.platform}</span><span>{t.date.toUpperCase()}</span><span>{t.amount}</span><span /></div>
-              {recentTransactions.length ? recentTransactions.map((item) => { const info = categoryInfo(item.category, item.type); const typeLabel = item.type === 'income' ? t.income.charAt(0) + t.income.slice(1).toLowerCase() : t.expense; return <div className="transaction-row" key={item.id}><div className="transaction-main"><IconBadge icon={info.icon} color={info.color} /><div className="transaction-title"><button className="transaction-edit-trigger" onClick={() => setEditingTransaction(item)} aria-label={`${t.edit} ${item.title}`}>{item.title}</button><span>{typeLabel}{item.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span><span className="transaction-platform-mobile">{item.platform || t.noPlatform}</span></div></div><span className="category-pill"><i style={{ background: info.color }} />{t.categoryNames[item.category] || item.category}</span><span className="platform-pill">{item.platform || t.noPlatform}</span><span className="transaction-date">{new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(new Date(`${item.date}T12:00:00`))}</span><span className={`transaction-amount ${item.type}`}>{item.type === 'income' ? '+' : '−'}{formatCurrency(item.amount, language)}</span><div className="transaction-actions"><button className="edit-row" onClick={() => setEditingTransaction(item)} aria-label={`${t.edit} ${item.title}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => removeTransaction(item.id)} aria-label={`${t.delete} ${item.title}`} title={t.delete}><X size={15} /></button></div></div> }) : <div className="empty-transactions"><span className="empty-icon"><Coffee size={21} /></span><strong>{t.freshStart}</strong><p>{t.firstTransaction}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {t.addATransaction}</button></div>}
+              {recentTransactions.length ? recentTransactions.map((item) => { const info = categoryInfo(item.category, item.type); const typeLabel = item.type === 'income' ? t.income.charAt(0) + t.income.slice(1).toLowerCase() : t.expense; return <div className="transaction-row" key={item.id}><div className="transaction-main"><IconBadge icon={info.icon} color={info.color} /><div className="transaction-title"><button className="transaction-edit-trigger" onClick={() => setEditingTransaction(item)} aria-label={`${t.edit} ${item.title}`}>{item.title}</button><span>{typeLabel}{item.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span><span className="transaction-platform-mobile">{item.platform || t.noPlatform}</span></div></div><span className="category-pill"><i style={{ background: info.color }} />{t.categoryNames[item.category] || item.category}</span><span className="platform-pill">{item.platform || t.noPlatform}</span><span className="transaction-date">{formatDateTime(item.date, locale)}</span><span className={`transaction-amount ${item.type}`}>{item.type === 'income' ? '+' : '−'}{formatCurrency(item.amount, language)}</span><div className="transaction-actions"><button className="edit-row" onClick={() => setEditingTransaction(item)} aria-label={`${t.edit} ${item.title}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => removeTransaction(item.id)} aria-label={`${t.delete} ${item.title}`} title={t.delete}><X size={15} /></button></div></div> }) : <div className="empty-transactions"><span className="empty-icon"><Coffee size={21} /></span><strong>{t.freshStart}</strong><p>{t.firstTransaction}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {t.addATransaction}</button></div>}
             </div>
             {recentTransactions.length > 0 && <div className="table-footer"><span>{t.showing} <strong>{recentTransactions.length}</strong> {t.of} <strong>{monthlyTransactions.length}</strong> {t.transactions.toLowerCase()}</span><span className="footer-note"><Check size={13} /> {t.lookingGood}</span></div>}
           </section>
