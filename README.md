@@ -41,7 +41,13 @@ src/
     simulation.js          the 36-month starter scenario
     storage.js             localStorage load/save and first-run seeding
     timeline.js            cash + per-asset history reconstruction
-  styles/index.css         global stylesheet
+  styles/
+    index.css              imports the others, in cascade order
+    base.css               design tokens, reset, error boundary
+    layout.css             app shell, sidebar, top bar, page frame
+    components.css         cards, panels, tables, modals, forms
+    features.css           overview, position, investments, profile
+    responsive.css         every media query, loaded last
 ```
 
 Built on React 19 with `@vitejs/plugin-react` and the **React Compiler** enabled (see `vite.config.js`) for automatic memoization. Imports use explicit file extensions.
