@@ -8,6 +8,7 @@ import { monthKey, normalizeTransactionDate, timeStamp } from '../lib/dates.js'
 import { api } from '../lib/api.js'
 import { assetMarketValue, investmentTypeFromTransaction, portfolioCostBasis } from '../lib/portfolio.js'
 import { demoTransactionsForEmptyMonths } from '../lib/simulation.js'
+import { dueOccurrences, startMonthFor } from '../lib/recurring.js'
 
 const FinanceContext = createContext(null)
 
@@ -37,6 +38,7 @@ export function FinanceProvider({ children }) {
   const [p2pRecords, setP2PRecords] = useState([])
   const [bondHoldings, setBondHoldings] = useState([])
   const [savingsAccounts, setSavingsAccounts] = useState([])
+  const [recurringRules, setRecurringRules] = useState([])
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
@@ -50,6 +52,7 @@ export function FinanceProvider({ children }) {
     setP2PRecords(data.p2p || [])
     setBondHoldings(data.bonds || [])
     setSavingsAccounts(data.savings || [])
+    setRecurringRules(data.recurring || [])
     setHydrated(true)
   }, [data])
 
@@ -221,6 +224,51 @@ export function FinanceProvider({ children }) {
     }
   }, [savingsAccounts, transactions, rememberPlatform, t, run])
 
+  /**
+   * Materialises any recurring occurrences that have come due since the last
+   * time the app was opened. Ids are deterministic, so a repeat run cannot
+   * duplicate anything, and a rule is only advanced once its rows are queued.
+   */
+  useEffect(() => {
+    if (!hydrated || recurringRules.length === 0) return
+    const due = dueOccurrences(recurringRules, new Date())
+    if (due.length === 0) return
+
+    const rows = due.map((item) => item.transaction)
+    setTransactions((current) => {
+      const known = new Set(current.map((item) => item.id))
+      return [...current, ...rows.filter((row) => !known.has(row.id))]
+    })
+    rows.forEach((row) => run(() => api.putTransaction(row)))
+
+    const generated = new Map()
+    due.forEach((item) => generated.set(item.ruleId, item.month))
+    const updates = recurringRules
+      .filter((item) => generated.has(item.id))
+      .map((item) => ({ ...item, lastGeneratedMonth: generated.get(item.id) }))
+    setRecurringRules((current) => current.map((item) => updates.find((update) => update.id === item.id) || item))
+    updates.forEach((item) => run(() => api.putRecurring(item)))
+  }, [hydrated, recurringRules, run])
+
+  const saveRecurringRule = useCallback((rule) => {
+    const existing = recurringRules.find((item) => item.id === rule.id)
+    // A brand new rule never back-dates: it starts this month if its day is
+    // still ahead, otherwise next month.
+    const saved = existing
+      ? { ...existing, ...rule }
+      : { ...rule, startMonth: startMonthFor(rule.dayOfMonth, new Date()), lastGeneratedMonth: null, active: rule.active !== false }
+    setRecurringRules((current) => (existing ? current.map((item) => (item.id === saved.id ? saved : item)) : [...current, saved]))
+    rememberPlatform(saved.platform)
+    rememberCategory(saved.type, saved.category)
+    run(() => api.putRecurring(saved))
+  }, [recurringRules, rememberPlatform, rememberCategory, run])
+
+  const removeRecurringRule = useCallback((id) => {
+    // Past occurrences stay put — the money really did move.
+    setRecurringRules((current) => current.filter((item) => item.id !== id))
+    run(() => api.deleteRecurring(id))
+  }, [run])
+
   const fillSampleHistory = useCallback(() => {
     const samples = demoTransactionsForEmptyMonths(transactions)
     if (!samples.length) return
@@ -235,7 +283,10 @@ export function FinanceProvider({ children }) {
     p2pRecords,
     bondHoldings,
     savingsAccounts,
+    recurringRules,
     hydrated,
+    saveRecurringRule,
+    removeRecurringRule,
     saveTransaction,
     removeTransaction,
     savePortfolioRecord,
@@ -245,7 +296,8 @@ export function FinanceProvider({ children }) {
     fillSampleHistory,
     investmentTypeFromTransaction,
   }), [
-    transactions, holdings, cryptoHoldings, p2pRecords, bondHoldings, savingsAccounts, hydrated,
+    transactions, holdings, cryptoHoldings, p2pRecords, bondHoldings, savingsAccounts, recurringRules, hydrated,
+    saveRecurringRule, removeRecurringRule,
     saveTransaction, removeTransaction, savePortfolioRecord, removePortfolioRecord,
     saveSavingsAccount, saveSavingsAccounts, fillSampleHistory,
   ])

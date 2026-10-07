@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { ASSET_TABLES, TRANSACTIONS, clearUserRows, listForUser, removeById, roundCents, runBatched, upsert, upsertStatement } from './tables.js'
+import { ASSET_TABLES, RECURRING, TRANSACTIONS, clearUserRows, listForUser, removeById, roundCents, runBatched, upsert, upsertStatement } from './tables.js'
 
 const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireGoal', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'categories', 'onboarded']
 
@@ -78,16 +78,17 @@ api.use('*', async (c, next) => {
 api.get('/state', async (c) => {
   const db = c.env.DB
   const userId = c.get('userId')
-  const [transactions, etfs, crypto, p2p, bonds, savings] = await Promise.all([
+  const [transactions, etfs, crypto, p2p, bonds, savings, recurring] = await Promise.all([
     listForUser(db, userId, TRANSACTIONS),
     listForUser(db, userId, ASSET_TABLES.etfs),
     listForUser(db, userId, ASSET_TABLES.crypto),
     listForUser(db, userId, ASSET_TABLES.p2p),
     listForUser(db, userId, ASSET_TABLES.bonds),
     listForUser(db, userId, ASSET_TABLES.savings),
+    listForUser(db, userId, RECURRING),
   ])
   const { profile, settings } = await loadSettings(db, userId)
-  return c.json({ transactions, etfs, crypto, p2p, bonds, savings, profile, settings })
+  return c.json({ transactions, etfs, crypto, p2p, bonds, savings, recurring, profile, settings })
 })
 
 api.put('/transactions/:id', async (c) => {
@@ -115,6 +116,19 @@ api.delete('/assets/:type/:id', async (c) => {
   const config = ASSET_TABLES[c.req.param('type')]
   if (!config) return c.json({ error: 'unknown asset type' }, 400)
   await removeById(c.env.DB, c.get('userId'), config, c.req.param('id'))
+  return c.json({ ok: true })
+})
+
+api.put('/recurring/:id', async (c) => {
+  const body = await c.req.json()
+  const record = { ...body, id: c.req.param('id') }
+  if (!record.title || !record.category || !record.type || !record.startMonth) return c.json({ error: 'invalid rule' }, 400)
+  await upsert(c.env.DB, c.get('userId'), RECURRING, record)
+  return c.json({ ok: true })
+})
+
+api.delete('/recurring/:id', async (c) => {
+  await removeById(c.env.DB, c.get('userId'), RECURRING, c.req.param('id'))
   return c.json({ ok: true })
 })
 

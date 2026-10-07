@@ -23,6 +23,9 @@ export const api = {
   putAsset: (type, record) => request(`/api/assets/${type}/${encodeURIComponent(record.id)}`, { method: 'PUT', body: JSON.stringify(record) }),
   deleteAsset: (type, id) => request(`/api/assets/${type}/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 
+  putRecurring: (rule) => request(`/api/recurring/${encodeURIComponent(rule.id)}`, { method: 'PUT', body: JSON.stringify(rule) }),
+  deleteRecurring: (id) => request(`/api/recurring/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
   putSettings: (payload) => request('/api/settings', { method: 'PUT', body: JSON.stringify(payload) }),
   importAll: (payload) => request('/api/import', { method: 'POST', body: JSON.stringify(payload) }),
   deleteAccount: () => request('/api/account', { method: 'DELETE' }),

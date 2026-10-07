@@ -123,4 +123,6 @@
 }
 @media (max-width: 760px) {
   .manage-columns { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .recurring-row { grid-template-columns: 30px minmax(0, 1fr) auto auto auto; gap: 9px; }
+  .recurring-next { display: none; }
 }

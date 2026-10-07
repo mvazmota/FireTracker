@@ -15,6 +15,7 @@ export const roundCents = (value) => {
  */
 const MONEY_COLUMNS = {
   transactions: ['amount', 'flowDelta'],
+  recurring_rules: ['amount'],
   p2p: ['invested', 'currentValue'],
   bonds: ['nominalValue', 'investedValue', 'currentValue'],
   savings: ['balance', 'target'],
@@ -64,6 +65,13 @@ export const ASSET_TABLES = {
   },
 }
 
+export const RECURRING = {
+  table: 'recurring_rules',
+  columns: ['id', 'title', 'category', 'type', 'amount', 'platform', 'dayOfMonth', 'startMonth', 'lastGeneratedMonth', 'active'],
+  toRow: (r) => [r.id, r.title, r.category, r.type, r.amount, r.platform ?? null, r.dayOfMonth, r.startMonth, r.lastGeneratedMonth ?? null, toBool(r.active ?? true)],
+  fromRow: (r) => ({ id: r.id, title: r.title, category: r.category, type: r.type, amount: r.amount, platform: r.platform ?? '', dayOfMonth: r.dayOfMonth, startMonth: r.startMonth, lastGeneratedMonth: r.lastGeneratedMonth ?? null, active: Boolean(r.active) }),
+}
+
 export const TRANSACTIONS = {
   table: 'transactions',
   columns: ['id', 'title', 'category', 'type', 'amount', 'date', 'platform', 'sourceType', 'sourceId', 'investmentType', 'flowDelta', 'isDemo'],
@@ -110,6 +118,6 @@ export async function listForUser(db, userId, config) {
 }
 
 export async function clearUserRows(db, userId) {
-  const tables = ['transactions', ...Object.values(ASSET_TABLES).map((c) => c.table)]
+  const tables = ['transactions', RECURRING.table, ...Object.values(ASSET_TABLES).map((c) => c.table)]
   await db.batch(tables.map((table) => db.prepare(`delete from "${table}" where "userId" = ?`).bind(userId)))
 }
