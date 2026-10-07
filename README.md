@@ -18,6 +18,7 @@ src/
   app/AppProviders.jsx     composes the language, settings and finance providers
   components/
     ErrorBoundary.jsx      keeps a crash from blanking the page
+    auth/                  LoginPage (non-functional sign-in gate)
     ui/                    Avatar, IconBadge, PlatformSelector
     layout-facing pages/   overview, position, transactions, statistics, profile
     transactions/          TransactionModal, AllTransactionsPage
@@ -77,6 +78,8 @@ npm run deploy              # builds dist/ and uploads it to the "firepath" proj
 The first deploy creates the Pages project if it does not exist. Afterwards the site is available at `https://<project-name>.pages.dev`.
 
 Transactions and each account/investment type are stored separately in this browser's local storage and displayed in euros. Each transaction stores a full date and time (shown as date plus hours and minutes in tables), includes an optional platform field, and can use custom platforms and categories. The starter scenario simulates 36 months for someone earning €2,000 a month: a €750 quarterly bonus (March, June, September, December), seasonal utility bills, everyday spending and a summer holiday, monthly ETF (€150) and P2P (€50) contributions, quarterly bond (€200) and crypto (€150 BTC, bought when the bonus lands) purchases, and an emergency fund built towards six months of regular expenses. A one-time data version replaces earlier demo records with this scenario; later edits persist normally. New portfolio purchases create monthly expenses in the Investment category, and savings contributions are tracked as Savings transfers. The saving rate counts cash saved plus invested capital. The FIRE meter starts with an editable €300,000 goal. The Global Position section charts cash and each asset over 3, 6, 12, 24, or all recorded months. Record monthly investment values to follow their evolution; editing a holding also updates the current month's snapshot. Investment prices are illustrative, manually entered values—not live market quotes.
+
+The app opens on a non-functional sign-in screen: any username and password are accepted, and **Log in** reveals the overview. A **Log out** button in the top bar returns to it. No credentials are checked or stored, and the session is not persisted, so a reload returns to the sign-in screen.
 
 The Profile & settings page stores a display name, account creation date, an optional profile photo, per-type investment visibility, and the FIRE meter settings (goal amount and whether the meter appears in the sidebar). Clicking the sidebar FIRE meter plays a short fire animation rather than opening an editor. Uploaded photos are resized in the browser and kept in local storage; they are never sent to a server. Hiding an investment type removes it from navigation, the overview and the global position while keeping its data.
 

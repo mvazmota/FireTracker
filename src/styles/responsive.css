@@ -108,3 +108,11 @@
   .annual-spending-breakdown { gap: 12px; }
   .history-modal { padding: 19px; }
 }
+
+/* Auth screens */
+@media (max-width: 760px) {
+  .login-language { top: 14px; right: 14px; }
+  .login-card { padding: 26px 20px 20px; }
+  .logout-button { padding: 0 8px; }
+  .logout-button span { display: none; }
+}
