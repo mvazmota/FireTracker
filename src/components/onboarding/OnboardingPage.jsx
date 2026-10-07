@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, Camera, Check, Flame, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Camera, Check, Flame, Plus, X } from 'lucide-react'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
 import { categorySuggestions } from '../../data/categories.js'
@@ -9,18 +9,26 @@ import { resizeImageFile } from '../../lib/image.js'
 import Avatar from '../ui/Avatar.jsx'
 import AnimalAvatar, { ANIMAL_LABEL_KEYS, ANIMAL_PRESETS, animalAvatarValue, animalId } from '../ui/AnimalAvatar.jsx'
 
+/** How many categories each group needs before the step can continue. */
+const MIN_CATEGORIES = 3
+
+/** Pre-selected so the step never starts from an empty screen. */
+const DEFAULT_CATEGORIES = { expense: ['Food & dining'], income: ['Salary'] }
+
 /**
  * First-run setup: a new account has no categories and no platforms, so we ask
  * for them before the app is usable, then for the investment spaces to show,
  * an optional FIRE goal, and finally an optional profile picture. The choice
- * steps are suggestion-driven to keep it quick; custom entries can be added
- * later from the normal forms.
+ * steps are suggestion-driven to keep it quick, and categories can be typed in
+ * as well.
  */
 export default function OnboardingPage() {
   const { t, language, changeLanguage } = useI18n()
   const { profile, investmentVisibility, fireGoal, fireMeterVisible, saveProfile, saveOnboarding } = useSettings()
   const [step, setStep] = useState(0)
-  const [categories, setCategories] = useState({ expense: [], income: [] })
+  const [categories, setCategories] = useState(() => ({ expense: [...DEFAULT_CATEGORIES.expense], income: [...DEFAULT_CATEGORIES.income] }))
+  const [customCategories, setCustomCategories] = useState({ expense: [], income: [] })
+  const [categoryDrafts, setCategoryDrafts] = useState({ expense: '', income: '' })
   const [platforms, setPlatforms] = useState([])
   const [visibility, setVisibility] = useState(() => ({ ...investmentVisibility }))
   const [goalInput, setGoalInput] = useState(String(fireGoal))
@@ -34,6 +42,24 @@ export default function OnboardingPage() {
       ...current,
       [type]: current[type].includes(name) ? current[type].filter((item) => item !== name) : [...current[type], name],
     }))
+  }
+
+  function setCategoryDraft(type, value) {
+    setCategoryDrafts((current) => ({ ...current, [type]: value }))
+  }
+
+  /** Adds a typed category, or just selects it when it already exists. */
+  function addCustomCategory(type) {
+    const name = categoryDrafts[type].trim()
+    if (!name) return
+    const existing = [...categorySuggestions(type), ...customCategories[type]].find((item) => item.toLowerCase() === name.toLowerCase())
+    if (existing) {
+      if (!categories[type].includes(existing)) setCategories((current) => ({ ...current, [type]: [...current[type], existing] }))
+    } else {
+      setCustomCategories((current) => ({ ...current, [type]: [...current[type], name] }))
+      setCategories((current) => ({ ...current, [type]: [...current[type], name] }))
+    }
+    setCategoryDraft(type, '')
   }
 
   function togglePlatform(name) {
@@ -69,7 +95,7 @@ export default function OnboardingPage() {
     })
   }
 
-  const categoriesReady = categories.expense.length > 0 && categories.income.length > 0
+  const categoriesReady = categories.expense.length >= MIN_CATEGORIES && categories.income.length >= MIN_CATEGORIES
   const goalValid = !showFire || goalInput.trim() === '' || (Number.isFinite(Number(goalInput)) && Number(goalInput) > 0)
 
   return <div className="onboarding-page">
@@ -91,9 +117,13 @@ export default function OnboardingPage() {
         <h1 id="onboarding-title">{t.onboardingCategoriesTitle}<span>.</span></h1>
         <p className="onboarding-sub">{t.onboardingCategoriesSubtitle}</p>
         {['expense', 'income'].map((type) => <div className="onboarding-group" key={type}>
-          <div className="onboarding-group-head"><strong>{type === 'expense' ? t.expense : t.income}</strong><span>{categories[type].length} {t.chosen}</span></div>
+          <div className="onboarding-group-head"><strong>{type === 'expense' ? t.expense : t.income}</strong><span>{categories[type].length} / {MIN_CATEGORIES}</span></div>
           <div className="onboarding-chips">
-            {categorySuggestions(type).map((name) => <button type="button" key={name} className={categories[type].includes(name) ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={categories[type].includes(name)} onClick={() => toggleCategory(type, name)}>{t.categoryNames[name] || name}</button>)}
+            {[...categorySuggestions(type), ...customCategories[type]].map((name) => <button type="button" key={name} className={categories[type].includes(name) ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={categories[type].includes(name)} onClick={() => toggleCategory(type, name)}>{t.categoryNames[name] || name}</button>)}
+          </div>
+          <div className="onboarding-add">
+            <input value={categoryDrafts[type]} placeholder={t.addOwnCategory} aria-label={t.addOwnCategory} onChange={(event) => setCategoryDraft(type, event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addCustomCategory(type) } }} />
+            <button type="button" onClick={() => addCustomCategory(type)} disabled={!categoryDrafts[type].trim()} aria-label={t.addCategory} title={t.addCategory}><Plus size={15} /></button>
           </div>
         </div>)}
         {!categoriesReady && <p className="onboarding-hint">{t.onboardingCategoriesHint}</p>}
