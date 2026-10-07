@@ -6,6 +6,11 @@ import {
   ReceiptText, SlidersHorizontal, Sparkles, Tag, TrendingUp, UserRound, Wallet, X,
 } from 'lucide-react'
 
+import AppProviders from './app/AppProviders.jsx'
+import { useI18n } from './i18n/LanguageProvider.jsx'
+import { useSettings } from './context/SettingsProvider.jsx'
+import { useFinance } from './context/FinanceProvider.jsx'
+import { usePortfolioSummary } from './hooks/usePortfolioSummary.js'
 import {
   BONDS_STORAGE_KEY,
   CRYPTO_STORAGE_KEY,
@@ -713,58 +718,68 @@ function AllTransactionsPage({ language, transactions, onAdd, onEdit, onDelete }
   </div>
 }
 
-function App() {
-  const [transactions, setTransactions] = useState(loadTransactions)
-  const [holdings, setHoldings] = useState(loadInvestments)
-  const [cryptoHoldings, setCryptoHoldings] = useState(loadCrypto)
-  const [p2pRecords, setP2PRecords] = useState(loadP2P)
-  const [bondHoldings, setBondHoldings] = useState(loadBonds)
-  const [savingsAccounts, setSavingsAccounts] = useState(loadSavingsAccounts)
-  const [platforms, setPlatforms] = useState(loadPlatforms)
-  const [customCategories, setCustomCategories] = useState(loadCustomCategories)
-  const [fireGoal, setFireGoal] = useState(loadFireGoal)
-  const [showFireGoalModal, setShowFireGoalModal] = useState(false)
-  const [profile, setProfile] = useState(loadUserProfile)
-  const [investmentVisibility, setInvestmentVisibility] = useState(loadInvestmentVisibility)
+function AppShell() {
+  const { language, locale, t, changeLanguage } = useI18n()
+  const {
+    profile,
+    fireGoal,
+    investmentVisibility,
+    platforms,
+    customCategories,
+    saveProfile,
+    saveFireGoal,
+    toggleInvestmentVisibility,
+  } = useSettings()
+  const {
+    transactions,
+    holdings,
+    cryptoHoldings,
+    p2pRecords,
+    bondHoldings,
+    savingsAccounts,
+    saveTransaction,
+    removeTransaction,
+    savePortfolioRecord,
+    removePortfolioRecord,
+    saveSavingsAccount,
+    saveSavingsAccounts,
+    fillSampleHistory,
+  } = useFinance()
+
+  const [selectedMonth, setSelectedMonth] = useState(() => dateForMonth(new Date()))
   const [activePage, setActivePage] = useState('overview')
   const [activeMobileTab, setActiveMobileTab] = useState('overview')
-  const [language, setLanguage] = useState(() => {
-    try { return localStorage.getItem(LANGUAGE_KEY) === 'pt' ? 'pt' : 'en' } catch { return 'en' }
-  })
-  const [selectedMonth, setSelectedMonth] = useState(() => dateForMonth(new Date()))
   const [showModal, setShowModal] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState(null)
+  const [showFireGoalModal, setShowFireGoalModal] = useState(false)
 
-  const monthlyTransactions = useMemo(() => transactions.filter((item) => item.date.startsWith(monthKey(selectedMonth))), [transactions, selectedMonth])
-  const totals = useMemo(() => monthlyTransactions.reduce((result, item) => { result[item.type] += item.amount; return result }, { income: 0, expense: 0 }), [monthlyTransactions])
-  const net = totals.income - totals.expense
-  const monthlyInvested = monthlyTransactions.filter((item) => item.type === 'expense' && ['Investment', 'Investments'].includes(item.category)).reduce((sum, item) => sum + item.amount, 0)
-  const monthlySavingsDeposits = monthlyTransactions.filter((item) => item.type === 'expense' && item.category === 'Savings').reduce((sum, item) => sum + item.amount, 0)
-  const cashSavedThisMonth = net + monthlySavingsDeposits
-  const totalSavedThisMonth = cashSavedThisMonth + monthlyInvested
-  const lifetimeIncome = transactions.filter((item) => item.type === 'income').reduce((sum, item) => sum + item.amount, 0)
-  const lifetimeExpenses = transactions.filter((item) => item.type === 'expense').reduce((sum, item) => {
-    if (!['Investment', 'Investments'].includes(item.category)) return sum + item.amount
-    const type = investmentTypeFromTransaction(item)
-    return type && investmentVisibility[type] ? sum : sum + item.amount
-  }, 0)
-  const ETFInvested = investmentVisibility.etfs ? holdings.reduce((sum, holding) => sum + holding.units * holding.averageCost, 0) : 0
-  const ETFMarketValue = investmentVisibility.etfs ? holdings.reduce((sum, holding) => sum + holding.units * holding.currentPrice, 0) : 0
-  const cryptoInvested = investmentVisibility.crypto ? cryptoHoldings.reduce((sum, holding) => sum + holding.units * holding.averageCost, 0) : 0
-  const cryptoMarketValue = investmentVisibility.crypto ? cryptoHoldings.reduce((sum, holding) => sum + holding.units * holding.currentPrice, 0) : 0
-  const p2pInvested = investmentVisibility.p2p ? p2pRecords.reduce((sum, record) => sum + record.invested, 0) : 0
-  const p2pMarketValue = investmentVisibility.p2p ? p2pRecords.reduce((sum, record) => sum + record.currentValue, 0) : 0
-  const bondsInvested = investmentVisibility.bonds ? bondHoldings.reduce((sum, record) => sum + record.investedValue, 0) : 0
-  const bondsMarketValue = investmentVisibility.bonds ? bondHoldings.reduce((sum, record) => sum + record.currentValue, 0) : 0
-  const totalSavingsBalance = investmentVisibility.savings ? savingsAccounts.reduce((sum, account) => sum + account.balance, 0) : 0
-  const totalInvested = ETFInvested + cryptoInvested + p2pInvested + bondsInvested
-  const totalPortfolioValue = ETFMarketValue + cryptoMarketValue + p2pMarketValue + bondsMarketValue + totalSavingsBalance
-  const trackedCash = lifetimeIncome - lifetimeExpenses - totalInvested
-  const globalPosition = trackedCash + totalPortfolioValue
-  const savings = totals.income ? (totalSavedThisMonth / totals.income) * 100 : 0
-  const recentTransactions = useMemo(() => [...monthlyTransactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5), [monthlyTransactions])
-  const t = messages[language]
-  const locale = language === 'pt' ? 'pt-PT' : 'en-IE'
+  const summary = usePortfolioSummary(selectedMonth)
+  const {
+    monthlyTransactions,
+    recentTransactions,
+    totals,
+    net,
+    monthlyInvested,
+    cashSavedThisMonth,
+    savingsRate,
+    trackedCash,
+    globalPosition,
+    totalPortfolioValue,
+    values,
+  } = summary
+
+  // Aliases so the markup below reads the same as before.
+  const savings = savingsRate
+  const ETFInvested = values.etfs.invested
+  const ETFMarketValue = values.etfs.value
+  const cryptoInvested = values.crypto.invested
+  const cryptoMarketValue = values.crypto.value
+  const p2pInvested = values.p2p.invested
+  const p2pMarketValue = values.p2p.value
+  const bondsInvested = values.bonds.invested
+  const bondsMarketValue = values.bonds.value
+  const totalSavingsBalance = values.savings.value
+
   const monthTitle = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(selectedMonth)
   const today = new Date()
 
@@ -773,162 +788,23 @@ function App() {
     document.title = language === 'pt' ? 'Firepath — o teu caminho para a independência financeira' : 'Firepath — your path to financial independence'
   }, [language, locale])
 
-  function saveFireGoal(nextGoal) {
-    setFireGoal(nextGoal)
-    localStorage.setItem(FIRE_GOAL_STORAGE_KEY, String(nextGoal))
+  function closeModal() {
+    setShowModal(false)
+    setEditingTransaction(null)
+  }
+
+  function handleSaveTransaction(transaction) {
+    saveTransaction(transaction)
+    closeModal()
+  }
+
+  function handleSaveFireGoal(nextGoal) {
+    saveFireGoal(nextGoal)
     setShowFireGoalModal(false)
   }
 
-  function saveUserProfile(nextProfile) {
-    setProfile(nextProfile)
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile))
-  }
-
-  function toggleInvestmentVisibility(type) {
-    const next = { ...investmentVisibility, [type]: !investmentVisibility[type] }
-    setInvestmentVisibility(next)
-    localStorage.setItem(VISIBILITY_STORAGE_KEY, JSON.stringify(next))
-  }
-
-  useEffect(() => {
-    const recordsByType = {
-      etfs: holdings,
-      crypto: cryptoHoldings,
-      p2p: p2pRecords,
-      bonds: bondHoldings,
-    }
-    let changed = false
-    const next = transactions.map((transaction) => {
-      if (transaction.sourceType === 'savings') {
-        const account = savingsAccounts.find((item) => item.id === transaction.sourceId)
-        const platform = account?.institution || 'Bank account'
-        if (transaction.platform !== platform) {
-          changed = true
-          return { ...transaction, platform }
-        }
-        return transaction
-      }
-      if (transaction.sourceType !== 'portfolio') {
-        if (!transaction.platform && transaction.isDemo) {
-          const investmentPlatform = transaction.category === 'Investment' && transaction.title.toLowerCase().includes('bond') ? 'Banco Invest' : transaction.category === 'Investment' ? 'Trade Republic' : 'Bank account'
-          changed = true
-          return { ...transaction, platform: investmentPlatform }
-        }
-        return transaction
-      }
-      const type = transaction.investmentType || Object.keys(recordsByType).find((key) => transaction.id.startsWith(`portfolio-flow-${key}-`))
-      const record = recordsByType[type]?.find((item) => item.id === transaction.sourceId)
-      if (!type || !record) return transaction
-      const detail = type === 'etfs' || type === 'crypto' ? record.symbol : record.name
-      const purchaseLabel = type === 'etfs' ? t.etfPurchase : type === 'crypto' ? t.cryptoPurchase : type === 'p2p' ? t.p2pPurchase : t.bondPurchase
-      const saleLabel = type === 'etfs' ? t.etfSale : type === 'crypto' ? t.cryptoSale : type === 'p2p' ? t.p2pSale : t.bondSale
-      const title = `${(transaction.flowDelta ?? (transaction.type === 'expense' ? 1 : -1)) > 0 ? purchaseLabel : saleLabel} · ${detail}`
-      const platform = record.platform || (type === 'etfs' ? 'Trade Republic' : type === 'crypto' ? 'Coinbase' : type === 'p2p' ? 'Mintos' : 'Banco Invest')
-      if (transaction.title === title && transaction.investmentType === type && transaction.platform === platform) return transaction
-      changed = true
-      return { ...transaction, title, investmentType: type, platform }
-    })
-    if (changed) {
-      setTransactions(next)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-    }
-  }, [transactions, holdings, cryptoHoldings, p2pRecords, bondHoldings, savingsAccounts, t])
-
-  function save(next) {
-    setTransactions(next)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-  }
-
-  function rememberPlatform(value) {
-    const platform = value?.trim()
-    if (!platform || platforms.some((item) => item.toLowerCase() === platform.toLowerCase())) return
-    const next = [...platforms, platform]
-    setPlatforms(next)
-    localStorage.setItem(PLATFORMS_STORAGE_KEY, JSON.stringify(next))
-  }
-
-  function rememberCategory(type, value) {
-    const category = value?.trim()
-    if (!category || categories[type].some((item) => item.name.toLowerCase() === category.toLowerCase()) || customCategories[type].some((item) => item.toLowerCase() === category.toLowerCase())) return
-    const next = { ...customCategories, [type]: [...customCategories[type], category] }
-    setCustomCategories(next)
-    localStorage.setItem(CUSTOM_CATEGORIES_STORAGE_KEY, JSON.stringify(next))
-  }
-
-  function savePortfolioRecord(type, record, captureCurrent = true) {
-    rememberPlatform(record.platform)
-    let savedRecord = record
-    if (captureCurrent) {
-      const month = monthKey(new Date())
-      const value = assetMarketValue(record, type)
-      const history = [...(record.history || []).filter((item) => item.month !== month), { month, value, invested: portfolioCostBasis(record, type) }].sort((a, b) => a.month.localeCompare(b.month))
-      savedRecord = { ...record, history }
-    }
-    const config = type === 'etfs'
-      ? { records: holdings, setter: setHoldings, key: INVESTMENT_STORAGE_KEY }
-      : type === 'crypto'
-        ? { records: cryptoHoldings, setter: setCryptoHoldings, key: CRYPTO_STORAGE_KEY }
-        : type === 'p2p'
-          ? { records: p2pRecords, setter: setP2PRecords, key: P2P_STORAGE_KEY }
-          : { records: bondHoldings, setter: setBondHoldings, key: BONDS_STORAGE_KEY }
-    const previousRecord = config.records.find((item) => item.id === savedRecord.id)
-    const delta = portfolioCostBasis(savedRecord, type) - (previousRecord ? portfolioCostBasis(previousRecord, type) : 0)
-    const exists = Boolean(previousRecord)
-    const next = exists ? config.records.map((item) => item.id === savedRecord.id ? savedRecord : item) : [...config.records, savedRecord]
-    config.setter(next)
-    localStorage.setItem(config.key, JSON.stringify(next))
-    if (Math.abs(delta) >= 0.005) {
-      const month = monthKey(new Date())
-      const sourceId = `portfolio-flow-${type}-${savedRecord.id}-${month}`
-      const priorFlow = transactions.find((item) => item.id === sourceId)?.flowDelta || 0
-      const flowDelta = priorFlow + delta
-      const nextTransactions = transactions.filter((item) => item.id !== sourceId)
-      if (Math.abs(flowDelta) >= 0.005) {
-        const detail = type === 'etfs' || type === 'crypto' ? savedRecord.symbol : savedRecord.name
-        const flowLabel = type === 'etfs' ? (flowDelta > 0 ? t.etfPurchase : t.etfSale) : type === 'crypto' ? (flowDelta > 0 ? t.cryptoPurchase : t.cryptoSale) : type === 'p2p' ? (flowDelta > 0 ? t.p2pPurchase : t.p2pSale) : (flowDelta > 0 ? t.bondPurchase : t.bondSale)
-        const title = `${flowLabel} · ${detail}`
-        nextTransactions.push({ id: sourceId, title, category: 'Investment', type: flowDelta > 0 ? 'expense' : 'income', amount: Math.abs(flowDelta), date: timeStamp(new Date()), platform: savedRecord.platform || '', sourceType: 'portfolio', sourceId: savedRecord.id, investmentType: type, flowDelta })
-      }
-      save(nextTransactions)
-    }
-  }
-
-  function saveSavingsAccounts(next) {
-    setSavingsAccounts(next)
-    localStorage.setItem(SAVINGS_STORAGE_KEY, JSON.stringify(next))
-  }
-
-  function saveSavingsAccount(account) {
-    rememberPlatform(account.institution)
-    rememberPlatform(account.institution)
-    const previous = savingsAccounts.find((item) => item.id === account.id)
-    const delta = account.balance - (previous?.balance || 0)
-    const month = monthKey(new Date())
-    const history = [...(account.history || []).filter((item) => item.month !== month), { month, value: account.balance }].sort((a, b) => a.month.localeCompare(b.month))
-    const savedAccount = { ...account, history }
-    const nextAccounts = previous ? savingsAccounts.map((item) => item.id === account.id ? savedAccount : item) : [...savingsAccounts, savedAccount]
-    saveSavingsAccounts(nextAccounts)
-    if (Math.abs(delta) >= 0.005) {
-      const sourceId = `savings-flow-${account.id}-${month}`
-      const priorFlow = transactions.find((item) => item.id === sourceId)?.flowDelta || 0
-      const flowDelta = priorFlow + delta
-      const nextTransactions = transactions.filter((item) => item.id !== sourceId)
-      if (Math.abs(flowDelta) >= 0.005) nextTransactions.push({ id: sourceId, title: `${flowDelta > 0 ? t.savingsDepositTitle : t.savingsWithdrawalTitle} · ${account.name}`, category: 'Savings', type: flowDelta > 0 ? 'expense' : 'income', amount: Math.abs(flowDelta), date: timeStamp(new Date()), platform: account.institution || '', sourceType: 'savings', sourceId: account.id, flowDelta })
-      save(nextTransactions)
-    }
-  }
-
-  function removePortfolioRecord(type, id) {
-    const config = type === 'etfs'
-      ? { records: holdings, setter: setHoldings, key: INVESTMENT_STORAGE_KEY }
-      : type === 'crypto'
-        ? { records: cryptoHoldings, setter: setCryptoHoldings, key: CRYPTO_STORAGE_KEY }
-        : type === 'p2p'
-          ? { records: p2pRecords, setter: setP2PRecords, key: P2P_STORAGE_KEY }
-          : { records: bondHoldings, setter: setBondHoldings, key: BONDS_STORAGE_KEY }
-    const next = config.records.filter((item) => item.id !== id)
-    config.setter(next)
-    localStorage.setItem(config.key, JSON.stringify(next))
+  function shiftMonth(amount) {
+    setSelectedMonth((month) => new Date(month.getFullYear(), month.getMonth() + amount, 1))
   }
 
   function selectOverview() {
@@ -960,45 +836,11 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  function fillSampleHistory() {
-    const samples = demoTransactionsForEmptyMonths(transactions)
-    if (samples.length) save([...transactions, ...samples])
-  }
-
   function selectTransactions(event) {
     event?.preventDefault()
     setActivePage('transactions')
     setActiveMobileTab('transactions')
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  function changeLanguage(nextLanguage) {
-    setLanguage(nextLanguage)
-    try { localStorage.setItem(LANGUAGE_KEY, nextLanguage) } catch { /* Language still applies for this session. */ }
-  }
-
-  function saveTransaction(transaction) {
-    rememberPlatform(transaction.platform)
-    rememberCategory(transaction.type, transaction.category)
-    rememberPlatform(transaction.platform)
-    rememberCategory(transaction.type, transaction.category)
-    const exists = transactions.some((item) => item.id === transaction.id)
-    save(exists ? transactions.map((item) => item.id === transaction.id ? transaction : item) : [...transactions, transaction])
-    setShowModal(false)
-    setEditingTransaction(null)
-  }
-
-  function closeModal() {
-    setShowModal(false)
-    setEditingTransaction(null)
-  }
-
-  function removeTransaction(id) {
-    save(transactions.filter((item) => item.id !== id))
-  }
-
-  function shiftMonth(amount) {
-    setSelectedMonth((month) => new Date(month.getFullYear(), month.getMonth() + amount, 1))
   }
 
   return (
@@ -1033,7 +875,7 @@ function App() {
 
       <main className="main-content" id="overview">
         <header className="topbar"><div className="breadcrumb">{t.yourSpace} <span>/</span> <strong>{t[activePage] || t.overview}</strong></div><div className="topbar-right"><div className="language-switch" role="group" aria-label={t.language}><button type="button" className={language === 'en' ? 'language-option selected-language' : 'language-option'} aria-label="English" aria-pressed={language === 'en'} onClick={() => changeLanguage('en')}>EN</button><button type="button" className={language === 'pt' ? 'language-option selected-language' : 'language-option'} aria-label="Português (Portugal)" title="Português (Portugal)" aria-pressed={language === 'pt'} onClick={() => changeLanguage('pt')}>PT-PT</button></div><span className="today-label"><span className="online-dot" />{t.saved}</span><Avatar profile={profile} className="top-avatar" /></div></header>
-        {activePage === 'profile' ? <ProfilePage language={language} profile={profile} visibility={investmentVisibility} onSaveProfile={saveUserProfile} onToggleVisibility={toggleInvestmentVisibility} /> : activePage === 'position' ? <GlobalPositionPage language={language} transactions={transactions} records={{ etfs: investmentVisibility.etfs ? holdings : [], crypto: investmentVisibility.crypto ? cryptoHoldings : [], p2p: investmentVisibility.p2p ? p2pRecords : [], bonds: investmentVisibility.bonds ? bondHoldings : [], savings: investmentVisibility.savings ? savingsAccounts : [] }} visibility={investmentVisibility} currentPosition={globalPosition} currentCash={trackedCash} /> : activePage === 'transactions' ? <AllTransactionsPage language={language} transactions={transactions} onAdd={() => setShowModal(true)} onEdit={setEditingTransaction} onDelete={removeTransaction} /> : activePage === 'etfs' || activePage === 'crypto' ? <InvestmentsPage language={language} holdings={activePage === 'etfs' ? holdings : cryptoHoldings} assetType={activePage === 'etfs' ? 'etf' : 'crypto'} platforms={platforms} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'p2p' || activePage === 'bonds' ? <FixedIncomePage language={language} kind={activePage} records={activePage === 'p2p' ? p2pRecords : bondHoldings} platforms={platforms} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'savings' ? <SavingsPage language={language} accounts={savingsAccounts} platforms={platforms} onSave={saveSavingsAccount} onDelete={(account) => saveSavingsAccounts(savingsAccounts.filter((item) => item.id !== account.id))} /> : activePage === 'statistics' ? <StatisticsPage language={language} transactions={transactions} onFillSample={fillSampleHistory} /> : <div className="page-content">
+        {activePage === 'profile' ? <ProfilePage language={language} profile={profile} visibility={investmentVisibility} onSaveProfile={saveProfile} onToggleVisibility={toggleInvestmentVisibility} /> : activePage === 'position' ? <GlobalPositionPage language={language} transactions={transactions} records={{ etfs: investmentVisibility.etfs ? holdings : [], crypto: investmentVisibility.crypto ? cryptoHoldings : [], p2p: investmentVisibility.p2p ? p2pRecords : [], bonds: investmentVisibility.bonds ? bondHoldings : [], savings: investmentVisibility.savings ? savingsAccounts : [] }} visibility={investmentVisibility} currentPosition={globalPosition} currentCash={trackedCash} /> : activePage === 'transactions' ? <AllTransactionsPage language={language} transactions={transactions} onAdd={() => setShowModal(true)} onEdit={setEditingTransaction} onDelete={removeTransaction} /> : activePage === 'etfs' || activePage === 'crypto' ? <InvestmentsPage language={language} holdings={activePage === 'etfs' ? holdings : cryptoHoldings} assetType={activePage === 'etfs' ? 'etf' : 'crypto'} platforms={platforms} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'p2p' || activePage === 'bonds' ? <FixedIncomePage language={language} kind={activePage} records={activePage === 'p2p' ? p2pRecords : bondHoldings} platforms={platforms} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'savings' ? <SavingsPage language={language} accounts={savingsAccounts} platforms={platforms} onSave={saveSavingsAccount} onDelete={(account) => saveSavingsAccounts(savingsAccounts.filter((item) => item.id !== account.id))} /> : activePage === 'statistics' ? <StatisticsPage language={language} transactions={transactions} onFillSample={fillSampleHistory} /> : <div className="page-content">
           <section className="welcome-row"><div><p className="eyebrow">{t.snapshot}</p><h1>{t.headline}<span>.</span></h1><p className="welcome-sub">{t.welcome}</p></div><button className="primary-button" onClick={() => setShowModal(true)}><Plus size={18} strokeWidth={2.4} /> {t.addTransaction}</button></section>
 
           <section className="global-position-panel" aria-label={t.globalPosition}>
@@ -1073,10 +915,17 @@ function App() {
           <footer className="page-footer"><span>{t.footer}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
         </div>}
       </main>
-      {(showModal || editingTransaction) && <Modal language={language} selectedMonth={selectedMonth} transaction={editingTransaction} platforms={platforms} customCategories={customCategories} onClose={closeModal} onSave={saveTransaction} />}
-      {showFireGoalModal && <FireGoalModal language={language} goal={fireGoal} onClose={() => setShowFireGoalModal(false)} onSave={saveFireGoal} />}
+      {(showModal || editingTransaction) && <Modal language={language} selectedMonth={selectedMonth} transaction={editingTransaction} platforms={platforms} customCategories={customCategories} onClose={closeModal} onSave={handleSaveTransaction} />}
+      {showFireGoalModal && <FireGoalModal language={language} goal={fireGoal} onClose={() => setShowFireGoalModal(false)} onSave={handleSaveFireGoal} />}
     </div>
   )
 }
 
-export default App
+/** Wraps the shell in the app-wide providers. */
+export default function App() {
+  return (
+    <AppProviders>
+      <AppShell />
+    </AppProviders>
+  )
+}

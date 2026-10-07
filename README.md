@@ -14,10 +14,17 @@ npm run dev
 ```
 src/
   main.jsx                 app entry — mounts <App/> inside an error boundary
-  App.jsx                  app shell: providers, layout and page routing state
+  App.jsx                  <App/> wraps <AppShell/> in the providers
+  app/AppProviders.jsx     composes the language, settings and finance providers
   components/              shared UI (ErrorBoundary, and feature components)
+  context/
+    SettingsProvider.jsx   profile, FIRE goal, visibility, platforms, categories
+    FinanceProvider.jsx    transactions + assets, and every mutation
+  hooks/usePortfolioSummary.js  derived dashboard totals
+  i18n/
+    messages.jsx           EN / PT-PT copy
+    LanguageProvider.jsx   active language + useI18n()
   data/categories.js       built-in categories with icons and colours
-  i18n/messages.jsx        EN / PT-PT copy
   lib/
     constants.js           storage keys, defaults, asset types
     dates.js               month keys, timestamps, date formatting
