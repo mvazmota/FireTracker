@@ -11,7 +11,7 @@ npm run dev
 
 ## Deploy to Cloudflare Pages
 
-The app is a static single-page build, so Cloudflare Pages can host it directly. `public/_redirects` provides an SPA fallback and `public/_headers` sets asset caching and basic security headers. All data is stored in the visitor's browser, so no backend or database is required.
+The app is a static single-page build, so Cloudflare can host it directly. Navigation is handled in-app rather than by URL routes, so no SPA fallback redirect is needed. `public/_headers` sets asset caching and basic security headers. All data is stored in the visitor's browser, so no backend or database is required.
 
 ### Option A — Git integration (continuous deployment)
 
