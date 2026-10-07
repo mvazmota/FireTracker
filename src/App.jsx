@@ -13,40 +13,10 @@ import { useSettings } from './context/SettingsProvider.jsx'
 import { useFinance } from './context/FinanceProvider.jsx'
 import { usePortfolioSummary } from './hooks/usePortfolioSummary.js'
 import LoginPage from './components/auth/LoginPage.jsx'
-import {
-  BONDS_STORAGE_KEY,
-  CRYPTO_STORAGE_KEY,
-  CUSTOM_CATEGORIES_STORAGE_KEY,
-  FIRE_GOAL_STORAGE_KEY,
-  INVESTMENT_STORAGE_KEY,
-  LANGUAGE_KEY,
-  P2P_STORAGE_KEY,
-  PLATFORMS_STORAGE_KEY,
-  PROFILE_STORAGE_KEY,
-  SAVINGS_STORAGE_KEY,
-  STORAGE_KEY,
-  VISIBILITY_STORAGE_KEY,
-} from './lib/constants.js'
-import { dateForMonth, dateKey, formatDateTime, monthKey, normalizeTransactionDate, timeStamp } from './lib/dates.js'
-import { formatCurrency, formatPercent, formatRate } from './lib/format.js'
-import { initialsForName, resizeImageFile } from './lib/image.js'
-import { assetMarketValue, investmentTypeFromTransaction, portfolioCostBasis } from './lib/portfolio.js'
-import { buildPositionTimeline } from './lib/timeline.js'
-import { demoTransactionsForEmptyMonths } from './lib/simulation.js'
-import {
-  loadBonds,
-  loadCrypto,
-  loadCustomCategories,
-  loadFireGoal,
-  loadInvestments,
-  loadInvestmentVisibility,
-  loadP2P,
-  loadPlatforms,
-  loadSavingsAccounts,
-  loadTransactions,
-  loadUserProfile,
-} from './lib/storage.js'
-import { categories, categoryInfo } from './data/categories.js'
+import OnboardingPage from './components/onboarding/OnboardingPage.jsx'
+import { dateForMonth, formatDateTime } from './lib/dates.js'
+import { formatCurrency } from './lib/format.js'
+import { categoryInfo } from './data/categories.js'
 import { messages } from './i18n/messages.jsx'
 
 
@@ -82,6 +52,7 @@ function AppShell() {
     fireGoal,
     fireMeterVisible,
     investmentVisibility,
+    onboarded,
     hydrated: settingsReady,
   } = useSettings()
   const {
@@ -195,6 +166,7 @@ function AppShell() {
   if (isPending) return <div className="app-loading">{t.loading}</div>
   if (!user) return <LoginPage />
   if (!settingsReady || !financeReady) return <div className="app-loading">{t.loading}</div>
+  if (!onboarded) return <OnboardingPage />
 
   return (
     <div className="app-shell" lang={locale}>

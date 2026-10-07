@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { ASSET_TABLES, TRANSACTIONS, clearUserRows, listForUser, removeById, upsert } from './tables.js'
 
-const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireGoal', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'customCategories']
+const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireGoal', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'categories', 'onboarded']
 
 const jsonOrNull = (value) => (value == null ? null : JSON.stringify(value))
 const parseOrNull = (value) => {
@@ -24,7 +24,8 @@ async function loadSettings(db, userId) {
       fireMeterVisible: row.fireMeterVisible == null ? undefined : Boolean(row.fireMeterVisible),
       investmentVisibility: parseOrNull(row.investmentVisibility) ?? undefined,
       platforms: parseOrNull(row.platforms) ?? undefined,
-      customCategories: parseOrNull(row.customCategories) ?? undefined,
+      categories: parseOrNull(row.categories) ?? undefined,
+      onboarded: row.onboarded == null ? undefined : Boolean(row.onboarded),
     },
   }
 }
@@ -40,7 +41,8 @@ async function saveSettings(db, userId, body) {
     fireMeterVisible: body?.settings?.fireMeterVisible ?? (existing?.fireMeterVisible == null ? true : Boolean(existing.fireMeterVisible)),
     investmentVisibility: body?.settings?.investmentVisibility ?? parseOrNull(existing?.investmentVisibility) ?? null,
     platforms: body?.settings?.platforms ?? parseOrNull(existing?.platforms) ?? null,
-    customCategories: body?.settings?.customCategories ?? parseOrNull(existing?.customCategories) ?? null,
+    categories: body?.settings?.categories ?? parseOrNull(existing?.categories) ?? null,
+    onboarded: body?.settings?.onboarded ?? (existing?.onboarded == null ? null : Boolean(existing.onboarded)),
   }
   const values = [
     userId,
@@ -52,7 +54,8 @@ async function saveSettings(db, userId, body) {
     merged.fireMeterVisible ? 1 : 0,
     jsonOrNull(merged.investmentVisibility),
     jsonOrNull(merged.platforms),
-    jsonOrNull(merged.customCategories),
+    jsonOrNull(merged.categories),
+    merged.onboarded ? 1 : 0,
   ]
   const columns = ['userId', ...SETTINGS_COLUMNS]
   const assignments = SETTINGS_COLUMNS.map((column) => `"${column}" = excluded."${column}"`).join(', ')

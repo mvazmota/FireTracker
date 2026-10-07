@@ -1,6 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { categories } from '../data/categories.js'
-import { DEFAULT_FIRE_GOAL, DEFAULT_PLATFORMS, DEFAULT_VISIBILITY } from '../lib/constants.js'
+import { DEFAULT_FIRE_GOAL, DEFAULT_VISIBILITY } from '../lib/constants.js'
 import { dateKey } from '../lib/dates.js'
 import { api } from '../lib/api.js'
 import { useAuth } from './AuthProvider.jsx'
@@ -8,16 +7,21 @@ import { useData } from './DataProvider.jsx'
 
 const SettingsContext = createContext(null)
 
+/** Every account starts with nothing chosen; onboarding fills these in. */
 const emptySettings = () => ({
   language: 'en',
   fireGoal: DEFAULT_FIRE_GOAL,
   fireMeterVisible: true,
   investmentVisibility: { ...DEFAULT_VISIBILITY },
-  platforms: [...DEFAULT_PLATFORMS],
-  customCategories: { expense: [], income: [] },
+  platforms: [],
+  categories: { expense: [], income: [] },
+  onboarded: false,
 })
 
-/** Profile, FIRE goal, investment visibility, platforms and custom categories. */
+/**
+ * Profile, FIRE goal, investment visibility and the per-user lists of
+ * categories and platforms.
+ */
 export function SettingsProvider({ children }) {
   const { user } = useAuth()
   const { data } = useData()
@@ -45,11 +49,12 @@ export function SettingsProvider({ children }) {
       fireGoal: stored.fireGoal ?? DEFAULT_FIRE_GOAL,
       fireMeterVisible: stored.fireMeterVisible ?? true,
       investmentVisibility: { ...DEFAULT_VISIBILITY, ...(stored.investmentVisibility || {}) },
-      platforms: stored.platforms?.length ? stored.platforms : [...DEFAULT_PLATFORMS],
-      customCategories: {
-        expense: stored.customCategories?.expense ?? [],
-        income: stored.customCategories?.income ?? [],
+      platforms: stored.platforms ?? [],
+      categories: {
+        expense: stored.categories?.expense ?? [],
+        income: stored.categories?.income ?? [],
       },
+      onboarded: stored.onboarded ?? false,
     })
     setHydrated(true)
   }, [data, user?.name, applySettings])
@@ -86,11 +91,14 @@ export function SettingsProvider({ children }) {
   const rememberCategory = useCallback((type, value) => {
     const category = value?.trim()
     if (!category) return
-    const current = settingsRef.current.customCategories
-    const isBuiltIn = categories[type]?.some((item) => item.name.toLowerCase() === category.toLowerCase())
-    const alreadyAdded = current[type].some((item) => item.toLowerCase() === category.toLowerCase())
-    if (isBuiltIn || alreadyAdded) return
-    persist({ customCategories: { ...current, [type]: [...current[type], category] } })
+    const current = settingsRef.current.categories
+    if (current[type].some((item) => item.toLowerCase() === category.toLowerCase())) return
+    persist({ categories: { ...current, [type]: [...current[type], category] } })
+  }, [persist])
+
+  /** Finishes onboarding with the categories and platforms the user picked. */
+  const saveOnboarding = useCallback(({ categories, platforms }) => {
+    persist({ categories, platforms, onboarded: true })
   }, [persist])
 
   const value = useMemo(() => ({
@@ -99,7 +107,8 @@ export function SettingsProvider({ children }) {
     fireMeterVisible: settings.fireMeterVisible,
     investmentVisibility: settings.investmentVisibility,
     platforms: settings.platforms,
-    customCategories: settings.customCategories,
+    categories: settings.categories,
+    onboarded: settings.onboarded,
     hydrated,
     saveProfile,
     saveFireGoal,
@@ -107,9 +116,11 @@ export function SettingsProvider({ children }) {
     toggleInvestmentVisibility,
     rememberPlatform,
     rememberCategory,
+    saveOnboarding,
   }), [
     profile, settings, hydrated,
-    saveProfile, saveFireGoal, toggleFireMeter, toggleInvestmentVisibility, rememberPlatform, rememberCategory,
+    saveProfile, saveFireGoal, toggleFireMeter, toggleInvestmentVisibility,
+    rememberPlatform, rememberCategory, saveOnboarding,
   ])
 
   return <SettingsContext value={value}>{children}</SettingsContext>

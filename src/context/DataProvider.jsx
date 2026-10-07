@@ -3,7 +3,8 @@ import { useAuth } from './AuthProvider.jsx'
 import { api } from '../lib/api.js'
 import { dateKey } from '../lib/dates.js'
 import { threeYearSimulation } from '../lib/simulation.js'
-import { DEFAULT_FIRE_GOAL, DEFAULT_PLATFORMS, DEFAULT_VISIBILITY } from '../lib/constants.js'
+import { DEFAULT_FIRE_GOAL, DEFAULT_VISIBILITY, PLATFORM_SUGGESTIONS } from '../lib/constants.js'
+import { categorySuggestions } from '../data/categories.js'
 
 const DataContext = createContext(null)
 
@@ -37,8 +38,9 @@ function simulationPayload() {
       fireGoal: DEFAULT_FIRE_GOAL,
       fireMeterVisible: true,
       investmentVisibility: DEFAULT_VISIBILITY,
-      platforms: DEFAULT_PLATFORMS,
-      customCategories: { expense: [], income: [] },
+      platforms: PLATFORM_SUGGESTIONS,
+      categories: { expense: categorySuggestions('expense'), income: categorySuggestions('income') },
+      onboarded: true,
     },
   }
 }

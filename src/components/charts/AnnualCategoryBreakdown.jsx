@@ -1,6 +1,6 @@
 import { Ellipsis } from 'lucide-react'
 import { formatCurrency } from '../../lib/format.js'
-import { categories, categoryInfo } from '../../data/categories.js'
+import { categoryInfo } from '../../data/categories.js'
 
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 export default function AnnualCategoryBreakdown({ transactions, year }) {

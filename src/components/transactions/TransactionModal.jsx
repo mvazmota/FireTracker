@@ -2,16 +2,15 @@ import PlatformSelector from '../ui/PlatformSelector.jsx'
 import { useState } from 'react'
 import { ArrowDownLeft, ArrowUpRight, CalendarDays, Check, ChevronDown, Clock, Plus, X } from 'lucide-react'
 import { monthKey, normalizeTransactionDate, timeStamp } from '../../lib/dates.js'
-import { categories } from '../../data/categories.js'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
 export default function TransactionModal({ onClose, onSave, selectedMonth, transaction }) {
-  const { platforms, customCategories } = useSettings()
+  const { platforms, categories } = useSettings()
   const { t, locale, language } = useI18n()
   const [type, setType] = useState(transaction?.type || 'expense')
   const [title, setTitle] = useState(transaction?.title || '')
   const [amount, setAmount] = useState(transaction ? String(transaction.amount) : '')
-  const [category, setCategory] = useState(transaction?.category || categories.expense[0].name)
+  const [category, setCategory] = useState(transaction?.category || categories.expense[0] || '')
   const [platform, setPlatform] = useState(transaction?.platform || '')
   const [creatingCategory, setCreatingCategory] = useState(false)
   const [newCategory, setNewCategory] = useState('')
@@ -22,12 +21,13 @@ export default function TransactionModal({ onClose, onSave, selectedMonth, trans
   const [date, setDate] = useState(initialDateTime.slice(0, 10))
   const [time, setTime] = useState(initialDateTime.slice(11, 16))
   const [error, setError] = useState('')
-  const customEntries = [...(customCategories[type] || []).map((name) => ({ name })), ...(category && !categories[type].some((item) => item.name === category) && !(customCategories[type] || []).includes(category) ? [{ name: category }] : [])]
-  const categoryOptions = [...categories[type], ...customEntries]
+  // The user's own categories, plus this transaction's category if it is no
+  // longer in the list (so editing an older record keeps its value).
+  const categoryOptions = [...categories[type], ...(category && !categories[type].includes(category) ? [category] : [])]
 
   function changeType(nextType) {
     setType(nextType)
-    setCategory(categories[nextType][0].name)
+    setCategory(categories[nextType][0] || '')
     setCreatingCategory(false)
     setNewCategory('')
   }
@@ -60,7 +60,7 @@ export default function TransactionModal({ onClose, onSave, selectedMonth, trans
           </div>
           <div className="form-row">
             <div><label className="field-label" htmlFor="transaction-time">{t.time}</label><div className="date-input"><Clock size={16} /><input id="transaction-time" type="time" value={time} onChange={(event) => setTime(event.target.value)} /></div></div>
-            <div><label className="field-label" htmlFor="transaction-category">{t.categoryLabel}</label>{creatingCategory ? <div className="platform-add-row"><input className="platform-custom-input" id="transaction-category" autoFocus placeholder={t.categoryName} value={newCategory} onChange={(event) => setNewCategory(event.target.value)} /><button className="icon-button" type="button" onClick={() => { setCreatingCategory(false); setNewCategory('') }} aria-label={t.useCategories}><X size={16} /></button></div> : <div className="select-wrap"><select id="transaction-category" value={category} onChange={(event) => { if (event.target.value === '__add_category__') { setCreatingCategory(true); setNewCategory('') } else setCategory(event.target.value) }}>{categoryOptions.map((item) => <option key={item.name} value={item.name}>{t.categoryNames[item.name] || item.name}</option>)}<option value="__add_category__">{t.addCategory}</option></select><ChevronDown size={16} /></div>}</div>
+            <div><label className="field-label" htmlFor="transaction-category">{t.categoryLabel}</label>{creatingCategory ? <div className="platform-add-row"><input className="platform-custom-input" id="transaction-category" autoFocus placeholder={t.categoryName} value={newCategory} onChange={(event) => setNewCategory(event.target.value)} /><button className="icon-button" type="button" onClick={() => { setCreatingCategory(false); setNewCategory('') }} aria-label={t.useCategories}><X size={16} /></button></div> : <div className="select-wrap"><select id="transaction-category" value={category} onChange={(event) => { if (event.target.value === '__add_category__') { setCreatingCategory(true); setNewCategory('') } else setCategory(event.target.value) }}>{categoryOptions.map((name) => <option key={name} value={name}>{t.categoryNames[name] || name}</option>)}<option value="__add_category__">{t.addCategory}</option></select><ChevronDown size={16} /></div>}</div>
           </div>
           <PlatformSelector id="transaction-platform" label={t.platform} value={platform} onChange={setPlatform} />
           {error && <p className="form-error">{error}</p>}

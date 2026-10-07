@@ -18,7 +18,8 @@ export const SIMULATION_VERSION_KEY = 'firepath-simulation-version-v1'
 export const SIMULATION_VERSION = 'three-year-fire-simulation-v3'
 export const DEFAULT_FIRE_GOAL = 300000
 
-export const DEFAULT_PLATFORMS = [
+/** Platforms offered as suggestions during onboarding. */
+export const PLATFORM_SUGGESTIONS = [
   'Bank account',
   'Cash',
   'Trade Republic',
