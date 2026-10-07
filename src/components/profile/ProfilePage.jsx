@@ -123,44 +123,48 @@ export default function ProfilePage() {
 
     <section className="panel profile-card"><div className="profile-avatar-block"><button type="button" className="profile-avatar-button" onClick={() => fileInput.current?.click()} aria-label={profile.avatar ? t.changePhoto : t.uploadPhoto}><Avatar profile={profile} className="profile-avatar-large" /><span className="profile-avatar-overlay"><Camera size={18} /></span></button><input ref={fileInput} className="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={uploadPhoto} />{profile.avatar ? <button type="button" className="profile-photo-remove" onClick={removePhoto}>{t.removePhoto}</button> : <span className="profile-photo-hint">{t.uploadPhoto}</span>}{photoError && <p className="profile-photo-error">{photoError}</p>}<span className="profile-avatar-caption">{t.avatarOrAnimal}</span><div className="profile-avatar-choices">{ANIMAL_PRESETS.map((id) => { const selected = profile.avatar === animalAvatarValue(id); const label = t[ANIMAL_LABEL_KEYS[id]]; return <button type="button" key={id} className={selected ? 'avatar-choice avatar-choice-on' : 'avatar-choice'} aria-pressed={selected} aria-label={label} title={label} onClick={() => chooseAnimal(id)}><AnimalAvatar id={id} /></button> })}</div></div><form className="profile-form" onSubmit={submitProfile}><label className="field-label" htmlFor="profile-name">{t.yourName}</label><div className="profile-name-edit"><input id="profile-name" value={name} placeholder={t.namePlaceholder} maxLength={60} onChange={(event) => setName(event.target.value)} /><button className="primary-button" type="submit"><Check size={15} /> {t.saveProfile}</button></div></form><div className="profile-created"><span>{t.accountCreated}</span><strong>{createdAt}</strong></div></section>
 
-    <section className="panel visibility-panel">
-      <div className="panel-heading"><div><h2>{t.fireMeterSettings}</h2><p>{t.fireMeterSettingsSubtitle}</p></div><span className="panel-icon"><Flame size={17} /></span></div>
-      <div className="visibility-row fire-toggle-row">
-        <span className="portfolio-mini-icon fire-tint"><Flame size={17} /></span>
-        <div className="visibility-label"><strong>{t.fireMeterSettings}</strong><span>{t.showFireMeter}</span></div>
-        <button type="button" className={fireMeterVisible ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={fireMeterVisible} aria-label={t.showFireMeter} onClick={toggleFireMeter}><span /></button>
-      </div>
-      <form className="fire-goal-form" onSubmit={submitGoal}>
-        <label className="field-label" htmlFor="fire-goal-input">{t.goalAmount}</label>
-        <div className="profile-name-edit">
-          <div className={fireMeterVisible ? 'amount-input' : 'amount-input amount-input-off'}><span>€</span><input id="fire-goal-input" type="number" min="1" step="1000" value={goalInput} disabled={!fireMeterVisible} onChange={(event) => { setGoalInput(event.target.value); setGoalSaved(false) }} /></div>
-          <button className="primary-button" type="submit" disabled={!fireMeterVisible}><Check size={15} /> {t.saveChanges}</button>
-          {goalSaved && <span className="settings-saved">{t.goalSaved}</span>}
+    <div className="settings-pair">
+      <section className="panel visibility-panel">
+        <div className="panel-heading"><div><h2>{t.fireMeterSettings}</h2><p>{t.fireMeterSettingsSubtitle}</p></div><span className="panel-icon"><Flame size={17} /></span></div>
+        <div className="visibility-row fire-toggle-row">
+          <span className="portfolio-mini-icon fire-tint"><Flame size={17} /></span>
+          <div className="visibility-label"><strong>{t.fireMeterSettings}</strong><span>{t.showFireMeter}</span></div>
+          <button type="button" className={fireMeterVisible ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={fireMeterVisible} aria-label={t.showFireMeter} onClick={toggleFireMeter}><span /></button>
         </div>
-        {goalError && <p className="form-error">{goalError}</p>}
-      </form>
-    </section>
+        <form className="fire-goal-form" onSubmit={submitGoal}>
+          <label className="field-label" htmlFor="fire-goal-input">{t.goalAmount}</label>
+          <div className="profile-name-edit">
+            <div className={fireMeterVisible ? 'amount-input' : 'amount-input amount-input-off'}><span>€</span><input id="fire-goal-input" type="number" min="1" step="1000" value={goalInput} disabled={!fireMeterVisible} onChange={(event) => { setGoalInput(event.target.value); setGoalSaved(false) }} /></div>
+            <button className="primary-button" type="submit" disabled={!fireMeterVisible}><Check size={15} /> {t.saveChanges}</button>
+            {goalSaved && <span className="settings-saved">{t.goalSaved}</span>}
+          </div>
+          {goalError && <p className="form-error">{goalError}</p>}
+        </form>
+      </section>
 
-    <section className="panel visibility-panel"><div className="panel-heading"><div><h2>{t.investmentSettings}</h2><p>{t.investmentSettingsSubtitle}</p></div><span className="panel-icon"><SlidersHorizontal size={17} /></span></div><div className="visibility-list">{INVESTMENT_TYPES.map(({ key, icon: Icon, tint }) => <div className="visibility-row" key={key}><span className={`portfolio-mini-icon ${tint}`}><Icon size={17} /></span><div className="visibility-label"><strong>{t[key]}</strong><span>{t.visibleSetting}</span></div><button type="button" className={investmentVisibility[key] ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={investmentVisibility[key]} aria-label={`${t.visibleSetting}: ${t[key]}`} onClick={() => toggleInvestmentVisibility(key)}><span /></button></div>)}</div><p className="visibility-note">{t.hiddenAssetsNote}</p></section>
+      <section className="panel visibility-panel"><div className="panel-heading"><div><h2>{t.investmentSettings}</h2><p>{t.investmentSettingsSubtitle}</p></div><span className="panel-icon"><SlidersHorizontal size={17} /></span></div><div className="visibility-list">{INVESTMENT_TYPES.map(({ key, icon: Icon, tint }) => <div className="visibility-row" key={key}><span className={`portfolio-mini-icon ${tint}`}><Icon size={17} /></span><div className="visibility-label"><strong>{t[key]}</strong><span>{t.visibleSetting}</span></div><button type="button" className={investmentVisibility[key] ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={investmentVisibility[key]} aria-label={`${t.visibleSetting}: ${t[key]}`} onClick={() => toggleInvestmentVisibility(key)}><span /></button></div>)}</div><p className="visibility-note">{t.hiddenAssetsNote}</p></section>
+    </div>
     <section className="panel visibility-panel">
       <div className="panel-heading"><div><h2>{t.manageCategories}</h2><p>{t.manageCategoriesSubtitle}</p></div><span className="panel-icon"><Tag size={17} /></span></div>
-      {['expense', 'income'].map((type) => <div className="manage-group" key={type}>
-        <div className="manage-group-head"><strong>{type === 'expense' ? t.expense : t.income}</strong><span>{categories[type].length}</span></div>
-        <div className="manage-list">
-          {categories[type].map((item) => {
-            const used = categoryUsage[type][item] || 0
-            return <div className="manage-row" key={item}>
-              <span className="manage-name">{t.categoryNames[item] || item}</span>
-              {used > 0 && <span className="manage-usage">{used} {t.records}</span>}
-              <button type="button" className="manage-remove" disabled={used > 0} title={used > 0 ? t.categoryInUse : `${t.delete} ${item}`} aria-label={`${t.delete} ${item}`} onClick={() => removeCategory(type, item)}><X size={14} /></button>
-            </div>
-          })}
-        </div>
-        <div className="add-row">
-          <input value={categoryDrafts[type]} placeholder={t.addOwnCategory} aria-label={t.addOwnCategory} onChange={(event) => setCategoryDrafts((current) => ({ ...current, [type]: event.target.value }))} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addCategory(type) } }} />
-          <button type="button" onClick={() => addCategory(type)} disabled={!categoryDrafts[type].trim()} aria-label={t.addCategory} title={t.addCategory}><Plus size={15} /></button>
-        </div>
-      </div>)}
+      <div className="manage-columns">
+        {['expense', 'income'].map((type) => <div className="manage-group" key={type}>
+          <div className="manage-group-head"><strong>{type === 'expense' ? t.expense : t.income}</strong><span>{categories[type].length}</span></div>
+          <div className="manage-list">
+            {categories[type].map((item) => {
+              const used = categoryUsage[type][item] || 0
+              return <div className="manage-row" key={item}>
+                <span className="manage-name">{t.categoryNames[item] || item}</span>
+                {used > 0 && <span className="manage-usage">{used} {t.records}</span>}
+                <button type="button" className="manage-remove" disabled={used > 0} title={used > 0 ? t.categoryInUse : `${t.delete} ${item}`} aria-label={`${t.delete} ${item}`} onClick={() => removeCategory(type, item)}><X size={14} /></button>
+              </div>
+            })}
+          </div>
+          <div className="add-row">
+            <input value={categoryDrafts[type]} placeholder={t.addOwnCategory} aria-label={t.addOwnCategory} onChange={(event) => setCategoryDrafts((current) => ({ ...current, [type]: event.target.value }))} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addCategory(type) } }} />
+            <button type="button" onClick={() => addCategory(type)} disabled={!categoryDrafts[type].trim()} aria-label={t.addCategory} title={t.addCategory}><Plus size={15} /></button>
+          </div>
+        </div>)}
+      </div>
     </section>
 
     <section className="panel visibility-panel">

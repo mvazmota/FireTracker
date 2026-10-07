@@ -116,3 +116,11 @@
   .logout-button { padding: 0 8px; }
   .logout-button span { display: none; }
 }
+
+/* Settings: stack the paired panels and the category columns on narrow screens */
+@media (max-width: 1120px) {
+  .settings-pair { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .manage-columns { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
