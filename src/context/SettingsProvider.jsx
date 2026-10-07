@@ -43,7 +43,13 @@ export function SettingsProvider({ children }) {
       return
     }
     const stored = data.settings || {}
-    setProfile(data.profile ?? { name: user?.name ?? '', avatar: '', createdAt: dateKey(new Date()) })
+    setProfile({
+      // The settings row is created by the first save (often onboarding) with a
+      // blank name, so fall back to the account name rather than showing none.
+      name: data.profile?.name || user?.name || '',
+      avatar: data.profile?.avatar ?? '',
+      createdAt: data.profile?.createdAt || dateKey(new Date()),
+    })
     applySettings({
       language: stored.language ?? 'en',
       fireGoal: stored.fireGoal ?? DEFAULT_FIRE_GOAL,
@@ -96,9 +102,14 @@ export function SettingsProvider({ children }) {
     persist({ categories: { ...current, [type]: [...current[type], category] } })
   }, [persist])
 
-  /** Finishes onboarding with the categories and platforms the user picked. */
-  const saveOnboarding = useCallback(({ categories, platforms }) => {
-    persist({ categories, platforms, onboarded: true })
+  /** Finishes onboarding with everything the user picked. */
+  const saveOnboarding = useCallback(({ categories, platforms, investmentVisibility }) => {
+    persist({
+      categories,
+      platforms,
+      ...(investmentVisibility ? { investmentVisibility } : {}),
+      onboarded: true,
+    })
   }, [persist])
 
   const value = useMemo(() => ({

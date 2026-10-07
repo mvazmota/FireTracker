@@ -59,6 +59,9 @@
 .avatar-photo { background-size: cover; background-position: center; color: transparent; }
 .avatar-animal { overflow: hidden; background: #e9efe4; }
 .animal-avatar { display: block; }
+.avatar-choice { padding: 0; border: 2px solid transparent; border-radius: 50%; background: none; overflow: hidden; transition: .15s; }
+.avatar-choice:hover { border-color: #c3d6c5; }
+.avatar-choice.avatar-choice-on { border-color: #7fae84; box-shadow: 0 0 0 3px #e6f0e6; }
 .main-content { margin-left: 230px; min-height: 100vh; }
 .topbar { height: 62px; padding: 0 49px; border-bottom: 1px solid #eaeee9; background: rgba(255,255,255,.72); display: flex; justify-content: space-between; align-items: center; }
 .breadcrumb { color: #929b95; font-size: 11px; }

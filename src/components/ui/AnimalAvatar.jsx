@@ -8,6 +8,9 @@
 
 export const ANIMAL_PRESETS = ['fox', 'cat', 'owl', 'panda', 'bear', 'penguin']
 
+/** i18n keys for each preset's accessible name. */
+export const ANIMAL_LABEL_KEYS = { fox: 'animalFox', cat: 'animalCat', owl: 'animalOwl', panda: 'animalPanda', bear: 'animalBear', penguin: 'animalPenguin' }
+
 const PREFIX = 'animal:'
 
 export function isAnimalAvatar(value) {

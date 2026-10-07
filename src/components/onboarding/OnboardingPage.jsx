@@ -3,25 +3,26 @@ import { ArrowLeft, ArrowRight, Camera, Check, Flame, X } from 'lucide-react'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
 import { categorySuggestions } from '../../data/categories.js'
+import { INVESTMENT_TYPES } from '../../data/investmentTypes.js'
 import { PLATFORM_SUGGESTIONS } from '../../lib/constants.js'
 import { resizeImageFile } from '../../lib/image.js'
 import Avatar from '../ui/Avatar.jsx'
-import AnimalAvatar, { ANIMAL_PRESETS, animalAvatarValue, animalId } from '../ui/AnimalAvatar.jsx'
-
-const ANIMAL_LABEL_KEYS = { fox: 'animalFox', cat: 'animalCat', owl: 'animalOwl', panda: 'animalPanda', bear: 'animalBear', penguin: 'animalPenguin' }
+import AnimalAvatar, { ANIMAL_LABEL_KEYS, ANIMAL_PRESETS, animalAvatarValue, animalId } from '../ui/AnimalAvatar.jsx'
 
 /**
  * First-run setup: a new account has no categories and no platforms, so we ask
- * for them before the app is usable, then offer an optional profile picture.
- * The category and platform steps are suggestion-driven to keep it quick;
- * custom entries can be added later from the normal forms.
+ * for them before the app is usable, then for the investment spaces to show,
+ * and finally an optional profile picture. The choice steps are
+ * suggestion-driven to keep it quick; custom entries can be added later from
+ * the normal forms.
  */
 export default function OnboardingPage() {
   const { t, language, changeLanguage } = useI18n()
-  const { profile, saveProfile, saveOnboarding } = useSettings()
+  const { profile, investmentVisibility, saveProfile, saveOnboarding } = useSettings()
   const [step, setStep] = useState(0)
   const [categories, setCategories] = useState({ expense: [], income: [] })
   const [platforms, setPlatforms] = useState([])
+  const [visibility, setVisibility] = useState(() => ({ ...investmentVisibility }))
   const [avatar, setAvatar] = useState(profile.avatar || '')
   const [photoError, setPhotoError] = useState('')
   const fileInput = useRef(null)
@@ -35,6 +36,10 @@ export default function OnboardingPage() {
 
   function togglePlatform(name) {
     setPlatforms((current) => (current.includes(name) ? current.filter((item) => item !== name) : [...current, name]))
+  }
+
+  function toggleInvestment(key) {
+    setVisibility((current) => ({ ...current, [key]: !current[key] }))
   }
 
   async function uploadPhoto(event) {
@@ -53,7 +58,7 @@ export default function OnboardingPage() {
 
   function finish() {
     if (avatar !== (profile.avatar || '')) saveProfile({ ...profile, avatar })
-    saveOnboarding({ categories, platforms })
+    saveOnboarding({ categories, platforms, investmentVisibility: visibility })
   }
 
   const categoriesReady = categories.expense.length > 0 && categories.income.length > 0
@@ -69,9 +74,9 @@ export default function OnboardingPage() {
     <section className="onboarding-card" aria-labelledby="onboarding-title">
       <span className="login-brand-mark"><Flame size={22} fill="currentColor" /></span>
       <div className="onboarding-progress" aria-hidden="true">
-        {[0, 1, 2].map((index) => <span key={index} className={step >= index ? 'onboarding-dot active-dot' : 'onboarding-dot'} />)}
+        {[0, 1, 2, 3].map((index) => <span key={index} className={step >= index ? 'onboarding-dot active-dot' : 'onboarding-dot'} />)}
       </div>
-      <p className="onboarding-step">{t.stepLabel} {step + 1}/3</p>
+      <p className="onboarding-step">{t.stepLabel} {step + 1}/4</p>
 
       {step === 0 ? <>
         <h1 id="onboarding-title">{t.onboardingCategoriesTitle}<span>.</span></h1>
@@ -94,6 +99,16 @@ export default function OnboardingPage() {
           <button type="button" className="ghost-button" onClick={() => setStep(0)}><ArrowLeft size={16} /> {t.back}</button>
           <button type="button" className="submit-button" onClick={() => setStep(2)}>{t.continue} <ArrowRight size={16} /></button>
         </div>
+      </> : step === 2 ? <>
+        <h1 id="onboarding-title">{t.onboardingInvestmentsTitle}<span>.</span></h1>
+        <p className="onboarding-sub">{t.onboardingInvestmentsSubtitle}</p>
+        <div className="onboarding-chips onboarding-chips-investments">
+          {INVESTMENT_TYPES.map(({ key, icon: Icon }) => <button type="button" key={key} className={visibility[key] ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={visibility[key]} onClick={() => toggleInvestment(key)}><Icon size={15} /> {t[key]}</button>)}
+        </div>
+        <div className="onboarding-actions">
+          <button type="button" className="ghost-button" onClick={() => setStep(1)}><ArrowLeft size={16} /> {t.back}</button>
+          <button type="button" className="submit-button" onClick={() => setStep(3)}>{t.continue} <ArrowRight size={16} /></button>
+        </div>
       </> : <>
         <h1 id="onboarding-title">{t.onboardingAvatarTitle}<span>.</span></h1>
         <p className="onboarding-sub">{t.onboardingAvatarSubtitle}</p>
@@ -105,7 +120,7 @@ export default function OnboardingPage() {
             const value = animalAvatarValue(id)
             const selected = avatar === value
             const label = t[ANIMAL_LABEL_KEYS[id]]
-            return <button type="button" key={id} className={selected ? 'onboarding-animal animal-on' : 'onboarding-animal'} aria-pressed={selected} aria-label={label} title={label} onClick={() => setAvatar(selected ? '' : value)}><AnimalAvatar id={id} /></button>
+            return <button type="button" key={id} className={selected ? 'avatar-choice avatar-choice-on' : 'avatar-choice'} aria-pressed={selected} aria-label={label} title={label} onClick={() => setAvatar(selected ? '' : value)}><AnimalAvatar id={id} /></button>
           })}
         </div>
         <div className="onboarding-avatar-actions">
@@ -115,7 +130,7 @@ export default function OnboardingPage() {
         <input ref={fileInput} className="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={uploadPhoto} />
         {photoError && <p className="form-error">{photoError}</p>}
         <div className="onboarding-actions">
-          <button type="button" className="ghost-button" onClick={() => setStep(1)}><ArrowLeft size={16} /> {t.back}</button>
+          <button type="button" className="ghost-button" onClick={() => setStep(2)}><ArrowLeft size={16} /> {t.back}</button>
           <button type="button" className="submit-button" onClick={finish}><Check size={16} /> {t.finishSetup}</button>
         </div>
       </>}

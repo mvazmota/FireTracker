@@ -104,6 +104,7 @@ function AppShell() {
   const bondsInvested = values.bonds.invested
   const bondsMarketValue = values.bonds.value
   const totalSavingsBalance = values.savings.value
+  const hasVisibleInvestments = Object.values(investmentVisibility).some(Boolean)
 
   const monthTitle = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(selectedMonth)
   const today = new Date()
@@ -210,7 +211,7 @@ function AppShell() {
 
           {fireMeterVisible && <div className="fire-compact-mobile"><FireMeterCompact position={globalPosition} goal={fireGoal} /></div>}
 
-          <section className="portfolio-overview"><div className="overview-section-heading"><h2>{t.portfolioSummary}</h2><p>{t.portfolioSummarySubtitle}</p></div><div className="portfolio-mini-grid">
+          {hasVisibleInvestments && <section className="portfolio-overview"><div className="overview-section-heading"><h2>{t.portfolioSummary}</h2><p>{t.portfolioSummarySubtitle}</p></div><div className="portfolio-mini-grid">
             {[
               { page: 'etfs', label: t.etfs, value: ETFMarketValue, invested: ETFInvested, count: holdings.length, icon: <ChartLine size={16} />, tint: 'etf-tint' },
               { page: 'crypto', label: t.crypto, value: cryptoMarketValue, invested: cryptoInvested, count: cryptoHoldings.length, icon: <Bitcoin size={16} />, tint: 'crypto-tint' },
@@ -218,7 +219,7 @@ function AppShell() {
               { page: 'bonds', label: t.bonds, value: bondsMarketValue, invested: bondsInvested, count: bondHoldings.length, icon: <Landmark size={16} />, tint: 'bonds-tint' },
               { page: 'savings', label: t.savings, value: totalSavingsBalance, invested: totalSavingsBalance, count: savingsAccounts.length, icon: <Wallet size={16} />, tint: 'savings-tint', detail: t.currentBalance },
             ].filter((item) => investmentVisibility[item.page]).map((item) => <button className="portfolio-mini-card" key={item.page} onClick={() => selectPortfolioPage(item.page)}><span className={`portfolio-mini-icon ${item.tint}`}>{item.icon}</span><span className="portfolio-mini-title">{item.label}<ArrowRight size={13} /></span><strong>{formatCurrency(item.value, language)}</strong><span className="portfolio-mini-foot">{item.count} {t.items} · {formatCurrency(item.invested, language)} {item.detail || t.invested}</span></button>)}
-          </div></section>
+          </div></section>}
 
           <section className="month-toolbar" aria-label={t.selectMonth}><div className="month-nav"><button className="month-arrow" onClick={() => shiftMonth(-1)} aria-label={t.previousMonth}><ArrowLeft size={17} /></button><div className="month-heading"><CalendarDays size={17} /><strong>{monthTitle}</strong></div><button className="month-arrow" onClick={() => shiftMonth(1)} aria-label={t.nextMonth}><ArrowRight size={17} /></button></div><button className="today-button" onClick={() => setSelectedMonth(dateForMonth(today))}>{t.today}</button></section>
 
