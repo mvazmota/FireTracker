@@ -41,16 +41,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .fire-compact-note { display: block; margin-top: 5px; color: #a99c88; font-size: 8px; }
 .fire-compact-mobile { display: none; }
 .help-link { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 8px; border: 0; background: none; color: #7d8982; font-size: 12px; text-align: left; }
-.profile { display: flex; align-items: center; gap: 10px; margin-top: 11px; padding: 15px 3px 0; border-top: 1px solid #edf0ec; }
-.profile-button { width: 100%; border-right: 0; border-bottom: 0; border-left: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.profile-button:hover { border-radius: 7px; background: #f8faf7; }
-.profile-button.active-profile { color: #376b4f; }
+.profile { margin-top: 12px; padding-top: 12px; border-top: 1px solid #edf0ec; }
+.profile-button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px; border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background .16s, color .16s; }
+.profile-button:hover { background: #f5f8f4; }
+.profile-button.active-profile { background: #edf4ef; color: #376b4f; }
+.profile-button .avatar { flex: 0 0 auto; }
+.profile-meta { flex: 1 1 auto; min-width: 0; }
+.profile-meta strong, .profile-meta span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-meta strong { color: #3a4740; font-size: 11px; font-weight: 600; }
+.profile-meta span { margin-top: 2px; color: #99a19c; font-size: 10px; }
+.profile-more { flex: 0 0 auto; margin-left: auto; color: #8f9993; }
 .avatar, .top-avatar { display: grid; place-items: center; width: 33px; height: 33px; border-radius: 50%; background: #e9efe4; color: #527455; font-size: 13px; font-weight: 700; }
 .avatar-photo { background-size: cover; background-position: center; color: transparent; }
-.profile strong, .profile span { display: block; }
-.profile strong { color: #3a4740; font-size: 11px; font-weight: 600; }
-.profile span { margin-top: 2px; color: #99a19c; font-size: 10px; }
-.profile-more { margin-left: auto; color: #8f9993; }
 .main-content { margin-left: 230px; min-height: 100vh; }
 .topbar { height: 62px; padding: 0 49px; border-bottom: 1px solid #eaeee9; background: rgba(255,255,255,.72); display: flex; justify-content: space-between; align-items: center; }
 .breadcrumb { color: #929b95; font-size: 11px; }
