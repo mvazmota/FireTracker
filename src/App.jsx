@@ -82,6 +82,7 @@ function AppShell() {
     fireGoal,
     fireMeterVisible,
     investmentVisibility,
+    hydrated: settingsReady,
   } = useSettings()
   const {
     transactions,
@@ -97,6 +98,7 @@ function AppShell() {
     saveSavingsAccount,
     saveSavingsAccounts,
     fillSampleHistory,
+    hydrated: financeReady,
   } = useFinance()
 
   const [selectedMonth, setSelectedMonth] = useState(() => dateForMonth(new Date()))
@@ -192,6 +194,7 @@ function AppShell() {
 
   if (isPending) return <div className="app-loading">{t.loading}</div>
   if (!user) return <LoginPage />
+  if (!settingsReady || !financeReady) return <div className="app-loading">{t.loading}</div>
 
   return (
     <div className="app-shell" lang={locale}>
