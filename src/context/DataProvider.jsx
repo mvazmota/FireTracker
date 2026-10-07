@@ -84,7 +84,15 @@ export function DataProvider({ children }) {
     load()
   }, [isPending, user, load])
 
-  const value = useMemo(() => ({ data, ready, reload: load }), [data, ready, load])
+  const isDemo = user?.email === DEMO_EMAIL
+
+  /** Wipes the demo account and restores the starter scenario. */
+  const resetDemo = useCallback(async () => {
+    await api.importAll(simulationPayload())
+    await load()
+  }, [load])
+
+  const value = useMemo(() => ({ data, ready, reload: load, isDemo, resetDemo }), [data, ready, load, isDemo, resetDemo])
   return <DataContext value={value}>{children}</DataContext>
 }
 

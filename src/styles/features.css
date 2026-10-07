@@ -195,6 +195,16 @@
 .fire-goal-form .profile-name-edit { align-items: center; }
 .fire-goal-form .profile-name-edit .amount-input { flex: 0 0 190px; }
 .settings-saved { display: inline-flex; align-items: center; color: #5f9169; font-size: 9px; font-weight: 600; }
+.demo-panel { margin-top: 15px; padding: 18px 20px 16px; }
+.demo-reset-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.demo-reset-note { margin: 0; max-width: 60ch; color: #8a958d; font-size: 11px; line-height: 1.5; }
+.demo-reset-actions { display: flex; align-items: center; gap: 10px; }
+.danger-button { height: 39px; padding: 0 15px; border: 1px solid #e7cdc4; border-radius: 7px; display: inline-flex; align-items: center; gap: 8px; background: #fbf1ef; color: #bf745e; font-size: 12px; font-weight: 600; transition: .18s; }
+.danger-button:hover { background: #f7e6e0; border-color: #dcb3a6; }
+.danger-button:disabled { opacity: .65; cursor: default; }
+.ghost-button { height: 39px; padding: 0 14px; border: 1px solid #dfe6df; border-radius: 7px; background: transparent; color: #5c6b60; font-size: 12px; font-weight: 600; transition: .18s; }
+.ghost-button:hover { background: #f2f6f1; }
+.ghost-button:disabled { opacity: .6; cursor: default; }
 .savings-breakdown-foot { display: block; white-space: normal; line-height: 1.55; }
 .savings-breakdown-foot > span { display: block; overflow: hidden; text-overflow: ellipsis; }
 .savings-table { min-width: 920px; }

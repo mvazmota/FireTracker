@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react'
-import { Bitcoin, Camera, ChartLine, Check, Flame, HandCoins, Landmark, SlidersHorizontal, Wallet } from 'lucide-react'
+import { Bitcoin, Camera, ChartLine, Check, Flame, HandCoins, Landmark, RotateCcw, SlidersHorizontal, Wallet } from 'lucide-react'
 import Avatar from '../ui/Avatar.jsx'
 import { initialsForName, resizeImageFile } from '../../lib/image.js'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
+import { useData } from '../../context/DataProvider.jsx'
 
 export default function ProfilePage() {
   const { t, locale } = useI18n()
@@ -24,6 +25,10 @@ export default function ProfilePage() {
   const [goalSaved, setGoalSaved] = useState(false)
   const [goalError, setGoalError] = useState('')
   const fileInput = useRef(null)
+  const { isDemo, resetDemo } = useData()
+  const [confirmingReset, setConfirmingReset] = useState(false)
+  const [resetting, setResetting] = useState(false)
+  const [resetDone, setResetDone] = useState(false)
 
   const investmentTypes = [
     { key: 'etfs', label: t.etfs, icon: <ChartLine size={17} />, tint: 'etf-tint' },
@@ -67,6 +72,17 @@ export default function ProfilePage() {
     saveProfile({ ...profile, name: name.trim(), avatar: '' })
   }
 
+  async function runDemoReset() {
+    setResetting(true)
+    try {
+      await resetDemo()
+      setConfirmingReset(false)
+      setResetDone(true)
+    } finally {
+      setResetting(false)
+    }
+  }
+
   return <div className="page-content profile-page">
     <section className="welcome-row"><div><p className="eyebrow">{t.account.toUpperCase()}</p><h1>{t.profileHeading}<span>.</span></h1><p className="welcome-sub">{t.profileSubtitle}</p></div></section>
 
@@ -91,6 +107,13 @@ export default function ProfilePage() {
     </section>
 
     <section className="panel visibility-panel"><div className="panel-heading"><div><h2>{t.investmentSettings}</h2><p>{t.investmentSettingsSubtitle}</p></div><span className="panel-icon"><SlidersHorizontal size={17} /></span></div><div className="visibility-list">{investmentTypes.map((item) => <div className="visibility-row" key={item.key}><span className={`portfolio-mini-icon ${item.tint}`}>{item.icon}</span><div className="visibility-label"><strong>{item.label}</strong><span>{t.visibleSetting}</span></div><button type="button" className={investmentVisibility[item.key] ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={investmentVisibility[item.key]} aria-label={`${t.visibleSetting}: ${item.label}`} onClick={() => toggleInvestmentVisibility(item.key)}><span /></button></div>)}</div><p className="visibility-note">{t.hiddenAssetsNote}</p></section>
+    {isDemo && <section className="panel demo-panel">
+      <div className="panel-heading"><div><h2>{t.demoData}</h2><p>{t.demoDataSubtitle}</p></div><span className="panel-icon"><RotateCcw size={17} /></span></div>
+      {confirmingReset
+        ? <div className="demo-reset-row"><p className="demo-reset-note">{t.demoResetConfirm}</p><div className="demo-reset-actions"><button type="button" className="danger-button" onClick={runDemoReset} disabled={resetting}>{resetting ? t.loading : t.demoResetYes}</button><button type="button" className="ghost-button" onClick={() => setConfirmingReset(false)} disabled={resetting}>{t.cancel}</button></div></div>
+        : <div className="demo-reset-row"><p className="demo-reset-note">{t.demoDataNote}</p><div className="demo-reset-actions"><button type="button" className="danger-button" onClick={() => { setResetDone(false); setConfirmingReset(true) }}><RotateCcw size={15} /> {t.demoReset}</button>{resetDone && <span className="settings-saved">{t.demoResetDone}</span>}</div></div>}
+    </section>}
+
     <footer className="page-footer"><span>{t.footer}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
   </div>
 }
