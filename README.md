@@ -9,6 +9,29 @@ npm install
 npm run dev
 ```
 
+## Project structure
+
+```
+src/
+  main.jsx                 app entry — mounts <App/> inside an error boundary
+  App.jsx                  app shell: providers, layout and page routing state
+  components/              shared UI (ErrorBoundary, and feature components)
+  data/categories.js       built-in categories with icons and colours
+  i18n/messages.jsx        EN / PT-PT copy
+  lib/
+    constants.js           storage keys, defaults, asset types
+    dates.js               month keys, timestamps, date formatting
+    format.js              currency, percent and number formatting
+    image.js               avatar initials and image downscaling
+    portfolio.js           cost basis, market value, asset classification
+    simulation.js          the 36-month starter scenario
+    storage.js             localStorage load/save and first-run seeding
+    timeline.js            cash + per-asset history reconstruction
+  styles/index.css         global stylesheet
+```
+
+Built on React 19 with `@vitejs/plugin-react` and the **React Compiler** enabled (see `vite.config.js`) for automatic memoization. Imports use explicit file extensions.
+
 ## Deploy to Cloudflare Pages
 
 The app is a static single-page build, so Cloudflare can host it directly. Navigation is handled in-app rather than by URL routes, so no SPA fallback redirect is needed. `public/_headers` sets asset caching and basic security headers. All data is stored in the visitor's browser, so no backend or database is required.

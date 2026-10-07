@@ -6,447 +6,41 @@ import {
   ReceiptText, SlidersHorizontal, Sparkles, Tag, TrendingUp, UserRound, Wallet, X,
 } from 'lucide-react'
 
-const STORAGE_KEY = 'sprout-finance-transactions-v1'
-const INVESTMENT_STORAGE_KEY = 'sprout-finance-etfs-v1'
-const CRYPTO_STORAGE_KEY = 'sprout-finance-crypto-v1'
-const P2P_STORAGE_KEY = 'sprout-finance-p2p-v1'
-const BONDS_STORAGE_KEY = 'sprout-finance-bonds-v1'
-const SAVINGS_STORAGE_KEY = 'sprout-finance-savings-v1'
-const FIRE_GOAL_STORAGE_KEY = 'sprout-fire-goal-v1'
-const LANGUAGE_KEY = 'sprout-finance-language-v1'
-const PLATFORMS_STORAGE_KEY = 'firepath-platforms-v1'
-const CUSTOM_CATEGORIES_STORAGE_KEY = 'firepath-custom-categories-v1'
-const PROFILE_STORAGE_KEY = 'firepath-user-profile-v1'
-const VISIBILITY_STORAGE_KEY = 'firepath-investment-visibility-v1'
-const SIMULATION_VERSION_KEY = 'firepath-simulation-version-v1'
-const SIMULATION_VERSION = 'three-year-fire-simulation-v3'
-const DEFAULT_PLATFORMS = ['Bank account', 'Cash', 'Trade Republic', 'Interactive Brokers', 'DEGIRO', 'Coinbase', 'Kraken', 'Mintos', 'PeerBerry', 'Banco Invest']
-const messages = {
-  en: {
-    language: 'Language', yourSpace: 'Your space', overview: 'Overview', position: 'Global position', transactions: 'Transactions', etfs: 'ETFs', crypto: 'Crypto', p2p: 'P2P', bonds: 'Bonds', savings: 'Savings', investments: 'Investments', statistics: 'Statistics', profile: 'Profile & settings',
-    tip: <>A little progress<br />adds up to a lot.</>, encouragement: 'You’re doing great. ✨', help: 'Help & feedback', account: 'Your account', personalSpace: 'Personal space', saved: 'All changes saved',
-    snapshot: 'YOUR FINANCIAL SNAPSHOT', headline: 'A clearer view of your money', welcome: 'Every little step counts. Here’s how things are looking.', addTransaction: 'Add transaction', selectMonth: 'Select month', previousMonth: 'Previous month', nextMonth: 'Next month', today: 'Today',
-    monthlySummary: 'Monthly summary', balance: 'CASH SAVED', income: 'INCOME', expenses: 'EXPENSES', savingRate: 'SAVING RATE', incomeSaved: 'of income saved', moneyIn: 'Money in this month', moneyOut: 'Money out this month', keepGoing: 'Keep that momentum going', overBudget: 'Spending is above income', cashSaved: 'Cash saved', cashSavedCaption: 'Cash remaining plus savings deposits', investedThisMonth: 'Invested',
-    fireLabel: 'FIRE', fireEyebrow: 'YOUR FIRE JOURNEY', fireHeading: 'Financial independence, in sight', fireSubtitle: 'Every step brings work-optional living closer.', fireGoal: 'FIRE goal', fireProgress: 'of your goal', fireRemaining: 'left to go', fireAchieved: 'You reached your FIRE goal!', editFireGoal: 'Edit goal', setFireGoal: 'Set your FIRE goal', goalAmount: 'Goal amount (€)', goalError: 'Enter a goal greater than zero.', fireEstimateNote: 'Progress uses your tracked global position; opening balances and debts are not included.',
-    positionHeading: 'Global position', positionSubtitle: 'See how your total position is made up and how it changes over time.', totalPosition: 'TOTAL POSITION', totalAssets: 'TOTAL ASSETS', currentAssets: 'Current position by asset', assetEvolution: 'Position over time', assetEvolutionSubtitle: 'Monthly value for cash and each asset type', period3: '3 mo', period6: '6 mo', period12: '12 mo', period24: '24 mo', periodAll: 'All months', seriesCash: 'Tracked cash', seriesETFs: 'ETFs', seriesCrypto: 'Crypto', seriesP2P: 'P2P', seriesBonds: 'Bonds', seriesSavings: 'Savings',
-    profileHeading: 'Your profile', profileSubtitle: 'Your account details and app preferences.', yourName: 'Your name', namePlaceholder: 'Enter your name', saveProfile: 'Save profile', accountCreated: 'Account created', uploadPhoto: 'Upload a profile photo', changePhoto: 'Change photo', removePhoto: 'Remove photo', avatarFileError: 'Choose a PNG, JPG, WebP or GIF image under 8 MB.', avatarReadError: 'That image could not be opened. Try another file.', investmentSpaces: 'Investment spaces', investmentSettings: 'Investment spaces', investmentSettingsSubtitle: 'Choose which asset types appear in your navigation, overview and global position.', visibleSetting: 'Show this section', hiddenAssetsNote: 'Hidden sections keep their data and transactions; they are just removed from your dashboard and global position.',
-    cashFlow: 'Cash flow', byWeek: 'Income and expenses, week by week', whereItGoes: 'Where it goes', spendingBreakdown: 'A little breakdown of your spending', thisMonth: 'This month', emptySpending: 'Add an expense to see your spending.', week: 'Week',
-    recent: 'Recent transactions', viewAll: 'View all', allTransactions: 'All transactions', allTransactionsSubtitle: 'Search and filter your complete transaction history.', moneyComingGoing: 'Your money coming and going', addNew: 'Add new', allActivity: 'All activity', investmentActivity: 'Investments', search: 'Search transactions', transaction: 'TRANSACTION', category: 'CATEGORY', platform: 'PLATFORM', date: 'DATE', time: 'Time', dateTime: 'Date & time', amount: 'AMOUNT', expense: 'Expense', loadMore: 'Load more', noTransactions: 'No transactions match these filters.', noPlatform: 'No platform', addPlatform: 'Add a platform…', platformName: 'Platform name', platformPlaceholder: 'e.g. Trade Republic', addCategory: 'Add a category…', categoryName: 'Category name', categoryNameError: 'Enter a category name.', useCategories: 'Choose an existing category',
-    noMatches: 'No matches just yet', freshStart: 'A fresh start', trySearch: 'Try another search, or clear your filters.', firstTransaction: 'Add your first transaction to get this month going.', addATransaction: 'Add a transaction', showing: 'Showing', of: 'of', lookingGood: 'Looking good so far', footer: 'Made for your money, and your peace of mind.', footerMonth: 'Take it one month at a time',
-    newTransaction: 'NEW TRANSACTION', editTransaction: 'EDIT TRANSACTION', updateTransaction: 'Update transaction', addToMonth: 'Add to your month', transactionType: 'Transaction type', whatFor: 'What was it for?', titlePlaceholder: 'e.g. Weekly groceries', amountEuro: 'Amount (€)', categoryLabel: 'Category', close: 'Close', saveChanges: 'Save changes', addExpense: 'Add expense', addIncome: 'Add income', edit: 'Edit', delete: 'Delete',
-    nameError: 'Give this transaction a name.', amountError: 'Enter an amount greater than zero.', dateError: 'Choose a date in the selected month.', platformRequired: 'Choose or add a platform.',
-    categoryNames: { 'Food & dining': 'Food & dining', Investment: 'Investment', Investments: 'Investments', Savings: 'Savings', Transport: 'Transport', Shopping: 'Shopping', Housing: 'Housing', Health: 'Health', Entertainment: 'Entertainment', Other: 'Other', Salary: 'Salary', Freelance: 'Freelance', Gift: 'Gift' },
-    statsEyebrow: 'YEAR AT A GLANCE', statsHeading: 'Your year in numbers', statsSubtitle: 'See how your income, expenses and savings add up over the year.', sampleHistory: 'Fill empty months with sample data', sampleData: 'Sample', sampleInfo: 'Example transactions are labelled in your transaction list. You can edit or delete them.', previousYear: 'Previous year', nextYear: 'Next year', thisYear: 'This year', yearSummary: 'Year summary', yearlyIncome: 'INCOME THIS YEAR', yearlyExpenses: 'EXPENSES THIS YEAR', yearlyBalance: 'NET THIS YEAR', yearlySavings: 'SAVING RATE', annualFlow: 'Monthly cash flow', annualFlowSubtitle: 'Income and expenses across the year', annualCategories: 'Expenses by category', annualCategoriesSubtitle: 'Where your spending went this year', noYearExpenses: 'No expenses recorded for this year.',
-    portfolioEyebrow: 'YOUR PORTFOLIO', portfolioHeading: 'ETF investments', portfolioSubtitle: 'Track your holdings and returns. Update prices manually; quotes are not live.', addETF: 'Add ETF', marketValue: 'MARKET VALUE', totalInvested: 'TOTAL INVESTED', unrealisedReturn: 'UNREALISED RETURN', ETFCount: 'ETFs HELD', currentPortfolio: 'Current portfolio value', investedSoFar: 'Contributions to date', basedOnPrices: 'Based on your price entries', fundsTracked: 'Funds in your portfolio', allocation: 'Portfolio allocation', allocationSubtitle: 'How your investments are distributed', holdings: 'Your ETF holdings', holdingsSubtitle: 'Edit units or prices whenever you need to', noHoldings: 'No ETFs in your portfolio yet', addFirstETF: 'Add an ETF to start tracking your investments.', symbol: 'TICKER', units: 'UNITS', avgCost: 'AVG. BUY PRICE', currentPrice: 'CURRENT PRICE', value: 'VALUE', return: 'RETURN', manualPrices: 'Prices are entered manually. This tracker does not provide live market data.',
-    globalPosition: 'GLOBAL POSITION', globalPositionSubtitle: 'Tracked cash plus the value of your investment portfolio', trackedCash: 'Tracked cash', globalETFValue: 'Investment portfolio', viewInvestments: 'View portfolio', globalPositionNote: 'Estimate since tracking began; savings deposits and investment cost basis are transfers into assets. Opening balances and debts are not included.', portfolioSummary: 'Investment overview', portfolioSummarySubtitle: 'Current value across all your investment spaces', invested: 'invested', items: 'positions',
-    addETFTitle: 'Add an ETF', editETFTitle: 'Edit ETF holding', fundName: 'Fund name', ticker: 'Ticker symbol', unitsOwned: 'Units owned', averageBuyPrice: 'Average buy price (€)', currentPriceEuro: 'Current price (€)', tickerPlaceholder: 'e.g. VWCE', fundPlaceholder: 'e.g. Vanguard FTSE All-World', unitsPlaceholder: 'e.g. 10.5', pricePlaceholder: '0.00', saveETF: 'Save ETF', addETFButton: 'Add to portfolio', requiredTicker: 'Enter a ticker symbol.', requiredName: 'Enter the fund name.', invalidUnits: 'Units must be greater than zero.', invalidPrice: 'Prices cannot be negative.', editETF: 'Edit holding', deleteETF: 'Remove holding',
-    etfsHeading: 'ETFs', cryptoHeading: 'Crypto', cryptoDescription: 'Track your crypto holdings and manually updated prices.', addCrypto: 'Add crypto', addCryptoTitle: 'Add a crypto asset', editCryptoTitle: 'Edit crypto holding', cryptoHoldings: 'Your crypto holdings', noCrypto: 'No crypto assets yet', addFirstCrypto: 'Add a coin or token to start tracking it.', cryptoCount: 'CRYPTO ASSETS', cryptoName: 'Asset name', cryptoPlaceholder: 'e.g. Bitcoin', addToPortfolio: 'Add to portfolio', assetsTracked: 'Assets in your portfolio',
-    p2pHeading: 'P2P investments', p2pDescription: 'Track your peer-to-peer lending investments and account values.', addP2P: 'Add P2P investment', p2pHoldings: 'Your P2P investments', noP2P: 'No P2P investments yet', addFirstP2P: 'Add a platform or project to start tracking it.', platform: 'Platform', projectName: 'Project or account', amountInvested: 'Amount invested (€)', accountValue: 'Current account value (€)', expectedReturn: 'Expected annual return (%)', p2pCount: 'P2P POSITIONS', p2pNote: 'Enter the amount invested and the latest account value shown by your platform.',
-    bondsHeading: 'Bonds', bondsDescription: 'Track your bond holdings, coupon rates and maturity dates.', addBond: 'Add bond', bondHoldings: 'Your bonds', noBonds: 'No bonds yet', addFirstBond: 'Add a bond to start tracking its value and maturity.', issuer: 'Issuer', bondName: 'Bond name', nominalValue: 'Nominal value (€)', purchaseValue: 'Purchase value (€)', bondCurrentValue: 'Current value (€)', couponRate: 'Coupon rate (%)', maturityDate: 'Maturity date', bondCount: 'BONDS HELD', bondNote: 'Bond values and coupon rates are entered manually; this is not a live market quote.',
-    savingsHeading: 'Savings account', savingsDescription: 'Track your savings balance and add deposits each month.', savingsAccounts: 'Your savings accounts', addSavingsAccount: 'Add savings account', editSavingsAccount: 'Edit savings account', savingsAccountName: 'Account name', institution: 'Bank or institution', openingBalance: 'Current total balance (€)', addMoney: 'Add money', depositAmount: 'Deposit amount (€)', savingsRate: 'Interest rate (%)', noSavings: 'No savings accounts yet', addFirstSavings: 'Add an account to start tracking your saved cash.', savingsCount: 'SAVINGS ACCOUNTS', savingsTarget: '6-MONTH TARGET', savingsAccountNote: 'Deposits are recorded as savings transfers in your monthly activity, not as spending.', currentBalance: 'current balance', savingsDepositTitle: 'Savings deposit', savingsWithdrawalTitle: 'Savings withdrawal',
-    investmentCategory: 'Investment', savingsCategory: 'Savings', cashSavedBreakdown: 'Cash saved', investedBreakdown: 'Invested capital', etfPurchase: 'ETF purchase', cryptoPurchase: 'Crypto purchase', p2pPurchase: 'P2P investment', bondPurchase: 'Bond purchase', etfSale: 'ETF sale', cryptoSale: 'Crypto sale', p2pSale: 'P2P withdrawal', bondSale: 'Bond sale', assetSale: 'Investment sale',
-    nameRequired: 'Enter a name.', providerRequired: 'Enter a platform or issuer.', investmentAmountsError: 'Enter valid amounts greater than zero.', rateError: 'The rate cannot be negative.', maturityRequired: 'Choose a maturity date.', addRecord: 'Add to portfolio', saveRecord: 'Save changes', editRecord: 'Edit holding', removeRecord: 'Remove holding', history: 'History', monthlyHistory: 'Monthly history', recordMonthlyValue: 'Record a monthly value', historySubtitle: 'Save each month’s value to see how this investment evolves. Example history is illustrative, not live market data.', month: 'Month', portfolioValue: 'Portfolio value (€)', saveSnapshot: 'Save monthly value', noHistory: 'No monthly values recorded yet.', futureMonth: 'Choose this month or an earlier month.', historyValueError: 'Enter a valid value greater than or equal to zero.', historyTrend: 'Value over time', snapshots: 'monthly snapshots',
-  },
-  pt: {
-    language: 'Idioma', yourSpace: 'O teu espaço', overview: 'Visão geral', position: 'Posição global', transactions: 'Transações', etfs: 'ETFs', crypto: 'Cripto', p2p: 'P2P', bonds: 'Obrigações', savings: 'Poupanças', investments: 'Investimentos', statistics: 'Estatísticas', profile: 'Perfil e definições',
-    tip: <>Cada pequeno passo<br />faz a diferença.</>, encouragement: 'Estás no bom caminho. ✨', help: 'Ajuda e feedback', account: 'A tua conta', personalSpace: 'Espaço pessoal', saved: 'Alterações guardadas',
-    snapshot: 'RESUMO FINANCEIRO', headline: 'Uma visão mais clara do teu dinheiro', welcome: 'Cada pequeno passo conta. Vê como estão as tuas finanças.', addTransaction: 'Adicionar transação', selectMonth: 'Selecionar mês', previousMonth: 'Mês anterior', nextMonth: 'Mês seguinte', today: 'Hoje',
-    monthlySummary: 'Resumo mensal', balance: 'DINHEIRO POUPADO', income: 'RENDIMENTOS', expenses: 'DESPESAS', savingRate: 'TAXA DE POUPANÇA', incomeSaved: 'do rendimento poupado', moneyIn: 'Entradas neste mês', moneyOut: 'Saídas neste mês', keepGoing: 'Continua neste bom caminho', overBudget: 'As despesas superam os rendimentos', cashSaved: 'Dinheiro poupado', cashSavedCaption: 'Saldo disponível mais depósitos em poupança', investedThisMonth: 'Investido',
-    fireLabel: 'FIRE', fireEyebrow: 'O TEU CAMINHO FIRE', fireHeading: 'A independência financeira está à vista', fireSubtitle: 'Cada passo aproxima-te de uma vida em que o trabalho é opcional.', fireGoal: 'Objetivo FIRE', fireProgress: 'do objetivo', fireRemaining: 'em falta', fireAchieved: 'Atingiste o teu objetivo FIRE!', editFireGoal: 'Editar objetivo', setFireGoal: 'Define o teu objetivo FIRE', goalAmount: 'Valor do objetivo (€)', goalError: 'Introduz um objetivo superior a zero.', fireEstimateNote: 'O progresso usa a posição global registada; não inclui saldos iniciais nem dívidas.',
-    positionHeading: 'Posição global', positionSubtitle: 'Vê como se compõe a tua posição total e como evolui ao longo do tempo.', totalPosition: 'POSIÇÃO TOTAL', totalAssets: 'TOTAL DE ATIVOS', currentAssets: 'Posição atual por ativo', assetEvolution: 'Evolução da posição', assetEvolutionSubtitle: 'Valor mensal do saldo e de cada tipo de ativo', period3: '3 meses', period6: '6 meses', period12: '12 meses', period24: '24 meses', periodAll: 'Todos', seriesCash: 'Saldo registado', seriesETFs: 'ETFs', seriesCrypto: 'Cripto', seriesP2P: 'P2P', seriesBonds: 'Obrigações', seriesSavings: 'Poupanças',
-    profileHeading: 'O teu perfil', profileSubtitle: 'Dados da conta e preferências da aplicação.', yourName: 'O teu nome', namePlaceholder: 'Introduz o teu nome', saveProfile: 'Guardar perfil', accountCreated: 'Conta criada', uploadPhoto: 'Carregar foto de perfil', changePhoto: 'Alterar foto', removePhoto: 'Remover foto', avatarFileError: 'Escolhe uma imagem PNG, JPG, WebP ou GIF com menos de 8 MB.', avatarReadError: 'Não foi possível abrir a imagem. Experimenta outro ficheiro.', investmentSpaces: 'Espaços de investimento', investmentSettings: 'Tipos de investimento', investmentSettingsSubtitle: 'Escolhe que tipos de ativos aparecem na navegação, no resumo e na posição global.', visibleSetting: 'Mostrar esta secção', hiddenAssetsNote: 'As secções ocultas mantêm os dados e as transações; apenas deixam de aparecer no resumo e na posição global.',
-    cashFlow: 'Fluxo de dinheiro', byWeek: 'Rendimentos e despesas, semana a semana', whereItGoes: 'Onde gastas', spendingBreakdown: 'Um resumo das tuas despesas', thisMonth: 'Este mês', emptySpending: 'Adiciona uma despesa para veres o resumo.', week: 'Semana',
-    recent: 'Transações recentes', viewAll: 'Ver todas', allTransactions: 'Todas as transações', allTransactionsSubtitle: 'Pesquisa e filtra todo o teu histórico de transações.', moneyComingGoing: 'O dinheiro que entra e sai', addNew: 'Adicionar', allActivity: 'Tudo', investmentActivity: 'Investimentos', search: 'Pesquisar transações', transaction: 'TRANSAÇÃO', category: 'CATEGORIA', platform: 'PLATAFORMA', date: 'DATA', time: 'Hora', dateTime: 'Data e hora', amount: 'VALOR', expense: 'Despesa', loadMore: 'Carregar mais', noTransactions: 'Não há transações que correspondam a estes filtros.', noPlatform: 'Sem plataforma', addPlatform: 'Adicionar plataforma…', platformName: 'Nome da plataforma', platformPlaceholder: 'ex.: Trade Republic', addCategory: 'Adicionar categoria…', categoryName: 'Nome da categoria', categoryNameError: 'Introduz o nome da categoria.', useCategories: 'Escolher uma categoria existente',
-    noMatches: 'Ainda não há resultados', freshStart: 'Um novo começo', trySearch: 'Experimenta outra pesquisa ou limpa os filtros.', firstTransaction: 'Adiciona a tua primeira transação deste mês.', addATransaction: 'Adicionar transação', showing: 'A mostrar', of: 'de', lookingGood: 'Tudo em ordem', footer: 'As tuas finanças, com mais tranquilidade.', footerMonth: 'Um mês de cada vez',
-    newTransaction: 'NOVA TRANSAÇÃO', editTransaction: 'EDITAR TRANSAÇÃO', updateTransaction: 'Editar transação', addToMonth: 'Adicionar ao mês', transactionType: 'Tipo de transação', whatFor: 'Em que consiste?', titlePlaceholder: 'ex.: Compras de supermercado', amountEuro: 'Valor (€)', categoryLabel: 'Categoria', close: 'Fechar', saveChanges: 'Guardar alterações', addExpense: 'Adicionar despesa', addIncome: 'Adicionar rendimento', edit: 'Editar', delete: 'Eliminar',
-    nameError: 'Indica um nome para esta transação.', amountError: 'Introduz um valor superior a zero.', dateError: 'Escolhe uma data do mês selecionado.', platformRequired: 'Escolhe ou adiciona uma plataforma.',
-    categoryNames: { 'Food & dining': 'Alimentação e restaurantes', Investment: 'Investimento', Investments: 'Investimentos', Savings: 'Poupanças', Transport: 'Transportes', Shopping: 'Compras', Housing: 'Habitação', Health: 'Saúde', Entertainment: 'Lazer', Other: 'Outros', Salary: 'Salário', Freelance: 'Trabalho independente', Gift: 'Oferta' },
-    statsEyebrow: 'RESUMO DO ANO', statsHeading: 'O teu ano em números', statsSubtitle: 'Vê como evoluem os rendimentos, as despesas e as poupanças ao longo do ano.', sampleHistory: 'Preencher meses vazios com dados de exemplo', sampleData: 'Exemplo', sampleInfo: 'As transações de exemplo estão identificadas na lista. Podes editá-las ou eliminá-las.', previousYear: 'Ano anterior', nextYear: 'Ano seguinte', thisYear: 'Este ano', yearSummary: 'Resumo anual', yearlyIncome: 'RENDIMENTOS DO ANO', yearlyExpenses: 'DESPESAS DO ANO', yearlyBalance: 'SALDO DO ANO', yearlySavings: 'TAXA DE POUPANÇA', annualFlow: 'Fluxo de dinheiro mensal', annualFlowSubtitle: 'Rendimentos e despesas ao longo do ano', annualCategories: 'Despesas por categoria', annualCategoriesSubtitle: 'Onde gastaste este ano', noYearExpenses: 'Não há despesas registadas neste ano.',
-    portfolioEyebrow: 'A TUA CARTEIRA', portfolioHeading: 'Investimentos em ETF', portfolioSubtitle: 'Acompanha posições e rendibilidade. Atualiza os preços manualmente; não há cotações em tempo real.', addETF: 'Adicionar ETF', marketValue: 'VALOR DE MERCADO', totalInvested: 'TOTAL INVESTIDO', unrealisedReturn: 'RENDIBILIDADE NÃO REALIZADA', ETFCount: 'ETFs NA CARTEIRA', currentPortfolio: 'Valor atual da carteira', investedSoFar: 'Capital investido até à data', basedOnPrices: 'Com base nos preços que introduziste', fundsTracked: 'Fundos na tua carteira', allocation: 'Alocação da carteira', allocationSubtitle: 'Distribuição dos teus investimentos', holdings: 'Os teus ETFs', holdingsSubtitle: 'Edita as unidades ou os preços quando quiseres', noHoldings: 'Ainda não tens ETFs na carteira', addFirstETF: 'Adiciona um ETF para começares a acompanhar os investimentos.', symbol: 'SÍMBOLO', units: 'UNIDADES', avgCost: 'PREÇO MÉDIO', currentPrice: 'PREÇO ATUAL', value: 'VALOR', return: 'RENDIBILIDADE', manualPrices: 'Os preços são introduzidos manualmente. Esta área não apresenta cotações em tempo real.',
-    globalPosition: 'POSIÇÃO GLOBAL', globalPositionSubtitle: 'Saldo registado mais o valor atual da carteira de investimentos', trackedCash: 'Saldo registado', globalETFValue: 'Carteira de investimentos', viewInvestments: 'Ver carteira', globalPositionNote: 'Estimativa desde o início do registo; depósitos de poupança e capital investido são transferidos para ativos. Não inclui saldos iniciais nem dívidas.', portfolioSummary: 'Resumo dos investimentos', portfolioSummarySubtitle: 'Valor atual em cada tipo de investimento', invested: 'investido', items: 'posições',
-    addETFTitle: 'Adicionar um ETF', editETFTitle: 'Editar posição ETF', fundName: 'Nome do fundo', ticker: 'Símbolo de negociação', unitsOwned: 'Unidades detidas', averageBuyPrice: 'Preço médio de compra (€)', currentPriceEuro: 'Preço atual (€)', tickerPlaceholder: 'ex.: VWCE', fundPlaceholder: 'ex.: Vanguard FTSE All-World', unitsPlaceholder: 'ex.: 10,5', pricePlaceholder: '0,00', saveETF: 'Guardar ETF', addETFButton: 'Adicionar à carteira', requiredTicker: 'Introduz o símbolo do ETF.', requiredName: 'Introduz o nome do fundo.', invalidUnits: 'As unidades têm de ser superiores a zero.', invalidPrice: 'Os preços não podem ser negativos.', editETF: 'Editar posição', deleteETF: 'Remover posição',
-    etfsHeading: 'ETFs', cryptoHeading: 'Cripto', cryptoDescription: 'Acompanha os teus ativos e atualiza os preços manualmente.', addCrypto: 'Adicionar cripto', addCryptoTitle: 'Adicionar ativo cripto', editCryptoTitle: 'Editar posição cripto', cryptoHoldings: 'Os teus ativos cripto', noCrypto: 'Ainda não tens ativos cripto', addFirstCrypto: 'Adiciona uma moeda ou token para começares a acompanhar.', cryptoCount: 'ATIVOS CRIPTO', cryptoName: 'Nome do ativo', cryptoPlaceholder: 'ex.: Bitcoin', addToPortfolio: 'Adicionar à carteira', assetsTracked: 'Ativos na carteira',
-    p2pHeading: 'Investimentos P2P', p2pDescription: 'Acompanha os teus empréstimos peer-to-peer e o valor atual nas plataformas.', addP2P: 'Adicionar investimento P2P', p2pHoldings: 'Os teus investimentos P2P', noP2P: 'Ainda não tens investimentos P2P', addFirstP2P: 'Adiciona uma plataforma ou projeto para começares a acompanhar.', platform: 'Plataforma', projectName: 'Projeto ou conta', amountInvested: 'Montante investido (€)', accountValue: 'Valor atual na plataforma (€)', expectedReturn: 'Rendibilidade anual esperada (%)', p2pCount: 'POSIÇÕES P2P', p2pNote: 'Introduz o montante investido e o valor atual apresentado pela plataforma.',
-    bondsHeading: 'Obrigações', bondsDescription: 'Acompanha as tuas obrigações, taxas de cupão e datas de maturidade.', addBond: 'Adicionar obrigação', bondHoldings: 'As tuas obrigações', noBonds: 'Ainda não tens obrigações', addFirstBond: 'Adiciona uma obrigação para acompanhares o valor e a maturidade.', issuer: 'Entidade emitente', bondName: 'Nome da obrigação', nominalValue: 'Valor nominal (€)', purchaseValue: 'Valor de compra (€)', bondCurrentValue: 'Valor atual (€)', couponRate: 'Taxa de cupão (%)', maturityDate: 'Data de maturidade', bondCount: 'OBRIGAÇÕES', bondNote: 'Os valores e as taxas de cupão são introduzidos manualmente; não são cotações em tempo real.',
-    savingsHeading: 'Conta poupança', savingsDescription: 'Acompanha o saldo da tua conta e adiciona depósitos todos os meses.', savingsAccounts: 'As tuas contas poupança', addSavingsAccount: 'Adicionar conta poupança', editSavingsAccount: 'Editar conta poupança', savingsAccountName: 'Nome da conta', institution: 'Banco ou instituição', openingBalance: 'Saldo total atual (€)', addMoney: 'Adicionar dinheiro', depositAmount: 'Montante do depósito (€)', savingsRate: 'Taxa de juro (%)', noSavings: 'Ainda não tens contas poupança', addFirstSavings: 'Adiciona uma conta para começares a acompanhar o dinheiro poupado.', savingsCount: 'CONTAS POUPANÇA', savingsTarget: 'OBJETIVO DE 6 MESES', savingsAccountNote: 'Os depósitos são registados como transferências para poupança na atividade mensal, não como despesas.', currentBalance: 'saldo atual', savingsDepositTitle: 'Depósito em poupança', savingsWithdrawalTitle: 'Levantamento da poupança',
-    investmentCategory: 'Investimento', savingsCategory: 'Poupanças', cashSavedBreakdown: 'Dinheiro poupado', investedBreakdown: 'Capital investido', etfPurchase: 'Compra de ETF', cryptoPurchase: 'Compra de cripto', p2pPurchase: 'Investimento P2P', bondPurchase: 'Compra de obrigação', etfSale: 'Venda de ETF', cryptoSale: 'Venda de cripto', p2pSale: 'Levantamento P2P', bondSale: 'Venda de obrigação', assetSale: 'Venda de investimento',
-    nameRequired: 'Introduz um nome.', providerRequired: 'Introduz uma plataforma ou entidade emitente.', investmentAmountsError: 'Introduz valores válidos superiores a zero.', rateError: 'A taxa não pode ser negativa.', maturityRequired: 'Escolhe uma data de maturidade.', addRecord: 'Adicionar à carteira', saveRecord: 'Guardar alterações', editRecord: 'Editar posição', removeRecord: 'Remover posição', history: 'Histórico', monthlyHistory: 'Histórico mensal', recordMonthlyValue: 'Registar valor mensal', historySubtitle: 'Regista o valor de cada mês para acompanhares a evolução. O histórico de exemplo é ilustrativo, não representa cotações reais.', month: 'Mês', portfolioValue: 'Valor da carteira (€)', saveSnapshot: 'Guardar valor mensal', noHistory: 'Ainda não há valores mensais registados.', futureMonth: 'Escolhe este mês ou um mês anterior.', historyValueError: 'Introduz um valor válido igual ou superior a zero.', historyTrend: 'Evolução do valor', snapshots: 'registos mensais',
-  },
-}
-
-function formatCurrency(amount, language) {
-  return new Intl.NumberFormat(language === 'pt' ? 'pt-PT' : 'en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }).format(amount)
-}
-
-function formatPercent(amount, language) {
-  return new Intl.NumberFormat(language === 'pt' ? 'pt-PT' : 'en-IE', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'always' }).format(amount / 100)
-}
-
-function formatRate(amount, language) {
-  return new Intl.NumberFormat(language === 'pt' ? 'pt-PT' : 'en-IE', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount / 100)
-}
-
-const categories = {
-  expense: [
-    { name: 'Food & dining', icon: ForkKnife, color: '#efa77c' },
-    { name: 'Investment', icon: ChartLine, color: '#78a7bd' },
-    { name: 'Savings', icon: Wallet, color: '#8aa979' },
-    { name: 'Transport', icon: CreditCard, color: '#89a9da' },
-    { name: 'Shopping', icon: ShoppingBag, color: '#ad9be0' },
-    { name: 'Housing', icon: House, color: '#78b7a0' },
-    { name: 'Health', icon: HeartPulse, color: '#df89a0' },
-    { name: 'Entertainment', icon: Film, color: '#e7c46f' },
-    { name: 'Other', icon: Tag, color: '#aab3b1' },
-  ],
-  income: [
-    { name: 'Salary', icon: Wallet, color: '#78b7a0' },
-    { name: 'Freelance', icon: Sparkles, color: '#89a9da' },
-    { name: 'Gift', icon: Gift, color: '#df89a0' },
-    { name: 'Other', icon: Tag, color: '#aab3b1' },
-  ],
-}
-
-let cachedSimulation = null
-
-function btcPriceAt(index) {
-  const trend = 28000 * (1 + index * 0.021)
-  const cycle = 1 + Math.sin(index * 0.55) * 0.18 + Math.sin(index * 1.7) * 0.07
-  return Math.round(Math.max(12000, trend * cycle) * 100) / 100
-}
-
-function threeYearSimulation() {
-  if (cachedSimulation) return cachedSimulation
-  const now = new Date()
-  const firstMonth = new Date(now.getFullYear(), now.getMonth() - 35, 1)
-  const transactions = []
-  const months = []
-  let ETFUnits = 0
-  let ETFInvested = 0
-  let ETFPrice = 100
-  const ETFHistory = []
-  let cryptoUnits = 0
-  let cryptoInvested = 0
-  const cryptoHistory = []
-  let p2pValue = 0
-  let p2pInvested = 0
-  const p2pHistory = []
-  let bondNominal = 0
-  let bondInvested = 0
-  let bondValue = 0
-  const bondHistory = []
-
-  function addTransaction(month, lastDay, isCurrentMonth, item) {
-    if (item.day > lastDay || (isCurrentMonth && item.day > now.getDate())) return false
-    const seed = (Number(month.slice(0, 4)) * 12 + Number(month.slice(5, 7))) + item.key.length * 7 + Math.round(item.amount)
-    const hour = 8 + (seed % 12)
-    const minute = (seed * 7) % 60
-    transactions.push({
-      id: `scenario-${month}-${item.key}`,
-      title: item.title,
-      category: item.category,
-      type: item.type,
-      amount: Math.round(item.amount * 100) / 100,
-      date: `${month}-${String(item.day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`,
-      platform: item.platform || 'Bank account',
-      isDemo: true,
-    })
-    return true
-  }
-
-  for (let index = 0; index < 36; index += 1) {
-    const date = new Date(firstMonth.getFullYear(), firstMonth.getMonth() + index, 1)
-    const month = monthKey(date)
-    const monthSeed = date.getFullYear() * 12 + date.getMonth()
-    const isCurrentMonth = month === monthKey(now)
-    const winter = [10, 11, 0, 1, 2].includes(date.getMonth())
-    const bonusMonth = [2, 5, 8, 11].includes(date.getMonth())
-    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
-    let regularSpending = 0
-
-    addTransaction(month, lastDay, isCurrentMonth, { key: 'salary', day: 1, title: 'Monthly salary', category: 'Salary', type: 'income', amount: 2000 })
-    if (bonusMonth) addTransaction(month, lastDay, isCurrentMonth, { key: 'bonus', day: 15, title: 'Quarterly bonus', category: 'Salary', type: 'income', amount: 750 })
-
-    const rent = 750
-    const phone = 28 + (monthSeed % 5) * 2
-    const internet = 30 + (monthSeed % 3) * 2
-    const water = 27 + (winter ? 13 : 0) + (monthSeed % 4) * 3
-    const electricity = 48 + (winter ? 48 : 0) + (monthSeed % 5) * 4
-    const transport = 62 + (monthSeed % 3) * 4
-    const bills = [
-      { key: 'rent', day: 1, title: 'Rent', category: 'Housing', amount: rent },
-      { key: 'phone', day: 2, title: 'Mobile phone bill', category: 'Housing', amount: phone },
-      { key: 'internet', day: 2, title: 'Home internet', category: 'Housing', amount: internet },
-      { key: 'water', day: 3, title: 'Water bill', category: 'Housing', amount: water },
-      { key: 'electricity', day: 4, title: 'Electricity bill', category: 'Housing', amount: electricity },
-      { key: 'transport', day: 3, title: 'Monthly transport pass', category: 'Transport', amount: transport },
-    ]
-    bills.forEach((bill) => {
-      regularSpending += bill.amount
-      addTransaction(month, lastDay, isCurrentMonth, { ...bill, type: 'expense' })
-    })
-
-    const groceryAmounts = [48, 56, 44, 63].map((amount, week) => amount + ((monthSeed + week * 2) % 5) * 4)
-    ;[5, 12, 19, 26].forEach((day, week) => {
-      regularSpending += groceryAmounts[week]
-      addTransaction(month, lastDay, isCurrentMonth, { key: `groceries-${week + 1}`, day, title: 'Groceries', category: 'Food & dining', type: 'expense', amount: groceryAmounts[week] })
-    })
-    const coffee = 18 + (monthSeed % 4) * 5
-    const dining = 32 + (monthSeed % 5) * 7
-    const leisure = 25 + (monthSeed % 6) * 8
-    regularSpending += coffee + dining + leisure
-    addTransaction(month, lastDay, isCurrentMonth, { key: 'coffee', day: 8, title: 'Coffee & lunch', category: 'Food & dining', type: 'expense', amount: coffee })
-    addTransaction(month, lastDay, isCurrentMonth, { key: 'dining', day: 17, title: 'Dinner out', category: 'Food & dining', type: 'expense', amount: dining })
-    addTransaction(month, lastDay, isCurrentMonth, { key: 'leisure', day: 22, title: 'Books, cinema & outings', category: 'Entertainment', type: 'expense', amount: leisure })
-    if (index % 4 === 1) {
-      const health = 18 + (monthSeed % 5) * 6
-      regularSpending += health
-      addTransaction(month, lastDay, isCurrentMonth, { key: 'health', day: 21, title: 'Pharmacy & health', category: 'Health', type: 'expense', amount: health })
-    }
-    if (date.getMonth() === 6) {
-      const holiday = 780
-      regularSpending += holiday
-      addTransaction(month, lastDay, isCurrentMonth, { key: 'holiday', day: 18, title: 'Summer holiday', category: 'Entertainment', type: 'expense', amount: holiday })
-    }
-    months.push({ date, month, monthSeed, bonusMonth, regularSpending, lastDay, isCurrentMonth })
-
-    // ETF: small monthly contribution
-    ETFPrice = 98 + index * 0.72 + Math.sin(index * 0.7) * 2.4
-    if (addTransaction(month, lastDay, isCurrentMonth, { key: 'etf-vwce', day: 7, title: 'ETF purchase · VWCE', category: 'Investment', type: 'expense', amount: 150, platform: 'Trade Republic' })) {
-      ETFUnits += 150 / ETFPrice
-      ETFInvested += 150
-    }
-    ETFHistory.push({ month, value: Math.round(ETFUnits * ETFPrice * 100) / 100, invested: ETFInvested })
-
-    // P2P: monthly contribution earning about 9% a year
-    p2pValue *= 1 + 0.09 / 12
-    if (addTransaction(month, lastDay, isCurrentMonth, { key: 'p2p-mintos', day: 10, title: 'P2P investment · Mintos', category: 'Investment', type: 'expense', amount: 50, platform: 'Mintos' })) {
-      p2pValue += 50
-      p2pInvested += 50
-    }
-    p2pHistory.push({ month, value: Math.round(p2pValue * 100) / 100, invested: p2pInvested })
-
-    // Bonds: bought quarterly
-    if (bonusMonth) {
-      if (addTransaction(month, lastDay, isCurrentMonth, { key: 'bond-portugal', day: 20, title: 'Bond purchase · Portugal Treasury 2030', category: 'Investment', type: 'expense', amount: 200, platform: 'Banco Invest' })) {
-        bondNominal += 200
-        bondInvested += 200
-      }
-    }
-    bondValue = bondInvested * (1 + index * 0.00012)
-    bondHistory.push({ month, value: Math.round(bondValue * 100) / 100, invested: bondInvested })
-
-    // Crypto: a small BTC buy when the quarterly bonus lands
-    const btcPrice = btcPriceAt(index)
-    if (bonusMonth) {
-      if (addTransaction(month, lastDay, isCurrentMonth, { key: 'crypto-btc', day: 16, title: 'Crypto purchase · BTC', category: 'Investment', type: 'expense', amount: 150, platform: 'Coinbase' })) {
-        cryptoUnits += 150 / btcPrice
-        cryptoInvested += 150
-      }
-    }
-    cryptoHistory.push({ month, value: Math.round(cryptoUnits * btcPrice * 100) / 100, invested: cryptoInvested })
-  }
-
-  const monthlyTarget = months.reduce((sum, month) => sum + month.regularSpending, 0) / months.length
-  const emergencyTarget = Math.round(monthlyTarget * 6 * 100) / 100
-  let emergencyBalance = 0
-  const savingsHistory = []
-  months.forEach(({ month, bonusMonth, lastDay, isCurrentMonth }) => {
-    const plannedDeposit = 150 + (bonusMonth ? 250 : 0)
-    const deposit = Math.min(plannedDeposit, Math.max(0, emergencyTarget - emergencyBalance))
-    if (deposit > 0 && addTransaction(month, lastDay, isCurrentMonth, { key: 'emergency-fund', day: 6, title: 'Emergency fund deposit', category: 'Savings', type: 'expense', amount: deposit, platform: 'Bank account' })) emergencyBalance += deposit
-    savingsHistory.push({ month, value: Math.round(emergencyBalance * 100) / 100 })
-  })
-
-  cachedSimulation = {
-    transactions: transactions.sort((a, b) => a.date.localeCompare(b.date)),
-    etfs: ETFUnits > 0 ? [{ id: 'scenario-vwce', symbol: 'VWCE', name: 'Vanguard FTSE All-World UCITS ETF', platform: 'Trade Republic', units: ETFUnits, averageCost: ETFInvested / ETFUnits, currentPrice: ETFPrice, history: ETFHistory, isDemo: true }] : [],
-    crypto: cryptoUnits > 0 ? [{ id: 'scenario-btc', symbol: 'BTC', name: 'Bitcoin', platform: 'Coinbase', units: cryptoUnits, averageCost: cryptoInvested / cryptoUnits, currentPrice: btcPriceAt(35), history: cryptoHistory, isDemo: true }] : [],
-    p2p: p2pInvested > 0 ? [{ id: 'scenario-mintos', platform: 'Mintos', name: 'Diversified loan portfolio', invested: p2pInvested, currentValue: Math.round(p2pValue * 100) / 100, annualRate: 9, history: p2pHistory, isDemo: true }] : [],
-    bonds: bondInvested > 0 ? [{ id: 'scenario-portugal-bond', name: 'Portugal Treasury Bond 2030', issuer: 'Portuguese Republic', platform: 'Banco Invest', nominalValue: bondNominal, investedValue: bondInvested, currentValue: Math.round(bondValue * 100) / 100, couponRate: 3.1, maturityDate: '2030-10-15', history: bondHistory, isDemo: true }] : [],
-    savings: [{ id: 'scenario-emergency-fund', name: 'Emergency fund · 6 months', institution: 'Bank account', balance: emergencyBalance, target: emergencyTarget, annualRate: 2.25, history: savingsHistory, isDemo: true }],
-  }
-  return cachedSimulation
-}
-
-function demoTransactions() { return threeYearSimulation().transactions }
-
-function demoTransactionsForEmptyMonths(transactions) {
-  const monthsWithActivity = new Set(transactions.map((item) => item.date.slice(0, 7)))
-  return demoTransactions().filter((item) => !monthsWithActivity.has(item.date.slice(0, 7)))
-}
-
-function demoInvestments() { return threeYearSimulation().etfs }
-function demoCrypto() { return threeYearSimulation().crypto }
-function demoP2P() { return threeYearSimulation().p2p }
-function demoBonds() { return threeYearSimulation().bonds }
-function demoSavings() { return threeYearSimulation().savings }
-
-function ensureSimulationSeeded() {
-  try {
-    if (localStorage.getItem(SIMULATION_VERSION_KEY) === SIMULATION_VERSION) return
-    const simulation = threeYearSimulation()
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(simulation.transactions))
-    localStorage.setItem(INVESTMENT_STORAGE_KEY, JSON.stringify(simulation.etfs))
-    localStorage.setItem(CRYPTO_STORAGE_KEY, JSON.stringify(simulation.crypto))
-    localStorage.setItem(P2P_STORAGE_KEY, JSON.stringify(simulation.p2p))
-    localStorage.setItem(BONDS_STORAGE_KEY, JSON.stringify(simulation.bonds))
-    localStorage.setItem(SAVINGS_STORAGE_KEY, JSON.stringify(simulation.savings))
-    localStorage.setItem(SIMULATION_VERSION_KEY, SIMULATION_VERSION)
-  } catch {
-    // Continue with the in-memory simulation when local storage is unavailable.
-  }
-}
-
-function loadTransactions() {
-  ensureSimulationSeeded()
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    const transactions = stored ? JSON.parse(stored) : demoTransactions()
-    return transactions.map((item) => ({ ...item, date: normalizeTransactionDate(item.date) }))
-  } catch {
-    return demoTransactions()
-  }
-}
-
-function normalizeDemoPlatforms(records, platform) {
-  return records.map((record) => record.isDemo && !record.platform ? { ...record, platform } : record)
-}
-
-function loadInvestments() {
-  ensureSimulationSeeded()
-  try {
-    const stored = localStorage.getItem(INVESTMENT_STORAGE_KEY)
-    return normalizeDemoPlatforms(stored ? JSON.parse(stored) : demoInvestments(), 'Trade Republic')
-  } catch {
-    return normalizeDemoPlatforms(demoInvestments(), 'Trade Republic')
-  }
-}
-
-function loadCollection(key, fallback) {
-  ensureSimulationSeeded()
-  try {
-    const stored = localStorage.getItem(key)
-    const records = stored ? JSON.parse(stored) : fallback()
-    const defaultPlatform = key === CRYPTO_STORAGE_KEY ? 'Coinbase' : key === P2P_STORAGE_KEY ? 'Mintos' : 'Banco Invest'
-    return normalizeDemoPlatforms(records, defaultPlatform)
-  } catch {
-    return fallback()
-  }
-}
-
-function loadSavingsAccounts() {
-  ensureSimulationSeeded()
-  try {
-    const stored = localStorage.getItem(SAVINGS_STORAGE_KEY)
-    const accounts = stored ? JSON.parse(stored) : localStorage.getItem(STORAGE_KEY) ? [] : demoSavings()
-    return accounts.map((account) => account.isDemo && !account.institution ? { ...account, institution: 'Bank account' } : account)
-  } catch {
-    return []
-  }
-}
-
-function loadFireGoal() {
-  try {
-    const stored = Number(localStorage.getItem(FIRE_GOAL_STORAGE_KEY))
-    return Number.isFinite(stored) && stored > 0 ? stored : 300000
-  } catch {
-    return 300000
-  }
-}
-
-function loadPlatforms() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(PLATFORMS_STORAGE_KEY) || '[]')
-    const fromTransactions = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').map((item) => item.platform).filter(Boolean)
-    const fromAssets = [INVESTMENT_STORAGE_KEY, CRYPTO_STORAGE_KEY, P2P_STORAGE_KEY, BONDS_STORAGE_KEY].flatMap((key) => JSON.parse(localStorage.getItem(key) || '[]').map((item) => item.platform).filter(Boolean))
-    const fromSavings = JSON.parse(localStorage.getItem(SAVINGS_STORAGE_KEY) || '[]').map((item) => item.institution).filter(Boolean)
-    return [...new Set([...DEFAULT_PLATFORMS, ...(Array.isArray(stored) ? stored : []), ...fromTransactions, ...fromAssets, ...fromSavings])]
-  } catch {
-    return DEFAULT_PLATFORMS
-  }
-}
-
-function loadCustomCategories() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(CUSTOM_CATEGORIES_STORAGE_KEY) || '{}')
-    return { expense: Array.isArray(stored.expense) ? stored.expense : [], income: Array.isArray(stored.income) ? stored.income : [] }
-  } catch {
-    return { expense: [], income: [] }
-  }
-}
-
-function loadUserProfile() {
-  try {
-    const stored = localStorage.getItem(PROFILE_STORAGE_KEY)
-    if (stored) return JSON.parse(stored)
-    const profile = { name: '', createdAt: dateKey(new Date()) }
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile))
-    return profile
-  } catch { /* Start with a local profile if storage is unavailable. */ }
-  return { name: '', createdAt: dateKey(new Date()) }
-}
-
-function loadInvestmentVisibility() {
-  const defaults = { etfs: true, crypto: true, p2p: true, bonds: true, savings: true }
-  try {
-    const stored = JSON.parse(localStorage.getItem(VISIBILITY_STORAGE_KEY) || '{}')
-    return Object.fromEntries(Object.keys(defaults).map((key) => [key, stored[key] !== false]))
-  } catch {
-    return defaults
-  }
-}
-
-function dateForMonth(date) {
-  return new Date(date.getFullYear(), date.getMonth(), 1)
-}
-
-function monthKey(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-}
-
-function dateKey(date) {
-  return `${monthKey(date)}-${String(date.getDate()).padStart(2, '0')}`
-}
-
-function timeStamp(date) {
-  return `${dateKey(date)}T${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`
-}
-
-function normalizeTransactionDate(value) {
-  if (typeof value !== 'string') return value
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T12:00:00`
-  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return `${value}:00`
-  return value
-}
-
-function formatDateTime(value, locale, withYear = false) {
-  const parsed = new Date(normalizeTransactionDate(value))
-  if (Number.isNaN(parsed.getTime())) return value
-  const options = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }
-  if (withYear) options.year = 'numeric'
-  return new Intl.DateTimeFormat(locale, options).format(parsed)
-}
-
-function portfolioCostBasis(record, type) {
-  if (type === 'etfs' || type === 'crypto') return record.units * record.averageCost
-  if (type === 'p2p') return record.invested
-  if (type === 'bonds') return record.investedValue
-  return 0
-}
-
-function investmentTypeFromTransaction(transaction) {
-  if (transaction.investmentType) return transaction.investmentType
-  const title = (transaction.title || '').toLowerCase()
-  if (title.includes('etf')) return 'etfs'
-  if (title.includes('crypto')) return 'crypto'
-  if (title.includes('p2p')) return 'p2p'
-  if (title.includes('bond')) return 'bonds'
-  return null
-}
-
-function categoryInfo(name, type = 'expense') {
-  return categories[type].find((item) => item.name === name) || categories.expense.at(-1)
-}
+import {
+  BONDS_STORAGE_KEY,
+  CRYPTO_STORAGE_KEY,
+  CUSTOM_CATEGORIES_STORAGE_KEY,
+  FIRE_GOAL_STORAGE_KEY,
+  INVESTMENT_STORAGE_KEY,
+  LANGUAGE_KEY,
+  P2P_STORAGE_KEY,
+  PLATFORMS_STORAGE_KEY,
+  PROFILE_STORAGE_KEY,
+  SAVINGS_STORAGE_KEY,
+  STORAGE_KEY,
+  VISIBILITY_STORAGE_KEY,
+} from './lib/constants.js'
+import { dateForMonth, dateKey, formatDateTime, monthKey, normalizeTransactionDate, timeStamp } from './lib/dates.js'
+import { formatCurrency, formatPercent, formatRate } from './lib/format.js'
+import { initialsForName, resizeImageFile } from './lib/image.js'
+import { assetMarketValue, investmentTypeFromTransaction, portfolioCostBasis } from './lib/portfolio.js'
+import { buildPositionTimeline } from './lib/timeline.js'
+import { demoTransactionsForEmptyMonths } from './lib/simulation.js'
+import {
+  loadBonds,
+  loadCrypto,
+  loadCustomCategories,
+  loadFireGoal,
+  loadInvestments,
+  loadInvestmentVisibility,
+  loadP2P,
+  loadPlatforms,
+  loadSavingsAccounts,
+  loadTransactions,
+  loadUserProfile,
+} from './lib/storage.js'
+import { categories, categoryInfo } from './data/categories.js'
+import { messages } from './i18n/messages.jsx'
 
 function IconBadge({ icon: Icon, color }) {
   return <span className="transaction-icon" style={{ '--icon-color': color }}><Icon size={18} strokeWidth={1.8} /></span>
@@ -509,7 +103,7 @@ function Modal({ language, onClose, onSave, selectedMonth, transaction, platform
           <label className="field-label" htmlFor="transaction-title">{t.whatFor}</label>
           <input id="transaction-title" autoFocus placeholder={t.titlePlaceholder} value={title} onChange={(event) => setTitle(event.target.value)} />
           <div className="form-row">
-            <div><label className="field-label" htmlFor="transaction-amount">{t.amountEuro}</label><div className="amount-input"><span>€</span><input id="transaction-amount" type="number" min="0.01" step="0.01" placeholder="0.00" value={amount} onChange={(event) => setAmount(event.target.value)} /></div></div>
+            <div><label className="field-label" htmlFor="transaction-amount">{t.amountEuro}</label><div className="amount-input"><span>â‚¬</span><input id="transaction-amount" type="number" min="0.01" step="0.01" placeholder="0.00" value={amount} onChange={(event) => setAmount(event.target.value)} /></div></div>
             <div><label className="field-label" htmlFor="transaction-date">{t.date}</label><div className="date-input"><CalendarDays size={16} /><input id="transaction-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} /></div></div>
           </div>
           <div className="form-row">
@@ -554,7 +148,7 @@ function InvestmentModal({ language, holding, onClose, onSave, platforms, assetT
           <div className="form-row"><div><label className="field-label" htmlFor="etf-symbol">{t.ticker}</label><input className="investment-field" id="etf-symbol" autoFocus placeholder={t.tickerPlaceholder} value={symbol} onChange={(event) => setSymbol(event.target.value.toUpperCase())} /></div><div><label className="field-label" htmlFor="etf-units">{t.unitsOwned}</label><input className="investment-field" id="etf-units" type="number" min="0.0001" step="any" placeholder={t.unitsPlaceholder} value={units} onChange={(event) => setUnits(event.target.value)} /></div></div>
           <label className="field-label" htmlFor="etf-name">{isCrypto ? t.cryptoName : t.fundName}</label><input className="investment-field" id="etf-name" placeholder={isCrypto ? t.cryptoPlaceholder : t.fundPlaceholder} value={name} onChange={(event) => setName(event.target.value)} />
           <PlatformSelector id="asset-platform" label={t.platform} value={platform} onChange={setPlatform} platforms={platforms} language={language} />
-          <div className="form-row"><div><label className="field-label" htmlFor="etf-average-cost">{t.averageBuyPrice}</label><div className="amount-input"><span>€</span><input id="etf-average-cost" type="number" min="0" step="0.01" placeholder={t.pricePlaceholder} value={averageCost} onChange={(event) => setAverageCost(event.target.value)} /></div></div><div><label className="field-label" htmlFor="etf-current-price">{t.currentPriceEuro}</label><div className="amount-input"><span>€</span><input id="etf-current-price" type="number" min="0" step="0.01" placeholder={t.pricePlaceholder} value={currentPrice} onChange={(event) => setCurrentPrice(event.target.value)} /></div></div></div>
+          <div className="form-row"><div><label className="field-label" htmlFor="etf-average-cost">{t.averageBuyPrice}</label><div className="amount-input"><span>â‚¬</span><input id="etf-average-cost" type="number" min="0" step="0.01" placeholder={t.pricePlaceholder} value={averageCost} onChange={(event) => setAverageCost(event.target.value)} /></div></div><div><label className="field-label" htmlFor="etf-current-price">{t.currentPriceEuro}</label><div className="amount-input"><span>â‚¬</span><input id="etf-current-price" type="number" min="0" step="0.01" placeholder={t.pricePlaceholder} value={currentPrice} onChange={(event) => setCurrentPrice(event.target.value)} /></div></div></div>
           {error && <p className="form-error">{error}</p>}
           <button className="submit-button" type="submit">{holding ? <Check size={17} /> : <Plus size={17} />} {holding ? t.saveETF : t.addToPortfolio}</button>
         </form>
@@ -577,12 +171,6 @@ function InvestmentAllocation({ holdings, language, emptyLabel }) {
   return (
     <article className="panel investment-allocation-panel"><div className="panel-heading"><div><h2>{t.allocation}</h2><p>{t.allocationSubtitle}</p></div><span className="panel-icon"><ChartLine size={17} /></span></div><div className="investment-allocation-content"><div className="donut" style={{ background }}><div className="donut-hole"><span>{t.marketValue.toLowerCase()}</span><strong>{formatCurrency(totalValue, language)}</strong></div></div><div className="investment-legend">{holdings.length ? holdings.map((holding, index) => <div className="investment-legend-row" key={holding.id}><span className="investment-fund-label"><i style={{ background: palette[index % palette.length] }} /><strong>{holding.symbol}</strong></span><span>{formatCurrency(holding.units * holding.currentPrice, language)}</span></div>) : <p className="empty-note">{emptyLabel}</p>}</div></div></article>
   )
-}
-
-function assetMarketValue(record, kind) {
-  if (kind === 'etfs' || kind === 'crypto') return record.units * record.currentPrice
-  if (kind === 'savings') return record.balance
-  return record.currentValue
 }
 
 function InvestmentHistoryChart({ history, language }) {
@@ -612,7 +200,7 @@ function InvestmentHistoryModal({ language, kind, record, onClose, onSave }) {
   const [value, setValue] = useState(String(currentValue))
   const [error, setError] = useState('')
   const locale = language === 'pt' ? 'pt-PT' : 'en-IE'
-  const label = kind === 'etfs' || kind === 'crypto' ? `${record.symbol} · ${record.name}` : record.name
+  const label = kind === 'etfs' || kind === 'crypto' ? `${record.symbol} Â· ${record.name}` : record.name
 
   useEffect(() => {
     const snapshot = record.history?.find((item) => item.month === month)
@@ -636,7 +224,7 @@ function InvestmentHistoryModal({ language, kind, record, onClose, onSave }) {
   return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="modal history-modal" role="dialog" aria-modal="true" aria-labelledby="history-modal-title">
     <div className="modal-top"><div><p className="eyebrow">{t.monthlyHistory.toUpperCase()}</p><h2 id="history-modal-title">{label}</h2></div><button className="icon-button" onClick={onClose} aria-label={t.close}><X size={19} /></button></div>
     <p className="history-intro">{t.historySubtitle}</p><InvestmentHistoryChart history={record.history} language={language} />
-    <form className="history-form" onSubmit={submit}><div className="form-row"><div><label className="field-label" htmlFor="history-month">{t.month}</label><input className="investment-field" id="history-month" type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></div><div><label className="field-label" htmlFor="history-value">{t.portfolioValue}</label><div className="amount-input"><span>€</span><input id="history-value" type="number" min="0" step="0.01" placeholder="0.00" value={value} onChange={(event) => setValue(event.target.value)} /></div></div></div>{error && <p className="form-error">{error}</p>}<button className="submit-button" type="submit"><Check size={17} /> {t.saveSnapshot}</button></form>
+    <form className="history-form" onSubmit={submit}><div className="form-row"><div><label className="field-label" htmlFor="history-month">{t.month}</label><input className="investment-field" id="history-month" type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></div><div><label className="field-label" htmlFor="history-value">{t.portfolioValue}</label><div className="amount-input"><span>â‚¬</span><input id="history-value" type="number" min="0" step="0.01" placeholder="0.00" value={value} onChange={(event) => setValue(event.target.value)} /></div></div></div>{error && <p className="form-error">{error}</p>}<button className="submit-button" type="submit"><Check size={17} /> {t.saveSnapshot}</button></form>
     <p className="history-count">{record.history?.length || 0} {t.snapshots}</p>
   </section></div>
 }
@@ -680,14 +268,14 @@ function InvestmentsPage({ language, holdings, onSave, onDelete, platforms, asse
       <section className="summary-grid investment-summary" aria-label={t.investments}>
         <article className="summary-card balance-card"><div className="summary-label">{t.marketValue}<span className="summary-symbol"><ChartLine size={16} /></span></div><div className="summary-amount">{formatCurrency(marketValue, language)}</div><div className="summary-foot">{t.currentPortfolio}</div><div className="balance-art"><span /><span /><span /></div></article>
         <article className="summary-card"><div className="summary-label">{t.totalInvested}<span className="summary-symbol income-symbol"><Wallet size={16} /></span></div><div className="summary-amount">{formatCurrency(totalInvested, language)}</div><div className="summary-foot">{t.investedSoFar}</div></article>
-        <article className="summary-card"><div className="summary-label">{t.unrealisedReturn}<span className="summary-symbol savings-symbol"><TrendingUp size={16} /></span></div><div className={`summary-amount ${unrealised < 0 ? 'negative-return' : 'positive-return'}`}>{unrealised >= 0 ? '+' : '−'}{formatCurrency(Math.abs(unrealised), language)}</div><div className="summary-foot"><span className={`trend-chip ${unrealised < 0 ? 'negative-chip' : ''}`}>{formatPercent(returnRate, language)}</span>{t.basedOnPrices}</div></article>
+        <article className="summary-card"><div className="summary-label">{t.unrealisedReturn}<span className="summary-symbol savings-symbol"><TrendingUp size={16} /></span></div><div className={`summary-amount ${unrealised < 0 ? 'negative-return' : 'positive-return'}`}>{unrealised >= 0 ? '+' : 'âˆ’'}{formatCurrency(Math.abs(unrealised), language)}</div><div className="summary-foot"><span className={`trend-chip ${unrealised < 0 ? 'negative-chip' : ''}`}>{formatPercent(returnRate, language)}</span>{t.basedOnPrices}</div></article>
         <article className="summary-card"><div className="summary-label">{isCrypto ? t.cryptoCount : t.ETFCount}<span className="summary-symbol expense-symbol">{isCrypto ? <Bitcoin size={16} /> : <ChartLine size={16} />}</span></div><div className="summary-amount">{holdings.length}</div><div className="summary-foot">{t.assetsTracked}</div></article>
       </section>
       <section className="insights-grid investment-insights"><InvestmentAllocation holdings={holdings} language={language} emptyLabel={emptyHeading} /><article className="panel manual-pricing-panel"><span className="manual-pricing-icon">{isCrypto ? <Bitcoin size={18} /> : <ChartLine size={18} />}</span><div><strong>{language === 'pt' ? 'Acompanha ao teu ritmo' : 'Your portfolio, your pace'}</strong><p>{t.manualPrices}</p></div><span className="manual-pricing-tag">MANUAL</span></article></section>
       <section className="panel holdings-panel"><div className="transactions-heading"><div><h2>{listHeading}</h2><p>{t.holdingsSubtitle}</p></div><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {addLabel}</button></div>
-        {holdings.length ? <div className="holdings-table-wrap"><table className="holdings-table"><thead><tr><th>{t.symbol}</th><th>{t.platform}</th><th>{t.units}</th><th>{t.avgCost}</th><th>{t.currentPrice}</th><th>{t.value}</th><th>{t.return}</th><th><span className="sr-only">{t.history}</span></th></tr></thead><tbody>{holdings.map((holding) => { const invested = holding.units * holding.averageCost; const value = holding.units * holding.currentPrice; const gain = value - invested; const percentage = invested ? (gain / invested) * 100 : 0; return <tr key={holding.id}><td><button className="holding-fund" onClick={() => setEditingHolding(holding)} aria-label={`${t.editRecord}: ${holding.symbol}`}><span className="holding-symbol">{holding.symbol}</span><span className="holding-name">{holding.name}{holding.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span></button></td><td><span className="platform-pill">{holding.platform || t.noPlatform}</span></td><td>{numberFormat.format(holding.units)}</td><td>{formatCurrency(holding.averageCost, language)}</td><td>{formatCurrency(holding.currentPrice, language)}</td><td className="holding-value">{formatCurrency(value, language)}</td><td><span className={gain >= 0 ? 'holding-return positive-return' : 'holding-return negative-return'}>{gain >= 0 ? '+' : '−'}{formatCurrency(Math.abs(gain), language)}<small>{formatPercent(percentage, language)}</small></span></td><td><div className="transaction-actions"><button className="history-row" onClick={() => setHistoryRecord(holding)} aria-label={`${t.history}: ${holding.symbol}`} title={t.history}><ChartLine size={15} /></button><button className="edit-row" onClick={() => setEditingHolding(holding)} aria-label={`${t.editRecord}: ${holding.symbol}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(holding.id)} aria-label={`${t.removeRecord}: ${holding.symbol}`} title={t.delete}><X size={15} /></button></div></td></tr> })}</tbody></table></div> : <div className="empty-transactions"><span className="empty-icon">{isCrypto ? <Bitcoin size={21} /> : <ChartLine size={21} />}</span><strong>{emptyHeading}</strong><p>{emptyMessage}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {addLabel}</button></div>}
+        {holdings.length ? <div className="holdings-table-wrap"><table className="holdings-table"><thead><tr><th>{t.symbol}</th><th>{t.platform}</th><th>{t.units}</th><th>{t.avgCost}</th><th>{t.currentPrice}</th><th>{t.value}</th><th>{t.return}</th><th><span className="sr-only">{t.history}</span></th></tr></thead><tbody>{holdings.map((holding) => { const invested = holding.units * holding.averageCost; const value = holding.units * holding.currentPrice; const gain = value - invested; const percentage = invested ? (gain / invested) * 100 : 0; return <tr key={holding.id}><td><button className="holding-fund" onClick={() => setEditingHolding(holding)} aria-label={`${t.editRecord}: ${holding.symbol}`}><span className="holding-symbol">{holding.symbol}</span><span className="holding-name">{holding.name}{holding.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span></button></td><td><span className="platform-pill">{holding.platform || t.noPlatform}</span></td><td>{numberFormat.format(holding.units)}</td><td>{formatCurrency(holding.averageCost, language)}</td><td>{formatCurrency(holding.currentPrice, language)}</td><td className="holding-value">{formatCurrency(value, language)}</td><td><span className={gain >= 0 ? 'holding-return positive-return' : 'holding-return negative-return'}>{gain >= 0 ? '+' : 'âˆ’'}{formatCurrency(Math.abs(gain), language)}<small>{formatPercent(percentage, language)}</small></span></td><td><div className="transaction-actions"><button className="history-row" onClick={() => setHistoryRecord(holding)} aria-label={`${t.history}: ${holding.symbol}`} title={t.history}><ChartLine size={15} /></button><button className="edit-row" onClick={() => setEditingHolding(holding)} aria-label={`${t.editRecord}: ${holding.symbol}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(holding.id)} aria-label={`${t.removeRecord}: ${holding.symbol}`} title={t.delete}><X size={15} /></button></div></td></tr> })}</tbody></table></div> : <div className="empty-transactions"><span className="empty-icon">{isCrypto ? <Bitcoin size={21} /> : <ChartLine size={21} />}</span><strong>{emptyHeading}</strong><p>{emptyMessage}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {addLabel}</button></div>}
       </section>
-      <footer className="page-footer"><span>{t.manualPrices}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
+      <footer className="page-footer"><span>{t.manualPrices}</span><span>{t.footerMonth} <span className="footer-heart">â™¥</span></span></footer>
       {(showModal || editingHolding) && <InvestmentModal language={language} holding={editingHolding} onClose={closeModal} onSave={saveHolding} platforms={platforms} assetType={assetType} />}
       {historyRecord && <InvestmentHistoryModal language={language} kind={assetType === 'crypto' ? 'crypto' : 'etfs'} record={historyRecord} onClose={() => setHistoryRecord(null)} onSave={saveHistory} />}
     </div>
@@ -729,14 +317,14 @@ function FixedIncomeModal({ language, kind, record, onClose, onSave, platforms }
     <div className="modal-top"><div><p className="eyebrow">{record ? t.editRecord.toUpperCase() : (isBond ? t.addBond : t.addP2P).toUpperCase()}</p><h2 id="fixed-income-modal-title">{record ? (isBond ? t.bondsHeading : t.p2pHeading) : (isBond ? t.addBond : t.addP2P)}</h2></div><button className="icon-button" onClick={onClose} aria-label={t.close}><X size={19} /></button></div>
     <form onSubmit={submit}>
       {isBond ? <>
-        <label className="field-label" htmlFor="fixed-name">{t.bondName}</label><input className="investment-field" id="fixed-name" autoFocus placeholder={language === 'pt' ? 'ex.: Obrigação do Tesouro' : 'e.g. Treasury bond 2030'} value={name} onChange={(event) => setName(event.target.value)} />
+        <label className="field-label" htmlFor="fixed-name">{t.bondName}</label><input className="investment-field" id="fixed-name" autoFocus placeholder={language === 'pt' ? 'ex.: ObrigaÃ§Ã£o do Tesouro' : 'e.g. Treasury bond 2030'} value={name} onChange={(event) => setName(event.target.value)} />
         <PlatformSelector id="fixed-platform" label={t.platform} value={platform} onChange={setPlatform} platforms={platforms} language={language} />
-        <div className="form-row"><div><label className="field-label" htmlFor="fixed-issuer">{t.issuer}</label><input className="investment-field" id="fixed-issuer" placeholder={language === 'pt' ? 'ex.: República Portuguesa' : 'e.g. Government of Portugal'} value={issuer} onChange={(event) => setIssuer(event.target.value)} /></div><div><label className="field-label" htmlFor="fixed-maturity">{t.maturityDate}</label><input className="investment-field" id="fixed-maturity" type="date" value={maturityDate} onChange={(event) => setMaturityDate(event.target.value)} /></div></div>
-        <div className="form-row"><div><label className="field-label" htmlFor="fixed-nominal">{t.nominalValue}</label><div className="amount-input"><span>€</span><input id="fixed-nominal" type="number" min="0.01" step="0.01" placeholder={t.pricePlaceholder} value={nominalValue} onChange={(event) => setNominalValue(event.target.value)} /></div></div><div><label className="field-label" htmlFor="fixed-purchase">{t.purchaseValue}</label><div className="amount-input"><span>€</span><input id="fixed-purchase" type="number" min="0.01" step="0.01" placeholder={t.pricePlaceholder} value={purchaseValue} onChange={(event) => setPurchaseValue(event.target.value)} /></div></div></div>
-        <div className="form-row"><div><label className="field-label" htmlFor="fixed-current">{t.bondCurrentValue}</label><div className="amount-input"><span>€</span><input id="fixed-current" type="number" min="0" step="0.01" placeholder={t.pricePlaceholder} value={currentValue} onChange={(event) => setCurrentValue(event.target.value)} /></div></div><div><label className="field-label" htmlFor="fixed-rate">{t.couponRate}</label><div className="amount-input"><input id="fixed-rate" type="number" min="0" step="0.01" placeholder="0.00" value={annualRate} onChange={(event) => setAnnualRate(event.target.value)} /><span>%</span></div></div></div>
+        <div className="form-row"><div><label className="field-label" htmlFor="fixed-issuer">{t.issuer}</label><input className="investment-field" id="fixed-issuer" placeholder={language === 'pt' ? 'ex.: RepÃºblica Portuguesa' : 'e.g. Government of Portugal'} value={issuer} onChange={(event) => setIssuer(event.target.value)} /></div><div><label className="field-label" htmlFor="fixed-maturity">{t.maturityDate}</label><input className="investment-field" id="fixed-maturity" type="date" value={maturityDate} onChange={(event) => setMaturityDate(event.target.value)} /></div></div>
+        <div className="form-row"><div><label className="field-label" htmlFor="fixed-nominal">{t.nominalValue}</label><div className="amount-input"><span>â‚¬</span><input id="fixed-nominal" type="number" min="0.01" step="0.01" placeholder={t.pricePlaceholder} value={nominalValue} onChange={(event) => setNominalValue(event.target.value)} /></div></div><div><label className="field-label" htmlFor="fixed-purchase">{t.purchaseValue}</label><div className="amount-input"><span>â‚¬</span><input id="fixed-purchase" type="number" min="0.01" step="0.01" placeholder={t.pricePlaceholder} value={purchaseValue} onChange={(event) => setPurchaseValue(event.target.value)} /></div></div></div>
+        <div className="form-row"><div><label className="field-label" htmlFor="fixed-current">{t.bondCurrentValue}</label><div className="amount-input"><span>â‚¬</span><input id="fixed-current" type="number" min="0" step="0.01" placeholder={t.pricePlaceholder} value={currentValue} onChange={(event) => setCurrentValue(event.target.value)} /></div></div><div><label className="field-label" htmlFor="fixed-rate">{t.couponRate}</label><div className="amount-input"><input id="fixed-rate" type="number" min="0" step="0.01" placeholder="0.00" value={annualRate} onChange={(event) => setAnnualRate(event.target.value)} /><span>%</span></div></div></div>
       </> : <>
         <div className="form-row"><div><PlatformSelector id="fixed-platform" label={t.platform} value={platform} onChange={setPlatform} platforms={platforms} language={language} /></div><div><label className="field-label" htmlFor="fixed-name">{t.projectName}</label><input className="investment-field" id="fixed-name" autoFocus placeholder={language === 'pt' ? 'ex.: Carteira diversificada' : 'e.g. Diversified loan portfolio'} value={name} onChange={(event) => setName(event.target.value)} /></div></div>
-        <div className="form-row"><div><label className="field-label" htmlFor="fixed-invested">{t.amountInvested}</label><div className="amount-input"><span>€</span><input id="fixed-invested" type="number" min="0.01" step="0.01" placeholder={t.pricePlaceholder} value={invested} onChange={(event) => setInvested(event.target.value)} /></div></div><div><label className="field-label" htmlFor="fixed-current">{t.accountValue}</label><div className="amount-input"><span>€</span><input id="fixed-current" type="number" min="0" step="0.01" placeholder={t.pricePlaceholder} value={currentValue} onChange={(event) => setCurrentValue(event.target.value)} /></div></div></div>
+        <div className="form-row"><div><label className="field-label" htmlFor="fixed-invested">{t.amountInvested}</label><div className="amount-input"><span>â‚¬</span><input id="fixed-invested" type="number" min="0.01" step="0.01" placeholder={t.pricePlaceholder} value={invested} onChange={(event) => setInvested(event.target.value)} /></div></div><div><label className="field-label" htmlFor="fixed-current">{t.accountValue}</label><div className="amount-input"><span>â‚¬</span><input id="fixed-current" type="number" min="0" step="0.01" placeholder={t.pricePlaceholder} value={currentValue} onChange={(event) => setCurrentValue(event.target.value)} /></div></div></div>
         <label className="field-label" htmlFor="fixed-rate">{t.expectedReturn}</label><div className="amount-input"><input id="fixed-rate" type="number" min="0" step="0.01" placeholder="0.00" value={annualRate} onChange={(event) => setAnnualRate(event.target.value)} /><span>%</span></div>
       </>}
       {error && <p className="form-error">{error}</p>}<button className="submit-button" type="submit">{record ? <Check size={17} /> : <Plus size={17} />} {record ? t.saveRecord : t.addRecord}</button>
@@ -768,13 +356,13 @@ function FixedIncomePage({ language, kind, records, onSave, onDelete, platforms 
 
   return <div className="page-content investments-page fixed-income-page">
     <section className="welcome-row"><div><p className="eyebrow">{t.portfolioEyebrow}</p><h1>{title}<span>.</span></h1><p className="welcome-sub">{isBond ? t.bondsDescription : t.p2pDescription}</p></div><button className="primary-button" onClick={() => setShowModal(true)}><Plus size={18} /> {addLabel}</button></section>
-    <section className="summary-grid investment-summary"><article className="summary-card balance-card"><div className="summary-label">{t.marketValue}<span className="summary-symbol">{isBond ? <Landmark size={16} /> : <HandCoins size={16} />}</span></div><div className="summary-amount">{formatCurrency(marketTotal, language)}</div><div className="summary-foot">{t.currentPortfolio}</div><div className="balance-art"><span /><span /><span /></div></article><article className="summary-card"><div className="summary-label">{t.totalInvested}<span className="summary-symbol income-symbol"><Wallet size={16} /></span></div><div className="summary-amount">{formatCurrency(investedTotal, language)}</div><div className="summary-foot">{t.investedSoFar}</div></article><article className="summary-card"><div className="summary-label">{t.unrealisedReturn}<span className="summary-symbol savings-symbol"><TrendingUp size={16} /></span></div><div className={`summary-amount ${gain < 0 ? 'negative-return' : 'positive-return'}`}>{gain < 0 ? '−' : '+'}{formatCurrency(Math.abs(gain), language)}</div><div className="summary-foot"><span className={`trend-chip ${gain < 0 ? 'negative-chip' : ''}`}>{formatPercent(investedTotal ? gain / investedTotal * 100 : 0, language)}</span>{t.basedOnPrices}</div></article><article className="summary-card"><div className="summary-label">{countLabel}<span className="summary-symbol expense-symbol">{isBond ? <Landmark size={16} /> : <HandCoins size={16} />}</span></div><div className="summary-amount">{records.length}</div><div className="summary-foot">{t.assetsTracked}</div></article></section>
+    <section className="summary-grid investment-summary"><article className="summary-card balance-card"><div className="summary-label">{t.marketValue}<span className="summary-symbol">{isBond ? <Landmark size={16} /> : <HandCoins size={16} />}</span></div><div className="summary-amount">{formatCurrency(marketTotal, language)}</div><div className="summary-foot">{t.currentPortfolio}</div><div className="balance-art"><span /><span /><span /></div></article><article className="summary-card"><div className="summary-label">{t.totalInvested}<span className="summary-symbol income-symbol"><Wallet size={16} /></span></div><div className="summary-amount">{formatCurrency(investedTotal, language)}</div><div className="summary-foot">{t.investedSoFar}</div></article><article className="summary-card"><div className="summary-label">{t.unrealisedReturn}<span className="summary-symbol savings-symbol"><TrendingUp size={16} /></span></div><div className={`summary-amount ${gain < 0 ? 'negative-return' : 'positive-return'}`}>{gain < 0 ? 'âˆ’' : '+'}{formatCurrency(Math.abs(gain), language)}</div><div className="summary-foot"><span className={`trend-chip ${gain < 0 ? 'negative-chip' : ''}`}>{formatPercent(investedTotal ? gain / investedTotal * 100 : 0, language)}</span>{t.basedOnPrices}</div></article><article className="summary-card"><div className="summary-label">{countLabel}<span className="summary-symbol expense-symbol">{isBond ? <Landmark size={16} /> : <HandCoins size={16} />}</span></div><div className="summary-amount">{records.length}</div><div className="summary-foot">{t.assetsTracked}</div></article></section>
     <section className="panel manual-pricing-panel fixed-income-note"><span className="manual-pricing-icon">{isBond ? <Landmark size={18} /> : <HandCoins size={18} />}</span><div><strong>{isBond ? t.bondsHeading : t.p2pHeading}</strong><p>{isBond ? t.bondNote : t.p2pNote}</p></div><span className="manual-pricing-tag">{language === 'pt' ? 'MANUAL' : 'MANUAL'}</span></section>
     <section className="panel holdings-panel"><div className="transactions-heading"><div><h2>{listHeading}</h2><p>{t.holdingsSubtitle}</p></div><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {addLabel}</button></div>
-      {records.length ? <div className="holdings-table-wrap"><table className="holdings-table fixed-income-table"><thead>{isBond ? <tr><th>{t.bondName}</th><th>{t.platform}</th><th>{t.nominalValue}</th><th>{t.purchaseValue}</th><th>{t.value}</th><th>{t.couponRate}</th><th>{t.maturityDate}</th><th>{t.return}</th><th /></tr> : <tr><th>{t.platform}</th><th>{t.projectName}</th><th>{t.amountInvested}</th><th>{t.accountValue}</th><th>{t.expectedReturn}</th><th>{t.return}</th><th /></tr>}</thead><tbody>{records.map((record) => { const principal = isBond ? record.investedValue : record.invested; const difference = record.currentValue - principal; const gainPercent = principal ? difference / principal * 100 : 0; return isBond ? <tr key={record.id}><td><button className="holding-fund" onClick={() => setEditing(record)}><span className="holding-symbol"><Landmark size={15} /></span><span className="holding-name">{record.name}{record.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span></button><small className="fixed-subline">{record.issuer}</small></td><td><span className="platform-pill">{record.platform || t.noPlatform}</span></td><td>{formatCurrency(record.nominalValue, language)}</td><td>{formatCurrency(record.investedValue, language)}</td><td className="holding-value">{formatCurrency(record.currentValue, language)}</td><td>{formatPercent(record.couponRate, language)}</td><td>{formatMaturity(record.maturityDate)}</td><td><span className={`holding-return ${difference >= 0 ? 'positive-return' : 'negative-return'}`}>{difference < 0 ? '−' : '+'}{formatCurrency(Math.abs(difference), language)}<small>{formatPercent(gainPercent, language)}</small></span></td><td><div className="transaction-actions"><button className="edit-row" onClick={() => setEditing(record)} aria-label={`${t.editRecord}: ${record.name}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(record.id)} aria-label={`${t.removeRecord}: ${record.name}`} title={t.delete}><X size={15} /></button></div></td></tr> : <tr key={record.id}><td><button className="holding-fund" onClick={() => setEditing(record)}><span className="holding-symbol"><HandCoins size={15} /></span><span className="holding-name">{record.platform}</span></button></td><td>{record.name}{record.isDemo && <i className="sample-chip">{t.sampleData}</i>}</td><td>{formatCurrency(record.invested, language)}</td><td className="holding-value">{formatCurrency(record.currentValue, language)}</td><td>{formatPercent(record.annualRate, language)}</td><td><span className={`holding-return ${difference >= 0 ? 'positive-return' : 'negative-return'}`}>{difference < 0 ? '−' : '+'}{formatCurrency(Math.abs(difference), language)}<small>{formatPercent(gainPercent, language)}</small></span></td><td><div className="transaction-actions"><button className="edit-row" onClick={() => setEditing(record)} aria-label={`${t.editRecord}: ${record.name}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(record.id)} aria-label={`${t.removeRecord}: ${record.name}`} title={t.delete}><X size={15} /></button></div></td></tr> })}</tbody></table></div> : <div className="empty-transactions"><span className="empty-icon">{isBond ? <Landmark size={21} /> : <HandCoins size={21} />}</span><strong>{noRecords}</strong><p>{addFirst}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {addLabel}</button></div>}
+      {records.length ? <div className="holdings-table-wrap"><table className="holdings-table fixed-income-table"><thead>{isBond ? <tr><th>{t.bondName}</th><th>{t.platform}</th><th>{t.nominalValue}</th><th>{t.purchaseValue}</th><th>{t.value}</th><th>{t.couponRate}</th><th>{t.maturityDate}</th><th>{t.return}</th><th /></tr> : <tr><th>{t.platform}</th><th>{t.projectName}</th><th>{t.amountInvested}</th><th>{t.accountValue}</th><th>{t.expectedReturn}</th><th>{t.return}</th><th /></tr>}</thead><tbody>{records.map((record) => { const principal = isBond ? record.investedValue : record.invested; const difference = record.currentValue - principal; const gainPercent = principal ? difference / principal * 100 : 0; return isBond ? <tr key={record.id}><td><button className="holding-fund" onClick={() => setEditing(record)}><span className="holding-symbol"><Landmark size={15} /></span><span className="holding-name">{record.name}{record.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span></button><small className="fixed-subline">{record.issuer}</small></td><td><span className="platform-pill">{record.platform || t.noPlatform}</span></td><td>{formatCurrency(record.nominalValue, language)}</td><td>{formatCurrency(record.investedValue, language)}</td><td className="holding-value">{formatCurrency(record.currentValue, language)}</td><td>{formatPercent(record.couponRate, language)}</td><td>{formatMaturity(record.maturityDate)}</td><td><span className={`holding-return ${difference >= 0 ? 'positive-return' : 'negative-return'}`}>{difference < 0 ? 'âˆ’' : '+'}{formatCurrency(Math.abs(difference), language)}<small>{formatPercent(gainPercent, language)}</small></span></td><td><div className="transaction-actions"><button className="edit-row" onClick={() => setEditing(record)} aria-label={`${t.editRecord}: ${record.name}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(record.id)} aria-label={`${t.removeRecord}: ${record.name}`} title={t.delete}><X size={15} /></button></div></td></tr> : <tr key={record.id}><td><button className="holding-fund" onClick={() => setEditing(record)}><span className="holding-symbol"><HandCoins size={15} /></span><span className="holding-name">{record.platform}</span></button></td><td>{record.name}{record.isDemo && <i className="sample-chip">{t.sampleData}</i>}</td><td>{formatCurrency(record.invested, language)}</td><td className="holding-value">{formatCurrency(record.currentValue, language)}</td><td>{formatPercent(record.annualRate, language)}</td><td><span className={`holding-return ${difference >= 0 ? 'positive-return' : 'negative-return'}`}>{difference < 0 ? 'âˆ’' : '+'}{formatCurrency(Math.abs(difference), language)}<small>{formatPercent(gainPercent, language)}</small></span></td><td><div className="transaction-actions"><button className="edit-row" onClick={() => setEditing(record)} aria-label={`${t.editRecord}: ${record.name}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(record.id)} aria-label={`${t.removeRecord}: ${record.name}`} title={t.delete}><X size={15} /></button></div></td></tr> })}</tbody></table></div> : <div className="empty-transactions"><span className="empty-icon">{isBond ? <Landmark size={21} /> : <HandCoins size={21} />}</span><strong>{noRecords}</strong><p>{addFirst}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {addLabel}</button></div>}
     </section>
     <section className="panel history-access-panel"><div className="transactions-heading"><div><h2>{t.monthlyHistory}</h2><p>{t.historySubtitle}</p></div></div><div className="history-access-grid">{records.map((record) => <button className="history-access-card" key={record.id} onClick={() => setHistoryRecord(record)}><span className="history-access-icon">{isBond ? <Landmark size={16} /> : <HandCoins size={16} />}</span><span className="history-access-name">{record.name}</span><span className="history-access-count">{record.history?.length || 0} {t.snapshots}</span><ChartLine size={15} className="history-access-arrow" /></button>)}</div></section>
-    <footer className="page-footer"><span>{isBond ? t.bondNote : t.p2pNote}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
+    <footer className="page-footer"><span>{isBond ? t.bondNote : t.p2pNote}</span><span>{t.footerMonth} <span className="footer-heart">â™¥</span></span></footer>
     {(showModal || editing) && <FixedIncomeModal language={language} kind={kind} record={editing} onClose={closeModal} onSave={saveRecord} platforms={platforms} />}
     {historyRecord && <InvestmentHistoryModal language={language} kind={kind} record={historyRecord} onClose={() => setHistoryRecord(null)} onSave={saveHistory} />}
   </div>
@@ -799,9 +387,9 @@ function SavingsAccountModal({ language, account, onClose, onSave, platforms }) 
   return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="modal investment-modal" role="dialog" aria-modal="true" aria-labelledby="savings-modal-title">
     <div className="modal-top"><div><p className="eyebrow">{account ? t.editSavingsAccount.toUpperCase() : t.addSavingsAccount.toUpperCase()}</p><h2 id="savings-modal-title">{account ? t.editSavingsAccount : t.addSavingsAccount}</h2></div><button className="icon-button" onClick={onClose} aria-label={t.close}><X size={19} /></button></div>
     <form onSubmit={submit}>
-      <label className="field-label" htmlFor="savings-name">{t.savingsAccountName}</label><input className="investment-field" id="savings-name" autoFocus placeholder={language === 'pt' ? 'ex.: Fundo de emergência' : 'e.g. Emergency fund'} value={name} onChange={(event) => setName(event.target.value)} />
+      <label className="field-label" htmlFor="savings-name">{t.savingsAccountName}</label><input className="investment-field" id="savings-name" autoFocus placeholder={language === 'pt' ? 'ex.: Fundo de emergÃªncia' : 'e.g. Emergency fund'} value={name} onChange={(event) => setName(event.target.value)} />
       <div className="form-row"><div><PlatformSelector id="savings-institution" label={t.institution} value={institution} onChange={setInstitution} platforms={platforms} language={language} /></div><div><label className="field-label" htmlFor="savings-rate">{t.savingsRate}</label><div className="amount-input"><input id="savings-rate" type="number" min="0" step="0.01" placeholder="0.00" value={rate} onChange={(event) => setRate(event.target.value)} /><span>%</span></div></div></div>
-      <label className="field-label" htmlFor="savings-balance">{t.openingBalance}</label><div className="amount-input"><span>€</span><input id="savings-balance" type="number" min="0" step="0.01" placeholder="0.00" value={balance} disabled={Boolean(account)} onChange={(event) => setBalance(event.target.value)} /></div>
+      <label className="field-label" htmlFor="savings-balance">{t.openingBalance}</label><div className="amount-input"><span>â‚¬</span><input id="savings-balance" type="number" min="0" step="0.01" placeholder="0.00" value={balance} disabled={Boolean(account)} onChange={(event) => setBalance(event.target.value)} /></div>
       {account && <p className="history-intro">{t.savingsAccountNote}</p>}
       {error && <p className="form-error">{error}</p>}<button className="submit-button" type="submit">{account ? <Check size={17} /> : <Plus size={17} />} {account ? t.saveRecord : t.addSavingsAccount}</button>
     </form>
@@ -818,8 +406,8 @@ function SavingsDepositModal({ language, account, onClose, onDeposit }) {
     onDeposit(Number(amount))
   }
   return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="modal investment-modal" role="dialog" aria-modal="true" aria-labelledby="savings-deposit-title">
-    <div className="modal-top"><div><p className="eyebrow">{t.savingsCategory.toUpperCase()}</p><h2 id="savings-deposit-title">{t.addMoney}</h2><p className="history-intro">{account.name} · {formatCurrency(account.balance, language)}</p></div><button className="icon-button" onClick={onClose} aria-label={t.close}><X size={19} /></button></div>
-    <form onSubmit={submit}><label className="field-label" htmlFor="savings-deposit-amount">{t.depositAmount}</label><div className="amount-input"><span>€</span><input id="savings-deposit-amount" autoFocus type="number" min="0.01" step="0.01" placeholder="0.00" value={amount} onChange={(event) => setAmount(event.target.value)} /></div>{error && <p className="form-error">{error}</p>}<button className="submit-button" type="submit"><Plus size={17} /> {t.addMoney}</button></form>
+    <div className="modal-top"><div><p className="eyebrow">{t.savingsCategory.toUpperCase()}</p><h2 id="savings-deposit-title">{t.addMoney}</h2><p className="history-intro">{account.name} Â· {formatCurrency(account.balance, language)}</p></div><button className="icon-button" onClick={onClose} aria-label={t.close}><X size={19} /></button></div>
+    <form onSubmit={submit}><label className="field-label" htmlFor="savings-deposit-amount">{t.depositAmount}</label><div className="amount-input"><span>â‚¬</span><input id="savings-deposit-amount" autoFocus type="number" min="0.01" step="0.01" placeholder="0.00" value={amount} onChange={(event) => setAmount(event.target.value)} /></div>{error && <p className="form-error">{error}</p>}<button className="submit-button" type="submit"><Plus size={17} /> {t.addMoney}</button></form>
   </section></div>
 }
 
@@ -844,9 +432,9 @@ function SavingsPage({ language, accounts, onSave, onDelete, platforms }) {
     <section className="summary-grid investment-summary"><article className="summary-card balance-card"><div className="summary-label">{t.marketValue}<span className="summary-symbol"><Wallet size={16} /></span></div><div className="summary-amount">{formatCurrency(balance, language)}</div><div className="summary-foot">{t.savingsAccounts}</div><div className="balance-art"><span /><span /><span /></div></article><article className="summary-card"><div className="summary-label">{t.savingsCount}<span className="summary-symbol income-symbol"><Landmark size={16} /></span></div><div className="summary-amount">{accounts.length}</div><div className="summary-foot">{t.assetsTracked}</div></article><article className="summary-card"><div className="summary-label">{t.savingsRate}<span className="summary-symbol savings-symbol"><TrendingUp size={16} /></span></div><div className="summary-amount">{formatRate(weightedRate, language)}</div><div className="summary-foot">{t.basedOnPrices}</div></article></section>
     <section className="panel manual-pricing-panel fixed-income-note"><span className="manual-pricing-icon"><Wallet size={18} /></span><div><strong>{t.savingsHeading}</strong><p>{t.savingsAccountNote}</p></div><span className="manual-pricing-tag">{language === 'pt' ? 'MENSAL' : 'MONTHLY'}</span></section>
     <section className="panel holdings-panel"><div className="transactions-heading"><div><h2>{t.savingsAccounts}</h2><p>{t.holdingsSubtitle}</p></div><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {t.addSavingsAccount}</button></div>
-      {accounts.length ? <div className="holdings-table-wrap"><table className="holdings-table savings-table"><thead><tr><th>{t.savingsAccountName}</th><th>{t.institution}</th><th>{t.marketValue}</th><th>{t.savingsTarget}</th><th>{t.savingsRate}</th><th>{t.history}</th><th /></tr></thead><tbody>{accounts.map((account) => { const targetProgress = account.target ? Math.max(0, Math.min(100, account.balance / account.target * 100)) : 0; return <tr key={account.id}><td><span className="holding-fund"><span className="holding-symbol"><Wallet size={15} /></span><span className="holding-name">{account.name}{account.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span></span></td><td>{account.institution}</td><td className="holding-value">{formatCurrency(account.balance, language)}</td><td>{account.target ? <div className="savings-target-cell"><strong>{formatCurrency(account.target, language)}</strong><div><span style={{ width: `${targetProgress}%` }} /></div><small>{targetProgress.toFixed(0)}%</small></div> : '—'}</td><td>{formatRate(account.annualRate, language)}</td><td><button className="history-table-button" onClick={() => setHistoryAccount(account)}>{account.history?.length || 0} {t.snapshots}</button></td><td><div className="transaction-actions"><button className="deposit-row" onClick={() => setDepositAccount(account)} aria-label={`${t.addMoney}: ${account.name}`} title={t.addMoney}><Plus size={15} /></button><button className="edit-row" onClick={() => setEditing(account)} aria-label={`${t.editSavingsAccount}: ${account.name}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(account)} aria-label={`${t.removeRecord}: ${account.name}`} title={t.delete}><X size={15} /></button></div></td></tr> })}</tbody></table></div> : <div className="empty-transactions"><span className="empty-icon"><Wallet size={21} /></span><strong>{t.noSavings}</strong><p>{t.addFirstSavings}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {t.addSavingsAccount}</button></div>}
+      {accounts.length ? <div className="holdings-table-wrap"><table className="holdings-table savings-table"><thead><tr><th>{t.savingsAccountName}</th><th>{t.institution}</th><th>{t.marketValue}</th><th>{t.savingsTarget}</th><th>{t.savingsRate}</th><th>{t.history}</th><th /></tr></thead><tbody>{accounts.map((account) => { const targetProgress = account.target ? Math.max(0, Math.min(100, account.balance / account.target * 100)) : 0; return <tr key={account.id}><td><span className="holding-fund"><span className="holding-symbol"><Wallet size={15} /></span><span className="holding-name">{account.name}{account.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span></span></td><td>{account.institution}</td><td className="holding-value">{formatCurrency(account.balance, language)}</td><td>{account.target ? <div className="savings-target-cell"><strong>{formatCurrency(account.target, language)}</strong><div><span style={{ width: `${targetProgress}%` }} /></div><small>{targetProgress.toFixed(0)}%</small></div> : 'â€”'}</td><td>{formatRate(account.annualRate, language)}</td><td><button className="history-table-button" onClick={() => setHistoryAccount(account)}>{account.history?.length || 0} {t.snapshots}</button></td><td><div className="transaction-actions"><button className="deposit-row" onClick={() => setDepositAccount(account)} aria-label={`${t.addMoney}: ${account.name}`} title={t.addMoney}><Plus size={15} /></button><button className="edit-row" onClick={() => setEditing(account)} aria-label={`${t.editSavingsAccount}: ${account.name}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(account)} aria-label={`${t.removeRecord}: ${account.name}`} title={t.delete}><X size={15} /></button></div></td></tr> })}</tbody></table></div> : <div className="empty-transactions"><span className="empty-icon"><Wallet size={21} /></span><strong>{t.noSavings}</strong><p>{t.addFirstSavings}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {t.addSavingsAccount}</button></div>}
     </section>
-    <footer className="page-footer"><span>{t.savingsAccountNote}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
+    <footer className="page-footer"><span>{t.savingsAccountNote}</span><span>{t.footerMonth} <span className="footer-heart">â™¥</span></span></footer>
     {(showModal || editing) && <SavingsAccountModal language={language} account={editing} onClose={closeAccountModal} onSave={saveAccount} platforms={platforms} />}
     {depositAccount && <SavingsDepositModal language={language} account={depositAccount} onClose={() => setDepositAccount(null)} onDeposit={addDeposit} />}
     {historyAccount && <InvestmentHistoryModal language={language} kind="savings" record={historyAccount} onClose={() => setHistoryAccount(null)} onSave={(record) => { onSave(record); setHistoryAccount(null) }} />}
@@ -864,7 +452,7 @@ function FireGoalModal({ language, goal, onClose, onSave }) {
   }
   return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="modal fire-goal-modal" role="dialog" aria-modal="true" aria-labelledby="fire-goal-modal-title">
     <div className="modal-top"><div><p className="eyebrow">{t.fireEyebrow}</p><h2 id="fire-goal-modal-title">{t.setFireGoal}</h2></div><button className="icon-button" onClick={onClose} aria-label={t.close}><X size={19} /></button></div>
-    <form onSubmit={submit}><label className="field-label" htmlFor="fire-goal-amount">{t.goalAmount}</label><div className="amount-input"><span>€</span><input id="fire-goal-amount" autoFocus type="number" min="1" step="1000" value={amount} onChange={(event) => setAmount(event.target.value)} /></div>{error && <p className="form-error">{error}</p>}<button className="submit-button" type="submit"><Check size={17} /> {t.saveChanges}</button></form>
+    <form onSubmit={submit}><label className="field-label" htmlFor="fire-goal-amount">{t.goalAmount}</label><div className="amount-input"><span>â‚¬</span><input id="fire-goal-amount" autoFocus type="number" min="1" step="1000" value={amount} onChange={(event) => setAmount(event.target.value)} /></div>{error && <p className="form-error">{error}</p>}<button className="submit-button" type="submit"><Check size={17} /> {t.saveChanges}</button></form>
   </section></div>
 }
 
@@ -920,7 +508,7 @@ function StatisticsPage({ language, transactions, onFillSample }) {
     </section>
     <section className="insights-grid annual-insights"><article className="panel annual-flow-panel"><div className="panel-heading"><div><h2>{t.annualFlow}</h2><p>{t.annualFlowSubtitle}</p></div><span className="panel-icon"><ChartLine size={17} /></span></div><AnnualFlowChart transactions={yearTransactions} year={year} language={language} /></article><AnnualCategoryBreakdown transactions={yearTransactions} year={year} language={language} /></section>
     <div className="sample-data-note"><Sparkles size={14} /><span>{t.sampleInfo}</span></div>
-    <footer className="page-footer"><span>{t.footer}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
+    <footer className="page-footer"><span>{t.footer}</span><span>{t.footerMonth} <span className="footer-heart">â™¥</span></span></footer>
   </div>
 }
 
@@ -977,64 +565,6 @@ function SpendingBreakdown({ transactions, language }) {
   )
 }
 
-function buildPositionTimeline({ transactions, etfs, crypto, p2p, bonds, savings, visibility }) {
-  const currentMonth = monthKey(new Date())
-  const collections = { etfs, crypto, p2p, bonds, savings }
-  const investmentAssets = Object.entries(collections).flatMap(([type, records]) => records.map((record) => {
-    const history = [...(record.history || [])].filter((item) => item.month).sort((a, b) => a.month.localeCompare(b.month))
-    const currentSnapshot = history.findIndex((item) => item.month === currentMonth)
-    const snapshot = { month: currentMonth, value: assetMarketValue(record, type), invested: type === 'savings' ? 0 : portfolioCostBasis(record, type) }
-    if (currentSnapshot >= 0) history[currentSnapshot] = { ...history[currentSnapshot], ...snapshot }
-    else history.push(snapshot)
-    history.sort((a, b) => a.month.localeCompare(b.month))
-    return { type, history, nextIndex: 0, started: false, currentValue: 0, currentInvested: 0 }
-  }))
-  const monthKeys = [
-    ...transactions.map((item) => item.date.slice(0, 7)),
-    ...investmentAssets.flatMap((asset) => asset.history.map((item) => item.month)),
-    currentMonth,
-  ].filter(Boolean)
-  const currentSerial = Number(currentMonth.slice(0, 4)) * 12 + Number(currentMonth.slice(5, 7)) - 1
-  const firstSerial = Math.min(...monthKeys.map((month) => Number(month.slice(0, 4)) * 12 + Number(month.slice(5, 7)) - 1), currentSerial)
-  const transactionsByMonth = new Map()
-  transactions.forEach((item) => {
-    const month = item.date.slice(0, 7)
-    const entry = transactionsByMonth.get(month) || { income: 0, expenses: 0 }
-    if (item.type === 'income') entry.income += item.amount
-    else if (!['Investment', 'Investments'].includes(item.category) || !visibility[investmentTypeFromTransaction(item)]) entry.expenses += item.amount
-    transactionsByMonth.set(month, entry)
-  })
-
-  let incomeToDate = 0
-  let expensesToDate = 0
-  const timeline = []
-  for (let serial = firstSerial; serial <= currentSerial; serial += 1) {
-    const year = Math.floor(serial / 12)
-    const monthNumber = serial % 12
-    const month = `${year}-${String(monthNumber + 1).padStart(2, '0')}`
-    const monthlyTransactions = transactionsByMonth.get(month) || { income: 0, expenses: 0 }
-    incomeToDate += monthlyTransactions.income
-    expensesToDate += monthlyTransactions.expenses
-
-    const totals = { etfs: 0, crypto: 0, p2p: 0, bonds: 0, savings: 0, invested: 0 }
-    investmentAssets.forEach((asset) => {
-      while (asset.nextIndex < asset.history.length && asset.history[asset.nextIndex].month <= month) {
-        const snapshot = asset.history[asset.nextIndex]
-        asset.currentValue = snapshot.value
-        asset.currentInvested = snapshot.invested ?? asset.currentInvested
-        asset.started = true
-        asset.nextIndex += 1
-      }
-      if (!asset.started) return
-      totals[asset.type] += asset.currentValue
-      if (asset.type !== 'savings') totals.invested += asset.currentInvested
-    })
-    const cash = incomeToDate - expensesToDate - totals.invested
-    timeline.push({ month, cash, ...totals, assets: totals.etfs + totals.crypto + totals.p2p + totals.bonds + totals.savings, position: cash + totals.etfs + totals.crypto + totals.p2p + totals.bonds + totals.savings })
-  }
-  return timeline
-}
-
 function PositionEvolutionChart({ timeline, language, range, visibility }) {
   const t = messages[language]
   const locale = language === 'pt' ? 'pt-PT' : 'en-IE'
@@ -1059,7 +589,7 @@ function PositionEvolutionChart({ timeline, language, range, visibility }) {
     ...(visibility.bonds ? [{ key: 'bonds', label: t.seriesBonds, color: '#a18bc0', width: 2 }] : []),
     ...(visibility.savings ? [{ key: 'savings', label: t.seriesSavings, color: '#df8f62', width: 2 }] : []),
   ]
-  return <div className="position-chart-container"><div className="position-chart-legend">{series.map((item) => <span key={item.key}><i style={{ background: item.color }} />{item.label}</span>)}</div><div className="position-chart-scroll"><svg className="position-chart" style={{ width: `${width}px` }} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${t.positionHeading} · ${t.assetEvolution}`}>
+  return <div className="position-chart-container"><div className="position-chart-legend">{series.map((item) => <span key={item.key}><i style={{ background: item.color }} />{item.label}</span>)}</div><div className="position-chart-scroll"><svg className="position-chart" style={{ width: `${width}px` }} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${t.positionHeading} Â· ${t.assetEvolution}`}>
     {[0, 1, 2, 3].map((step) => { const gridY = plotTop + step * ((plotBottom - plotTop) / 3); return <line key={step} x1="22" x2={width - 22} y1={gridY} y2={gridY} className="grid-line" /> })}
     {series.map((item) => { const points = visible.map((point, index) => `${x(index)},${y(point[item.key])}`).join(' '); return <polyline key={item.key} points={points} fill="none" stroke={item.color} strokeWidth={item.width} strokeLinecap="round" strokeLinejoin="round" className={item.key === 'position' ? 'position-total-line' : ''} /> })}
     {visible.map((point, index) => { const label = new Intl.DateTimeFormat(locale, { month: 'short', year: '2-digit' }).format(new Date(`${point.month}-01T12:00:00`)); return <text key={point.month} x={x(index)} y="239" className="chart-label" textAnchor="middle">{label}</text> })}
@@ -1086,38 +616,8 @@ function GlobalPositionPage({ language, transactions, records, currentPosition, 
     <section className="position-summary-grid"><article className="position-summary-card position-total-card"><span>{t.totalPosition}</span><strong>{formatCurrency(current.position, language)}</strong><small>{t.fireEstimateNote}</small></article><article className="position-summary-card"><span>{t.trackedCash}</span><strong className={current.cash < 0 ? 'negative-return' : ''}>{formatCurrency(current.cash, language)}</strong></article><article className="position-summary-card"><span>{t.totalAssets}</span><strong>{formatCurrency(current.assets, language)}</strong></article></section>
     <section className="panel position-assets-panel"><div className="panel-heading"><div><h2>{t.currentAssets}</h2><p>{t.portfolioSummarySubtitle}</p></div><span className="panel-icon"><ChartLine size={17} /></span></div><div className="position-assets-grid">{assetRows.map((item) => { const share = grossAssets > 0 ? Math.max(0, (item.value / grossAssets) * 100) : 0; return <article className="position-asset-card" key={item.key}><div className="position-asset-label"><span className={`portfolio-mini-icon ${item.tint}`}>{item.icon}</span><span>{item.label}</span></div><strong>{formatCurrency(item.value, language)}</strong><div className="position-asset-bar"><span style={{ width: `${Math.min(100, share)}%` }} /></div><small>{share.toFixed(1)}% {t.of} {t.totalAssets.toLowerCase()}</small></article> })}</div></section>
     <section className="panel position-evolution-panel"><div className="position-evolution-heading"><div className="panel-heading"><div><h2>{t.assetEvolution}</h2><p>{t.assetEvolutionSubtitle}</p></div><span className="panel-icon"><TrendingUp size={17} /></span></div><div className="range-switch" role="group" aria-label={t.assetEvolution}>{ranges.map(([value, label]) => <button key={value} className={range === value ? 'range-option active-range' : 'range-option'} aria-pressed={range === value} onClick={() => setRange(value)}>{label}</button>)}</div></div><PositionEvolutionChart timeline={timeline} language={language} range={range} visibility={visibility} /></section>
-    <footer className="page-footer"><span>{t.globalPositionNote}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
+    <footer className="page-footer"><span>{t.globalPositionNote}</span><span>{t.footerMonth} <span className="footer-heart">â™¥</span></span></footer>
   </div>
-}
-
-function initialsForName(name) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  return parts.length ? parts.slice(0, 2).map((part) => part[0].toUpperCase()).join('') : 'F'
-}
-
-function resizeImageFile(file, maxSize = 256) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onerror = () => reject(new Error('read'))
-    reader.onload = () => {
-      const image = new Image()
-      image.onerror = () => reject(new Error('decode'))
-      image.onload = () => {
-        const scale = Math.min(1, maxSize / Math.max(image.width, image.height))
-        const width = Math.max(1, Math.round(image.width * scale))
-        const height = Math.max(1, Math.round(image.height * scale))
-        const canvas = document.createElement('canvas')
-        canvas.width = width
-        canvas.height = height
-        const context = canvas.getContext('2d')
-        if (!context) return reject(new Error('canvas'))
-        context.drawImage(image, 0, 0, width, height)
-        resolve(canvas.toDataURL('image/jpeg', 0.85))
-      }
-      image.src = reader.result
-    }
-    reader.readAsDataURL(file)
-  })
 }
 
 function Avatar({ profile, className = 'avatar' }) {
@@ -1182,7 +682,7 @@ function ProfilePage({ language, profile, visibility, onSaveProfile, onToggleVis
     <section className="welcome-row"><div><p className="eyebrow">{t.account.toUpperCase()}</p><h1>{t.profileHeading}<span>.</span></h1><p className="welcome-sub">{t.profileSubtitle}</p></div></section>
     <section className="panel profile-card"><div className="profile-avatar-block"><button type="button" className="profile-avatar-button" onClick={() => fileInput.current?.click()} aria-label={profile.avatar ? t.changePhoto : t.uploadPhoto}><Avatar profile={profile} className="profile-avatar-large" /><span className="profile-avatar-overlay"><Camera size={18} /></span></button><input ref={fileInput} className="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={uploadPhoto} />{profile.avatar ? <button type="button" className="profile-photo-remove" onClick={removePhoto}>{t.removePhoto}</button> : <span className="profile-photo-hint">{t.uploadPhoto}</span>}{photoError && <p className="profile-photo-error">{photoError}</p>}</div><form className="profile-form" onSubmit={submit}><label className="field-label" htmlFor="profile-name">{t.yourName}</label><div className="profile-name-edit"><input id="profile-name" value={name} placeholder={t.namePlaceholder} maxLength={60} onChange={(event) => setName(event.target.value)} /><button className="primary-button" type="submit"><Check size={15} /> {t.saveProfile}</button></div></form><div className="profile-created"><span>{t.accountCreated}</span><strong>{createdAt}</strong></div></section>
     <section className="panel visibility-panel"><div className="panel-heading"><div><h2>{t.investmentSettings}</h2><p>{t.investmentSettingsSubtitle}</p></div><span className="panel-icon"><SlidersHorizontal size={17} /></span></div><div className="visibility-list">{investmentTypes.map((item) => <div className="visibility-row" key={item.key}><span className={`portfolio-mini-icon ${item.tint}`}>{item.icon}</span><div className="visibility-label"><strong>{item.label}</strong><span>{t.visibleSetting}</span></div><button type="button" className={visibility[item.key] ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={visibility[item.key]} aria-label={`${t.visibleSetting}: ${item.label}`} onClick={() => onToggleVisibility(item.key)}><span /></button></div>)}</div><p className="visibility-note">{t.hiddenAssetsNote}</p></section>
-    <footer className="page-footer"><span>{t.footer}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
+    <footer className="page-footer"><span>{t.footer}</span><span>{t.footerMonth} <span className="footer-heart">â™¥</span></span></footer>
   </div>
 }
 
@@ -1205,20 +705,20 @@ function AllTransactionsPage({ language, transactions, onAdd, onEdit, onDelete }
     <section className="welcome-row"><div><p className="eyebrow">{t.transactions.toUpperCase()}</p><h1>{t.allTransactions}<span>.</span></h1><p className="welcome-sub">{t.allTransactionsSubtitle}</p></div><button className="primary-button" onClick={onAdd}><Plus size={18} /> {t.addTransaction}</button></section>
     <section className="panel transactions-panel all-transactions-panel"><div className="transaction-controls"><div className="filter-tabs" role="tablist" aria-label={t.transactions}>{filters.map(([value, label]) => <button key={value} role="tab" aria-selected={filter === value} className={filter === value ? 'filter-tab active-filter' : 'filter-tab'} onClick={() => { setFilter(value); setLimit(20) }}>{label}</button>)}</div><label className="search-box"><Search size={15} /><input aria-label={t.search} placeholder={t.search} value={query} onChange={(event) => { setQuery(event.target.value); setLimit(20) }} /></label></div>
       <div className="transaction-table"><div className="table-head"><span>{t.transaction}</span><span>{t.category}</span><span>{t.platform}</span><span>{t.date}</span><span>{t.amount}</span><span /></div>
-        {visible.length ? visible.map((item) => { const info = categoryInfo(item.category, item.type); const typeLabel = item.type === 'income' ? t.income.charAt(0) + t.income.slice(1).toLowerCase() : t.expense; return <div className="transaction-row" key={item.id}><div className="transaction-main"><IconBadge icon={info.icon} color={info.color} /><div className="transaction-title"><button className="transaction-edit-trigger" onClick={() => onEdit(item)} aria-label={`${t.edit} ${item.title}`}>{item.title}</button><span>{typeLabel}{item.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span><span className="transaction-platform-mobile">{item.platform || t.noPlatform}</span></div></div><span className="category-pill"><i style={{ background: info.color }} />{t.categoryNames[item.category] || item.category}</span><span className="platform-pill">{item.platform || '—'}</span><span className="transaction-date">{formatDateTime(item.date, locale, true)}</span><span className={`transaction-amount ${item.type}`}>{item.type === 'income' ? '+' : '−'}{formatCurrency(item.amount, language)}</span><div className="transaction-actions"><button className="edit-row" onClick={() => onEdit(item)} aria-label={`${t.edit} ${item.title}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(item.id)} aria-label={`${t.delete} ${item.title}`} title={t.delete}><X size={15} /></button></div></div> }) : <div className="empty-transactions"><span className="empty-icon"><Coffee size={21} /></span><strong>{t.noTransactions}</strong><p>{t.trySearch}</p></div>}
+        {visible.length ? visible.map((item) => { const info = categoryInfo(item.category, item.type); const typeLabel = item.type === 'income' ? t.income.charAt(0) + t.income.slice(1).toLowerCase() : t.expense; return <div className="transaction-row" key={item.id}><div className="transaction-main"><IconBadge icon={info.icon} color={info.color} /><div className="transaction-title"><button className="transaction-edit-trigger" onClick={() => onEdit(item)} aria-label={`${t.edit} ${item.title}`}>{item.title}</button><span>{typeLabel}{item.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span><span className="transaction-platform-mobile">{item.platform || t.noPlatform}</span></div></div><span className="category-pill"><i style={{ background: info.color }} />{t.categoryNames[item.category] || item.category}</span><span className="platform-pill">{item.platform || 'â€”'}</span><span className="transaction-date">{formatDateTime(item.date, locale, true)}</span><span className={`transaction-amount ${item.type}`}>{item.type === 'income' ? '+' : 'âˆ’'}{formatCurrency(item.amount, language)}</span><div className="transaction-actions"><button className="edit-row" onClick={() => onEdit(item)} aria-label={`${t.edit} ${item.title}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(item.id)} aria-label={`${t.delete} ${item.title}`} title={t.delete}><X size={15} /></button></div></div> }) : <div className="empty-transactions"><span className="empty-icon"><Coffee size={21} /></span><strong>{t.noTransactions}</strong><p>{t.trySearch}</p></div>}
       </div>
       <div className="all-transactions-footer"><span>{t.showing} <strong>{visible.length}</strong> {t.of} <strong>{filtered.length}</strong> {t.transactions.toLowerCase()}</span>{visible.length < filtered.length && <button className="text-button" onClick={() => setLimit((current) => current + 20)}>{t.loadMore} <ArrowDownLeft size={14} /></button>}</div>
     </section>
-    <footer className="page-footer"><span>{t.footer}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
+    <footer className="page-footer"><span>{t.footer}</span><span>{t.footerMonth} <span className="footer-heart">â™¥</span></span></footer>
   </div>
 }
 
 function App() {
   const [transactions, setTransactions] = useState(loadTransactions)
   const [holdings, setHoldings] = useState(loadInvestments)
-  const [cryptoHoldings, setCryptoHoldings] = useState(() => loadCollection(CRYPTO_STORAGE_KEY, demoCrypto))
-  const [p2pRecords, setP2PRecords] = useState(() => loadCollection(P2P_STORAGE_KEY, demoP2P))
-  const [bondHoldings, setBondHoldings] = useState(() => loadCollection(BONDS_STORAGE_KEY, demoBonds))
+  const [cryptoHoldings, setCryptoHoldings] = useState(loadCrypto)
+  const [p2pRecords, setP2PRecords] = useState(loadP2P)
+  const [bondHoldings, setBondHoldings] = useState(loadBonds)
   const [savingsAccounts, setSavingsAccounts] = useState(loadSavingsAccounts)
   const [platforms, setPlatforms] = useState(loadPlatforms)
   const [customCategories, setCustomCategories] = useState(loadCustomCategories)
@@ -1270,7 +770,7 @@ function App() {
 
   useEffect(() => {
     document.documentElement.lang = locale
-    document.title = language === 'pt' ? 'Firepath — o teu caminho para a independência financeira' : 'Firepath — your path to financial independence'
+    document.title = language === 'pt' ? 'Firepath â€” o teu caminho para a independÃªncia financeira' : 'Firepath â€” your path to financial independence'
   }, [language, locale])
 
   function saveFireGoal(nextGoal) {
@@ -1322,7 +822,7 @@ function App() {
       const detail = type === 'etfs' || type === 'crypto' ? record.symbol : record.name
       const purchaseLabel = type === 'etfs' ? t.etfPurchase : type === 'crypto' ? t.cryptoPurchase : type === 'p2p' ? t.p2pPurchase : t.bondPurchase
       const saleLabel = type === 'etfs' ? t.etfSale : type === 'crypto' ? t.cryptoSale : type === 'p2p' ? t.p2pSale : t.bondSale
-      const title = `${(transaction.flowDelta ?? (transaction.type === 'expense' ? 1 : -1)) > 0 ? purchaseLabel : saleLabel} · ${detail}`
+      const title = `${(transaction.flowDelta ?? (transaction.type === 'expense' ? 1 : -1)) > 0 ? purchaseLabel : saleLabel} Â· ${detail}`
       const platform = record.platform || (type === 'etfs' ? 'Trade Republic' : type === 'crypto' ? 'Coinbase' : type === 'p2p' ? 'Mintos' : 'Banco Invest')
       if (transaction.title === title && transaction.investmentType === type && transaction.platform === platform) return transaction
       changed = true
@@ -1386,7 +886,7 @@ function App() {
       if (Math.abs(flowDelta) >= 0.005) {
         const detail = type === 'etfs' || type === 'crypto' ? savedRecord.symbol : savedRecord.name
         const flowLabel = type === 'etfs' ? (flowDelta > 0 ? t.etfPurchase : t.etfSale) : type === 'crypto' ? (flowDelta > 0 ? t.cryptoPurchase : t.cryptoSale) : type === 'p2p' ? (flowDelta > 0 ? t.p2pPurchase : t.p2pSale) : (flowDelta > 0 ? t.bondPurchase : t.bondSale)
-        const title = `${flowLabel} · ${detail}`
+        const title = `${flowLabel} Â· ${detail}`
         nextTransactions.push({ id: sourceId, title, category: 'Investment', type: flowDelta > 0 ? 'expense' : 'income', amount: Math.abs(flowDelta), date: timeStamp(new Date()), platform: savedRecord.platform || '', sourceType: 'portfolio', sourceId: savedRecord.id, investmentType: type, flowDelta })
       }
       save(nextTransactions)
@@ -1413,7 +913,7 @@ function App() {
       const priorFlow = transactions.find((item) => item.id === sourceId)?.flowDelta || 0
       const flowDelta = priorFlow + delta
       const nextTransactions = transactions.filter((item) => item.id !== sourceId)
-      if (Math.abs(flowDelta) >= 0.005) nextTransactions.push({ id: sourceId, title: `${flowDelta > 0 ? t.savingsDepositTitle : t.savingsWithdrawalTitle} · ${account.name}`, category: 'Savings', type: flowDelta > 0 ? 'expense' : 'income', amount: Math.abs(flowDelta), date: timeStamp(new Date()), platform: account.institution || '', sourceType: 'savings', sourceId: account.id, flowDelta })
+      if (Math.abs(flowDelta) >= 0.005) nextTransactions.push({ id: sourceId, title: `${flowDelta > 0 ? t.savingsDepositTitle : t.savingsWithdrawalTitle} Â· ${account.name}`, category: 'Savings', type: flowDelta > 0 ? 'expense' : 'income', amount: Math.abs(flowDelta), date: timeStamp(new Date()), platform: account.institution || '', sourceType: 'savings', sourceId: account.id, flowDelta })
       save(nextTransactions)
     }
   }
@@ -1503,7 +1003,7 @@ function App() {
 
   return (
     <div className="app-shell" lang={locale}>
-      <aside className="sidebar" data-space-label={language === 'pt' ? 'AS TUAS FINANÇAS' : 'YOUR MONEY'}>
+      <aside className="sidebar" data-space-label={language === 'pt' ? 'AS TUAS FINANÃ‡AS' : 'YOUR MONEY'}>
         <a className="brand" href="#overview" aria-label="Firepath home"><span className="brand-mark"><Flame size={18} fill="currentColor" /></span><span>firepath<span className="brand-period">.</span></span></a>
         <div className="side-caption">{t.yourSpace.toUpperCase()}</div>
         <a className={activePage === 'overview' ? 'nav-link active' : 'nav-link'} href="#overview" onClick={(event) => { event.preventDefault(); selectOverview() }}><span className="nav-icon"><Wallet size={18} /></span>{t.overview}</a>
@@ -1532,7 +1032,7 @@ function App() {
       </nav>
 
       <main className="main-content" id="overview">
-        <header className="topbar"><div className="breadcrumb">{t.yourSpace} <span>/</span> <strong>{t[activePage] || t.overview}</strong></div><div className="topbar-right"><div className="language-switch" role="group" aria-label={t.language}><button type="button" className={language === 'en' ? 'language-option selected-language' : 'language-option'} aria-label="English" aria-pressed={language === 'en'} onClick={() => changeLanguage('en')}>EN</button><button type="button" className={language === 'pt' ? 'language-option selected-language' : 'language-option'} aria-label="Português (Portugal)" title="Português (Portugal)" aria-pressed={language === 'pt'} onClick={() => changeLanguage('pt')}>PT-PT</button></div><span className="today-label"><span className="online-dot" />{t.saved}</span><Avatar profile={profile} className="top-avatar" /></div></header>
+        <header className="topbar"><div className="breadcrumb">{t.yourSpace} <span>/</span> <strong>{t[activePage] || t.overview}</strong></div><div className="topbar-right"><div className="language-switch" role="group" aria-label={t.language}><button type="button" className={language === 'en' ? 'language-option selected-language' : 'language-option'} aria-label="English" aria-pressed={language === 'en'} onClick={() => changeLanguage('en')}>EN</button><button type="button" className={language === 'pt' ? 'language-option selected-language' : 'language-option'} aria-label="PortuguÃªs (Portugal)" title="PortuguÃªs (Portugal)" aria-pressed={language === 'pt'} onClick={() => changeLanguage('pt')}>PT-PT</button></div><span className="today-label"><span className="online-dot" />{t.saved}</span><Avatar profile={profile} className="top-avatar" /></div></header>
         {activePage === 'profile' ? <ProfilePage language={language} profile={profile} visibility={investmentVisibility} onSaveProfile={saveUserProfile} onToggleVisibility={toggleInvestmentVisibility} /> : activePage === 'position' ? <GlobalPositionPage language={language} transactions={transactions} records={{ etfs: investmentVisibility.etfs ? holdings : [], crypto: investmentVisibility.crypto ? cryptoHoldings : [], p2p: investmentVisibility.p2p ? p2pRecords : [], bonds: investmentVisibility.bonds ? bondHoldings : [], savings: investmentVisibility.savings ? savingsAccounts : [] }} visibility={investmentVisibility} currentPosition={globalPosition} currentCash={trackedCash} /> : activePage === 'transactions' ? <AllTransactionsPage language={language} transactions={transactions} onAdd={() => setShowModal(true)} onEdit={setEditingTransaction} onDelete={removeTransaction} /> : activePage === 'etfs' || activePage === 'crypto' ? <InvestmentsPage language={language} holdings={activePage === 'etfs' ? holdings : cryptoHoldings} assetType={activePage === 'etfs' ? 'etf' : 'crypto'} platforms={platforms} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'p2p' || activePage === 'bonds' ? <FixedIncomePage language={language} kind={activePage} records={activePage === 'p2p' ? p2pRecords : bondHoldings} platforms={platforms} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'savings' ? <SavingsPage language={language} accounts={savingsAccounts} platforms={platforms} onSave={saveSavingsAccount} onDelete={(account) => saveSavingsAccounts(savingsAccounts.filter((item) => item.id !== account.id))} /> : activePage === 'statistics' ? <StatisticsPage language={language} transactions={transactions} onFillSample={fillSampleHistory} /> : <div className="page-content">
           <section className="welcome-row"><div><p className="eyebrow">{t.snapshot}</p><h1>{t.headline}<span>.</span></h1><p className="welcome-sub">{t.welcome}</p></div><button className="primary-button" onClick={() => setShowModal(true)}><Plus size={18} strokeWidth={2.4} /> {t.addTransaction}</button></section>
 
@@ -1550,7 +1050,7 @@ function App() {
               { page: 'p2p', label: t.p2p, value: p2pMarketValue, invested: p2pInvested, count: p2pRecords.length, icon: <HandCoins size={16} />, tint: 'p2p-tint' },
               { page: 'bonds', label: t.bonds, value: bondsMarketValue, invested: bondsInvested, count: bondHoldings.length, icon: <Landmark size={16} />, tint: 'bonds-tint' },
               { page: 'savings', label: t.savings, value: totalSavingsBalance, invested: totalSavingsBalance, count: savingsAccounts.length, icon: <Wallet size={16} />, tint: 'savings-tint', detail: t.currentBalance },
-            ].filter((item) => investmentVisibility[item.page]).map((item) => <button className="portfolio-mini-card" key={item.page} onClick={() => selectPortfolioPage(item.page)}><span className={`portfolio-mini-icon ${item.tint}`}>{item.icon}</span><span className="portfolio-mini-title">{item.label}<ArrowRight size={13} /></span><strong>{formatCurrency(item.value, language)}</strong><span className="portfolio-mini-foot">{item.count} {t.items} · {formatCurrency(item.invested, language)} {item.detail || t.invested}</span></button>)}
+            ].filter((item) => investmentVisibility[item.page]).map((item) => <button className="portfolio-mini-card" key={item.page} onClick={() => selectPortfolioPage(item.page)}><span className={`portfolio-mini-icon ${item.tint}`}>{item.icon}</span><span className="portfolio-mini-title">{item.label}<ArrowRight size={13} /></span><strong>{formatCurrency(item.value, language)}</strong><span className="portfolio-mini-foot">{item.count} {t.items} Â· {formatCurrency(item.invested, language)} {item.detail || t.invested}</span></button>)}
           </div></section>
 
           <section className="month-toolbar" aria-label={t.selectMonth}><div className="month-nav"><button className="month-arrow" onClick={() => shiftMonth(-1)} aria-label={t.previousMonth}><ArrowLeft size={17} /></button><div className="month-heading"><CalendarDays size={17} /><strong>{monthTitle}</strong></div><button className="month-arrow" onClick={() => shiftMonth(1)} aria-label={t.nextMonth}><ArrowRight size={17} /></button></div><button className="today-button" onClick={() => setSelectedMonth(dateForMonth(today))}>{t.today}</button></section>
@@ -1566,11 +1066,11 @@ function App() {
 
           <section className="panel transactions-panel" id="transactions"><div className="transactions-heading"><div><h2>{t.recent}</h2><p>{t.moneyComingGoing}</p></div><div className="transactions-heading-actions"><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {t.addNew}</button><button className="view-all-button" onClick={selectTransactions}>{t.viewAll} <ArrowRight size={14} /></button></div></div>
             <div className="transaction-table"><div className="table-head"><span>{t.transaction}</span><span>{t.category}</span><span>{t.platform}</span><span>{t.date.toUpperCase()}</span><span>{t.amount}</span><span /></div>
-              {recentTransactions.length ? recentTransactions.map((item) => { const info = categoryInfo(item.category, item.type); const typeLabel = item.type === 'income' ? t.income.charAt(0) + t.income.slice(1).toLowerCase() : t.expense; return <div className="transaction-row" key={item.id}><div className="transaction-main"><IconBadge icon={info.icon} color={info.color} /><div className="transaction-title"><button className="transaction-edit-trigger" onClick={() => setEditingTransaction(item)} aria-label={`${t.edit} ${item.title}`}>{item.title}</button><span>{typeLabel}{item.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span><span className="transaction-platform-mobile">{item.platform || t.noPlatform}</span></div></div><span className="category-pill"><i style={{ background: info.color }} />{t.categoryNames[item.category] || item.category}</span><span className="platform-pill">{item.platform || t.noPlatform}</span><span className="transaction-date">{formatDateTime(item.date, locale)}</span><span className={`transaction-amount ${item.type}`}>{item.type === 'income' ? '+' : '−'}{formatCurrency(item.amount, language)}</span><div className="transaction-actions"><button className="edit-row" onClick={() => setEditingTransaction(item)} aria-label={`${t.edit} ${item.title}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => removeTransaction(item.id)} aria-label={`${t.delete} ${item.title}`} title={t.delete}><X size={15} /></button></div></div> }) : <div className="empty-transactions"><span className="empty-icon"><Coffee size={21} /></span><strong>{t.freshStart}</strong><p>{t.firstTransaction}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {t.addATransaction}</button></div>}
+              {recentTransactions.length ? recentTransactions.map((item) => { const info = categoryInfo(item.category, item.type); const typeLabel = item.type === 'income' ? t.income.charAt(0) + t.income.slice(1).toLowerCase() : t.expense; return <div className="transaction-row" key={item.id}><div className="transaction-main"><IconBadge icon={info.icon} color={info.color} /><div className="transaction-title"><button className="transaction-edit-trigger" onClick={() => setEditingTransaction(item)} aria-label={`${t.edit} ${item.title}`}>{item.title}</button><span>{typeLabel}{item.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span><span className="transaction-platform-mobile">{item.platform || t.noPlatform}</span></div></div><span className="category-pill"><i style={{ background: info.color }} />{t.categoryNames[item.category] || item.category}</span><span className="platform-pill">{item.platform || t.noPlatform}</span><span className="transaction-date">{formatDateTime(item.date, locale)}</span><span className={`transaction-amount ${item.type}`}>{item.type === 'income' ? '+' : 'âˆ’'}{formatCurrency(item.amount, language)}</span><div className="transaction-actions"><button className="edit-row" onClick={() => setEditingTransaction(item)} aria-label={`${t.edit} ${item.title}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => removeTransaction(item.id)} aria-label={`${t.delete} ${item.title}`} title={t.delete}><X size={15} /></button></div></div> }) : <div className="empty-transactions"><span className="empty-icon"><Coffee size={21} /></span><strong>{t.freshStart}</strong><p>{t.firstTransaction}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {t.addATransaction}</button></div>}
             </div>
             {recentTransactions.length > 0 && <div className="table-footer"><span>{t.showing} <strong>{recentTransactions.length}</strong> {t.of} <strong>{monthlyTransactions.length}</strong> {t.transactions.toLowerCase()}</span><span className="footer-note"><Check size={13} /> {t.lookingGood}</span></div>}
           </section>
-          <footer className="page-footer"><span>{t.footer}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
+          <footer className="page-footer"><span>{t.footer}</span><span>{t.footerMonth} <span className="footer-heart">â™¥</span></span></footer>
         </div>}
       </main>
       {(showModal || editingTransaction) && <Modal language={language} selectedMonth={selectedMonth} transaction={editingTransaction} platforms={platforms} customCategories={customCategories} onClose={closeModal} onSave={saveTransaction} />}
