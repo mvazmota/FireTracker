@@ -224,10 +224,13 @@
 .fire-goal-form .profile-name-edit { align-items: center; }
 .fire-goal-form .profile-name-edit .amount-input { flex: 0 0 190px; }
 .settings-saved { display: inline-flex; align-items: center; color: #5f9169; font-size: 9px; font-weight: 600; }
-.demo-panel { margin-top: 15px; padding: 18px 20px 16px; }
-.demo-reset-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.demo-reset-note { margin: 0; max-width: 60ch; color: #8a958d; font-size: 11px; line-height: 1.5; }
-.demo-reset-actions { display: flex; align-items: center; gap: 10px; }
+.action-panel { margin-top: 15px; padding: 18px 20px 16px; }
+.action-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.action-note { margin: 0; max-width: 60ch; color: #8a958d; font-size: 11px; line-height: 1.5; }
+.action-actions { display: flex; align-items: center; gap: 10px; }
+.danger-zone { border-color: #f0dcd6; }
+.danger-zone .panel-heading h2 { color: #b4574a; }
+.danger-icon { color: #bf745e; background: #fbf1ef; }
 .danger-button { height: 39px; padding: 0 15px; border: 1px solid #e7cdc4; border-radius: 7px; display: inline-flex; align-items: center; gap: 8px; background: #fbf1ef; color: #bf745e; font-size: 12px; font-weight: 600; transition: .18s; }
 .danger-button:hover { background: #f7e6e0; border-color: #dcb3a6; }
 .danger-button:disabled { opacity: .65; cursor: default; }

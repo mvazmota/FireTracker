@@ -25,4 +25,5 @@ export const api = {
 
   putSettings: (payload) => request('/api/settings', { method: 'PUT', body: JSON.stringify(payload) }),
   importAll: (payload) => request('/api/import', { method: 'POST', body: JSON.stringify(payload) }),
+  deleteAccount: () => request('/api/account', { method: 'DELETE' }),
 }

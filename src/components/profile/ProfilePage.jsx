@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Camera, Check, Flame, Plus, RotateCcw, SlidersHorizontal, Tag, Wallet, X } from 'lucide-react'
+import { Camera, Check, Flame, Plus, RotateCcw, SlidersHorizontal, Tag, Trash2, Wallet, X } from 'lucide-react'
 import Avatar from '../ui/Avatar.jsx'
 import AnimalAvatar, { ANIMAL_LABEL_KEYS, ANIMAL_PRESETS, animalAvatarValue } from '../ui/AnimalAvatar.jsx'
 import { resizeImageFile } from '../../lib/image.js'
@@ -8,6 +8,8 @@ import { useSettings } from '../../context/SettingsProvider.jsx'
 import { useData } from '../../context/DataProvider.jsx'
 import { useFinance } from '../../context/FinanceProvider.jsx'
 import { useAuth } from '../../context/AuthProvider.jsx'
+import { api } from '../../lib/api.js'
+import { REMEMBERED_EMAIL_KEY } from '../../lib/constants.js'
 import { usePortfolioSummary } from '../../hooks/usePortfolioSummary.js'
 import { INVESTMENT_TYPES } from '../../data/investmentTypes.js'
 import FireMeterCompact from '../fire/FireMeterCompact.jsx'
@@ -30,7 +32,7 @@ export default function ProfilePage() {
     removeCategory,
     removePlatform,
   } = useSettings()
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const { transactions } = useFinance()
   // A stable date: the FIRE figures below are lifetime totals, not monthly.
   const today = useMemo(() => new Date(), [])
@@ -48,6 +50,9 @@ export default function ProfilePage() {
   const [resetDone, setResetDone] = useState(false)
   const [categoryDrafts, setCategoryDrafts] = useState({ expense: '', income: '' })
   const [platformDraft, setPlatformDraft] = useState('')
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   const createdAt = new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(`${profile.createdAt}T12:00:00`))
 
@@ -112,6 +117,26 @@ export default function ProfilePage() {
     if (!value) return
     rememberPlatform(value)
     setPlatformDraft('')
+  }
+
+  /** Deletes the account server-side, then restarts the app signed out. */
+  async function confirmDeleteAccount() {
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await api.deleteAccount()
+    } catch {
+      setDeleting(false)
+      setDeleteError(t.deleteAccountError)
+      return
+    }
+    try {
+      localStorage.removeItem(REMEMBERED_EMAIL_KEY)
+    } catch {
+      // Nothing to clear.
+    }
+    await signOut().catch(() => {})
+    window.location.reload()
   }
 
   async function runDemoReset() {
@@ -198,11 +223,19 @@ export default function ProfilePage() {
       </div>
     </section>
 
-    {isDemo && <section className="panel demo-panel">
+    {isDemo && <section className="panel action-panel">
       <div className="panel-heading"><div><h2>{t.demoData}</h2><p>{t.demoDataSubtitle}</p></div><span className="panel-icon"><RotateCcw size={17} /></span></div>
       {confirmingReset
-        ? <div className="demo-reset-row"><p className="demo-reset-note">{t.demoResetConfirm}</p><div className="demo-reset-actions"><button type="button" className="danger-button" onClick={runDemoReset} disabled={resetting}>{resetting ? t.loading : t.demoResetYes}</button><button type="button" className="ghost-button" onClick={() => setConfirmingReset(false)} disabled={resetting}>{t.cancel}</button></div></div>
-        : <div className="demo-reset-row"><p className="demo-reset-note">{t.demoDataNote}</p><div className="demo-reset-actions"><button type="button" className="danger-button" onClick={() => { setResetDone(false); setConfirmingReset(true) }}><RotateCcw size={15} /> {t.demoReset}</button>{resetDone && <span className="settings-saved">{t.demoResetDone}</span>}</div></div>}
+        ? <div className="action-row"><p className="action-note">{t.demoResetConfirm}</p><div className="action-actions"><button type="button" className="danger-button" onClick={runDemoReset} disabled={resetting}>{resetting ? t.loading : t.demoResetYes}</button><button type="button" className="ghost-button" onClick={() => setConfirmingReset(false)} disabled={resetting}>{t.cancel}</button></div></div>
+        : <div className="action-row"><p className="action-note">{t.demoDataNote}</p><div className="action-actions"><button type="button" className="danger-button" onClick={() => { setResetDone(false); setConfirmingReset(true) }}><RotateCcw size={15} /> {t.demoReset}</button>{resetDone && <span className="settings-saved">{t.demoResetDone}</span>}</div></div>}
+    </section>}
+
+    {!isDemo && <section className="panel action-panel danger-zone">
+      <div className="panel-heading"><div><h2>{t.deleteAccount}</h2><p>{t.deleteAccountSubtitle}</p></div><span className="panel-icon danger-icon"><Trash2 size={17} /></span></div>
+      {confirmingDelete
+        ? <div className="action-row"><p className="action-note">{t.deleteAccountConfirm}</p><div className="action-actions"><button type="button" className="danger-button" onClick={confirmDeleteAccount} disabled={deleting}>{deleting ? t.loading : t.deleteAccountYes}</button><button type="button" className="ghost-button" onClick={() => setConfirmingDelete(false)} disabled={deleting}>{t.cancel}</button></div></div>
+        : <div className="action-row"><p className="action-note">{t.deleteAccountNote}</p><div className="action-actions"><button type="button" className="danger-button" onClick={() => { setDeleteError(''); setConfirmingDelete(true) }}><Trash2 size={15} /> {t.deleteAccount}</button></div></div>}
+      {deleteError && <p className="form-error">{deleteError}</p>}
     </section>}
 
     <footer className="page-footer"><span>{t.footer}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>

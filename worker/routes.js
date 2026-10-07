@@ -124,6 +124,24 @@ api.put('/settings', async (c) => {
 })
 
 /**
+ * Erases the signed-in account and everything belonging to it. The auth rows
+ * are deleted explicitly rather than relying on the cascades, so the account
+ * disappears even if foreign keys are not enforced.
+ */
+api.delete('/account', async (c) => {
+  const db = c.env.DB
+  const userId = c.get('userId')
+  await clearUserRows(db, userId)
+  await db.batch([
+    db.prepare('delete from "user_settings" where "userId" = ?').bind(userId),
+    db.prepare('delete from "session" where "userId" = ?').bind(userId),
+    db.prepare('delete from "account" where "userId" = ?').bind(userId),
+    db.prepare('delete from "user" where "id" = ?').bind(userId),
+  ])
+  return c.json({ ok: true })
+})
+
+/**
  * Bulk import — used to seed the demo account and to restore it. Statements are
  * batched so importing hundreds of rows takes a few round trips, not hundreds.
  */
