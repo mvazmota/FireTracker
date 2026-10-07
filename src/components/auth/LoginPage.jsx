@@ -26,7 +26,8 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false)
 
   const isSignUp = mode === 'signUp'
-  const canRecallEmail = rememberedEmail && rememberedEmail !== email.trim()
+  // Only offered when signing in: a new account needs a fresh email anyway.
+  const canRecallEmail = !isSignUp && rememberedEmail && rememberedEmail !== email.trim()
 
   async function submit(event) {
     event.preventDefault()
