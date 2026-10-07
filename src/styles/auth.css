@@ -40,7 +40,8 @@
 .onboarding-group-head strong { color: #46544b; font-size: 11px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }
 .onboarding-group-head span { color: #a4aca6; font-size: 10px; }
 .onboarding-chips { display: flex; flex-wrap: wrap; gap: 7px; }
-.onboarding-chips-platforms { justify-content: center; margin-bottom: 22px; }
+.onboarding-chips-platforms { justify-content: center; }
+.onboarding-add-platforms { max-width: 340px; margin: 12px auto 18px; }
 .onboarding-chips-investments { justify-content: center; margin-bottom: 22px; }
 .onboarding-chips-investments .onboarding-chip { display: inline-flex; align-items: center; gap: 7px; }
 .onboarding-add { display: flex; gap: 7px; margin-top: 9px; }

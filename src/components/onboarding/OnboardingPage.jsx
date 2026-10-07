@@ -34,6 +34,8 @@ export default function OnboardingPage() {
   const [customCategories, setCustomCategories] = useState({ expense: [], income: [] })
   const [categoryDrafts, setCategoryDrafts] = useState({ expense: '', income: '' })
   const [platforms, setPlatforms] = useState(() => [...DEFAULT_SELECTED_PLATFORMS])
+  const [customPlatforms, setCustomPlatforms] = useState([])
+  const [platformDraft, setPlatformDraft] = useState('')
   const [visibility, setVisibility] = useState(() => ({ ...DEFAULT_SELECTED_INVESTMENTS }))
   const [goalInput, setGoalInput] = useState(String(fireGoal))
   const [showFire, setShowFire] = useState(fireMeterVisible)
@@ -68,6 +70,20 @@ export default function OnboardingPage() {
 
   function togglePlatform(name) {
     setPlatforms((current) => (current.includes(name) ? current.filter((item) => item !== name) : [...current, name]))
+  }
+
+  /** Adds a typed platform, or just selects it when it already exists. */
+  function addCustomPlatform() {
+    const name = platformDraft.trim()
+    if (!name) return
+    const existing = [...PLATFORM_SUGGESTIONS, ...customPlatforms].find((item) => item.toLowerCase() === name.toLowerCase())
+    if (existing) {
+      if (!platforms.includes(existing)) setPlatforms((current) => [...current, existing])
+    } else {
+      setCustomPlatforms((current) => [...current, name])
+      setPlatforms((current) => [...current, name])
+    }
+    setPlatformDraft('')
   }
 
   function toggleInvestment(key) {
@@ -138,7 +154,11 @@ export default function OnboardingPage() {
         <h1 id="onboarding-title">{t.onboardingPlatformsTitle}<span>.</span></h1>
         <p className="onboarding-sub">{t.onboardingPlatformsSubtitle}</p>
         <div className="onboarding-chips onboarding-chips-platforms">
-          {PLATFORM_SUGGESTIONS.map((name) => <button type="button" key={name} className={platforms.includes(name) ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={platforms.includes(name)} onClick={() => togglePlatform(name)}>{name}</button>)}
+          {[...PLATFORM_SUGGESTIONS, ...customPlatforms].map((name) => <button type="button" key={name} className={platforms.includes(name) ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={platforms.includes(name)} onClick={() => togglePlatform(name)}>{name}</button>)}
+        </div>
+        <div className="onboarding-add onboarding-add-platforms">
+          <input value={platformDraft} placeholder={t.addOwnPlatform} aria-label={t.addOwnPlatform} onChange={(event) => setPlatformDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addCustomPlatform() } }} />
+          <button type="button" onClick={addCustomPlatform} disabled={!platformDraft.trim()} aria-label={t.addPlatform} title={t.addPlatform}><Plus size={15} /></button>
         </div>
         {!platformsReady && <p className="onboarding-hint">{t.onboardingPlatformsHint}</p>}
         <div className="onboarding-actions">
