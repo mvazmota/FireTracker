@@ -192,6 +192,24 @@
 .visibility-switch.switch-on > span { transform: translateX(17px); }
 .visibility-note { margin: 9px 0 1px; padding-top: 9px; border-top: 1px solid #f0f2ef; color: #9aa39d; font-size: 9px; line-height: 1.5; }
 .fire-tint { color: #dc8659; background: #fbf0e4; }
+.add-row { display: flex; gap: 7px; margin-top: 9px; }
+.add-row input { flex: 1; min-width: 0; height: 34px; padding: 0 10px; border: 1px solid #e2e9e2; border-radius: 7px; color: #46544b; font-size: 11px; }
+.add-row input::placeholder { color: #b1b9b3; }
+.add-row input:focus { border-color: #aec9b2; outline: 0; }
+.add-row button { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; border: 1px solid #dbe7dc; border-radius: 7px; background: #f2f8f1; color: #4b7a57; transition: .15s; }
+.add-row button:hover:not(:disabled) { background: #e7f2e6; border-color: #bdd4bf; }
+.add-row button:disabled { opacity: .5; cursor: not-allowed; }
+.manage-group { margin-top: 14px; }
+.manage-group-head { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 4px; }
+.manage-group-head strong { color: #46544b; font-size: 11px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }
+.manage-group-head span { color: #a4aca6; font-size: 10px; }
+.manage-list { margin-bottom: 10px; }
+.manage-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; min-height: 42px; border-top: 1px solid #f0f2ef; }
+.manage-name { overflow: hidden; color: #4c5b51; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.manage-usage { color: #9aa39d; font-size: 9px; white-space: nowrap; }
+.manage-remove { display: grid; place-items: center; width: 26px; height: 26px; border: 0; border-radius: 6px; background: transparent; color: #ab7971; transition: .15s; }
+.manage-remove:hover:not(:disabled) { background: #fbf1ef; }
+.manage-remove:disabled { color: #ccd4cd; cursor: not-allowed; }
 .fire-toggle-row { margin-top: 8px; }
 .fire-goal-form { margin: 13px 0 4px; }
 .fire-goal-form .field-label { margin-bottom: 8px; }

@@ -41,16 +41,9 @@
 .onboarding-group-head span { color: #a4aca6; font-size: 10px; }
 .onboarding-chips { display: flex; flex-wrap: wrap; gap: 7px; }
 .onboarding-chips-platforms { justify-content: center; }
-.onboarding-add-platforms { max-width: 340px; margin: 12px auto 18px; }
+.add-row-platforms { max-width: 340px; margin: 12px auto 18px; }
 .onboarding-chips-investments { justify-content: center; margin-bottom: 22px; }
 .onboarding-chips-investments .onboarding-chip { display: inline-flex; align-items: center; gap: 7px; }
-.onboarding-add { display: flex; gap: 7px; margin-top: 9px; }
-.onboarding-add input { flex: 1; min-width: 0; height: 34px; padding: 0 10px; border: 1px solid #e2e9e2; border-radius: 7px; color: #46544b; font-size: 11px; }
-.onboarding-add input::placeholder { color: #b1b9b3; }
-.onboarding-add input:focus { border-color: #aec9b2; outline: 0; }
-.onboarding-add button { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; border: 1px solid #dbe7dc; border-radius: 7px; background: #f2f8f1; color: #4b7a57; transition: .15s; }
-.onboarding-add button:hover:not(:disabled) { background: #e7f2e6; border-color: #bdd4bf; }
-.onboarding-add button:disabled { opacity: .5; cursor: not-allowed; }
 .onboarding-fire { text-align: left; margin-bottom: 22px; }
 .onboarding-fire .field-label { margin-bottom: 8px; }
 .onboarding-fire .amount-input { margin-bottom: 10px; }

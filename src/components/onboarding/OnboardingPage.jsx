@@ -143,7 +143,7 @@ export default function OnboardingPage() {
           <div className="onboarding-chips">
             {[...categorySuggestions(type), ...customCategories[type]].map((name) => <button type="button" key={name} className={categories[type].includes(name) ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={categories[type].includes(name)} onClick={() => toggleCategory(type, name)}>{t.categoryNames[name] || name}</button>)}
           </div>
-          <div className="onboarding-add">
+          <div className="add-row">
             <input value={categoryDrafts[type]} placeholder={t.addOwnCategory} aria-label={t.addOwnCategory} onChange={(event) => setCategoryDraft(type, event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addCustomCategory(type) } }} />
             <button type="button" onClick={() => addCustomCategory(type)} disabled={!categoryDrafts[type].trim()} aria-label={t.addCategory} title={t.addCategory}><Plus size={15} /></button>
           </div>
@@ -156,7 +156,7 @@ export default function OnboardingPage() {
         <div className="onboarding-chips onboarding-chips-platforms">
           {[...PLATFORM_SUGGESTIONS, ...customPlatforms].map((name) => <button type="button" key={name} className={platforms.includes(name) ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={platforms.includes(name)} onClick={() => togglePlatform(name)}>{name}</button>)}
         </div>
-        <div className="onboarding-add onboarding-add-platforms">
+        <div className="add-row add-row-platforms">
           <input value={platformDraft} placeholder={t.addOwnPlatform} aria-label={t.addOwnPlatform} onChange={(event) => setPlatformDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addCustomPlatform() } }} />
           <button type="button" onClick={addCustomPlatform} disabled={!platformDraft.trim()} aria-label={t.addPlatform} title={t.addPlatform}><Plus size={15} /></button>
         </div>

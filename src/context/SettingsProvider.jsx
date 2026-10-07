@@ -102,6 +102,15 @@ export function SettingsProvider({ children }) {
     persist({ categories: { ...current, [type]: [...current[type], category] } })
   }, [persist])
 
+  const removeCategory = useCallback((type, value) => {
+    const current = settingsRef.current.categories
+    persist({ categories: { ...current, [type]: current[type].filter((item) => item !== value) } })
+  }, [persist])
+
+  const removePlatform = useCallback((value) => {
+    persist({ platforms: settingsRef.current.platforms.filter((item) => item !== value) })
+  }, [persist])
+
   /** Finishes onboarding with everything the user picked. */
   const saveOnboarding = useCallback(({ categories, platforms, investmentVisibility, fireGoal, fireMeterVisible }) => {
     persist({
@@ -129,11 +138,13 @@ export function SettingsProvider({ children }) {
     toggleInvestmentVisibility,
     rememberPlatform,
     rememberCategory,
+    removeCategory,
+    removePlatform,
     saveOnboarding,
   }), [
     profile, settings, hydrated,
     saveProfile, saveFireGoal, toggleFireMeter, toggleInvestmentVisibility,
-    rememberPlatform, rememberCategory, saveOnboarding,
+    rememberPlatform, rememberCategory, removeCategory, removePlatform, saveOnboarding,
   ])
 
   return <SettingsContext value={value}>{children}</SettingsContext>

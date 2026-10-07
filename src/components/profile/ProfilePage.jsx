@@ -1,11 +1,12 @@
-import { useRef, useState } from 'react'
-import { Camera, Check, Flame, RotateCcw, SlidersHorizontal } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import { Camera, Check, Flame, Plus, RotateCcw, SlidersHorizontal, Tag, Wallet, X } from 'lucide-react'
 import Avatar from '../ui/Avatar.jsx'
 import AnimalAvatar, { ANIMAL_LABEL_KEYS, ANIMAL_PRESETS, animalAvatarValue } from '../ui/AnimalAvatar.jsx'
 import { resizeImageFile } from '../../lib/image.js'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
 import { useData } from '../../context/DataProvider.jsx'
+import { useFinance } from '../../context/FinanceProvider.jsx'
 import { INVESTMENT_TYPES } from '../../data/investmentTypes.js'
 
 export default function ProfilePage() {
@@ -19,7 +20,14 @@ export default function ProfilePage() {
     saveFireGoal,
     fireMeterVisible,
     toggleFireMeter,
+    categories,
+    platforms,
+    rememberCategory,
+    rememberPlatform,
+    removeCategory,
+    removePlatform,
   } = useSettings()
+  const { transactions } = useFinance()
 
   const [name, setName] = useState(profile.name || '')
   const [photoError, setPhotoError] = useState('')
@@ -31,8 +39,20 @@ export default function ProfilePage() {
   const [confirmingReset, setConfirmingReset] = useState(false)
   const [resetting, setResetting] = useState(false)
   const [resetDone, setResetDone] = useState(false)
+  const [categoryDrafts, setCategoryDrafts] = useState({ expense: '', income: '' })
+  const [platformDraft, setPlatformDraft] = useState('')
 
   const createdAt = new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(`${profile.createdAt}T12:00:00`))
+
+  // How many transactions use each category, so in-use ones can be protected.
+  const categoryUsage = useMemo(() => {
+    const counts = { expense: {}, income: {} }
+    for (const item of transactions) {
+      if (!counts[item.type]) continue
+      counts[item.type][item.category] = (counts[item.type][item.category] || 0) + 1
+    }
+    return counts
+  }, [transactions])
 
   function submitProfile(event) {
     event.preventDefault()
@@ -73,6 +93,20 @@ export default function ProfilePage() {
     saveProfile({ ...profile, name: name.trim(), avatar: profile.avatar === value ? '' : value })
   }
 
+  function addCategory(type) {
+    const value = categoryDrafts[type].trim()
+    if (!value) return
+    rememberCategory(type, value)
+    setCategoryDrafts((current) => ({ ...current, [type]: '' }))
+  }
+
+  function addPlatform() {
+    const value = platformDraft.trim()
+    if (!value) return
+    rememberPlatform(value)
+    setPlatformDraft('')
+  }
+
   async function runDemoReset() {
     setResetting(true)
     try {
@@ -108,6 +142,38 @@ export default function ProfilePage() {
     </section>
 
     <section className="panel visibility-panel"><div className="panel-heading"><div><h2>{t.investmentSettings}</h2><p>{t.investmentSettingsSubtitle}</p></div><span className="panel-icon"><SlidersHorizontal size={17} /></span></div><div className="visibility-list">{INVESTMENT_TYPES.map(({ key, icon: Icon, tint }) => <div className="visibility-row" key={key}><span className={`portfolio-mini-icon ${tint}`}><Icon size={17} /></span><div className="visibility-label"><strong>{t[key]}</strong><span>{t.visibleSetting}</span></div><button type="button" className={investmentVisibility[key] ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={investmentVisibility[key]} aria-label={`${t.visibleSetting}: ${t[key]}`} onClick={() => toggleInvestmentVisibility(key)}><span /></button></div>)}</div><p className="visibility-note">{t.hiddenAssetsNote}</p></section>
+    <section className="panel visibility-panel">
+      <div className="panel-heading"><div><h2>{t.manageCategories}</h2><p>{t.manageCategoriesSubtitle}</p></div><span className="panel-icon"><Tag size={17} /></span></div>
+      {['expense', 'income'].map((type) => <div className="manage-group" key={type}>
+        <div className="manage-group-head"><strong>{type === 'expense' ? t.expense : t.income}</strong><span>{categories[type].length}</span></div>
+        <div className="manage-list">
+          {categories[type].map((item) => {
+            const used = categoryUsage[type][item] || 0
+            return <div className="manage-row" key={item}>
+              <span className="manage-name">{t.categoryNames[item] || item}</span>
+              {used > 0 && <span className="manage-usage">{used} {t.records}</span>}
+              <button type="button" className="manage-remove" disabled={used > 0} title={used > 0 ? t.categoryInUse : `${t.delete} ${item}`} aria-label={`${t.delete} ${item}`} onClick={() => removeCategory(type, item)}><X size={14} /></button>
+            </div>
+          })}
+        </div>
+        <div className="add-row">
+          <input value={categoryDrafts[type]} placeholder={t.addOwnCategory} aria-label={t.addOwnCategory} onChange={(event) => setCategoryDrafts((current) => ({ ...current, [type]: event.target.value }))} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addCategory(type) } }} />
+          <button type="button" onClick={() => addCategory(type)} disabled={!categoryDrafts[type].trim()} aria-label={t.addCategory} title={t.addCategory}><Plus size={15} /></button>
+        </div>
+      </div>)}
+    </section>
+
+    <section className="panel visibility-panel">
+      <div className="panel-heading"><div><h2>{t.managePlatforms}</h2><p>{t.managePlatformsSubtitle}</p></div><span className="panel-icon"><Wallet size={17} /></span></div>
+      <div className="manage-list">
+        {platforms.length ? platforms.map((item) => <div className="manage-row" key={item}><span className="manage-name">{item}</span><button type="button" className="manage-remove" title={`${t.delete} ${item}`} aria-label={`${t.delete} ${item}`} onClick={() => removePlatform(item)}><X size={14} /></button></div>) : <p className="empty-note">{t.noPlatformsYet}</p>}
+      </div>
+      <div className="add-row">
+        <input value={platformDraft} placeholder={t.addOwnPlatform} aria-label={t.addOwnPlatform} onChange={(event) => setPlatformDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addPlatform() } }} />
+        <button type="button" onClick={addPlatform} disabled={!platformDraft.trim()} aria-label={t.addPlatform} title={t.addPlatform}><Plus size={15} /></button>
+      </div>
+    </section>
+
     {isDemo && <section className="panel demo-panel">
       <div className="panel-heading"><div><h2>{t.demoData}</h2><p>{t.demoDataSubtitle}</p></div><span className="panel-icon"><RotateCcw size={17} /></span></div>
       {confirmingReset
