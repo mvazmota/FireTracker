@@ -60,7 +60,12 @@
 .onboarding-hint { margin: 0 0 14px; color: #b08a6a; font-size: 11px; }
 .onboarding-wide { width: 100%; height: 44px; }
 .onboarding-actions { display: flex; gap: 10px; }
-.onboarding-actions .submit-button { flex: 1; height: 44px; }
+.onboarding-actions .submit-button { flex: 1; height: 44px; margin-top: 0; }
+.onboarding-actions .ghost-button { height: 44px; }
+.onboarding-title-row { display: flex; align-items: center; justify-content: center; gap: 9px; }
+.onboarding-optional { padding: 3px 9px; border-radius: 999px; background: #eef4ee; color: #5f8a6b; font-size: 9px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
+.onboarding-learn-more { display: inline-flex; align-items: center; gap: 5px; margin: -10px 0 16px; color: #4f7d5c; font-size: 11px; font-weight: 600; text-decoration: none; }
+.onboarding-learn-more:hover { text-decoration: underline; }
 .onboarding-avatar-preview { display: grid; place-items: center; margin: 0 0 18px; }
 .onboarding-avatar-big { display: grid; place-items: center; width: 84px; height: 84px; border: 5px solid #f0f5ef; border-radius: 50%; background: #dfeade; color: #426b4d; font: 700 24px 'Manrope', sans-serif; background-size: cover; background-position: center; }
 .onboarding-animals { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 18px; }

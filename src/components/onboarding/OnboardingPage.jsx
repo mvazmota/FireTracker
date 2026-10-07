@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, Camera, Check, Flame, Plus, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Camera, Check, ExternalLink, Flame, Plus, X } from 'lucide-react'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
 import { categorySuggestions } from '../../data/categories.js'
@@ -10,10 +10,14 @@ import Avatar from '../ui/Avatar.jsx'
 import AnimalAvatar, { ANIMAL_LABEL_KEYS, ANIMAL_PRESETS, animalAvatarValue, animalId } from '../ui/AnimalAvatar.jsx'
 
 /** How many categories each group needs before the step can continue. */
-const MIN_CATEGORIES = 3
+const MIN_CATEGORIES = { expense: 3, income: 2 }
 
 /** Pre-selected so the step never starts from an empty screen. */
 const DEFAULT_CATEGORIES = { expense: ['Food & dining'], income: ['Salary'] }
+
+/** Pre-selected defaults for the platform and investment steps. */
+const DEFAULT_SELECTED_PLATFORMS = ['Bank account']
+const DEFAULT_SELECTED_INVESTMENTS = { etfs: true, crypto: false, p2p: false, bonds: false, savings: false }
 
 /**
  * First-run setup: a new account has no categories and no platforms, so we ask
@@ -24,13 +28,13 @@ const DEFAULT_CATEGORIES = { expense: ['Food & dining'], income: ['Salary'] }
  */
 export default function OnboardingPage() {
   const { t, language, changeLanguage } = useI18n()
-  const { profile, investmentVisibility, fireGoal, fireMeterVisible, saveProfile, saveOnboarding } = useSettings()
+  const { profile, fireGoal, fireMeterVisible, saveProfile, saveOnboarding } = useSettings()
   const [step, setStep] = useState(0)
   const [categories, setCategories] = useState(() => ({ expense: [...DEFAULT_CATEGORIES.expense], income: [...DEFAULT_CATEGORIES.income] }))
   const [customCategories, setCustomCategories] = useState({ expense: [], income: [] })
   const [categoryDrafts, setCategoryDrafts] = useState({ expense: '', income: '' })
-  const [platforms, setPlatforms] = useState([])
-  const [visibility, setVisibility] = useState(() => ({ ...investmentVisibility }))
+  const [platforms, setPlatforms] = useState(() => [...DEFAULT_SELECTED_PLATFORMS])
+  const [visibility, setVisibility] = useState(() => ({ ...DEFAULT_SELECTED_INVESTMENTS }))
   const [goalInput, setGoalInput] = useState(String(fireGoal))
   const [showFire, setShowFire] = useState(fireMeterVisible)
   const [avatar, setAvatar] = useState(profile.avatar || '')
@@ -95,7 +99,9 @@ export default function OnboardingPage() {
     })
   }
 
-  const categoriesReady = categories.expense.length >= MIN_CATEGORIES && categories.income.length >= MIN_CATEGORIES
+  const categoriesReady = categories.expense.length >= MIN_CATEGORIES.expense && categories.income.length >= MIN_CATEGORIES.income
+  const platformsReady = platforms.length > 0
+  const investmentsReady = Object.values(visibility).some(Boolean)
   const goalValid = !showFire || goalInput.trim() === '' || (Number.isFinite(Number(goalInput)) && Number(goalInput) > 0)
 
   return <div className="onboarding-page">
@@ -117,7 +123,7 @@ export default function OnboardingPage() {
         <h1 id="onboarding-title">{t.onboardingCategoriesTitle}<span>.</span></h1>
         <p className="onboarding-sub">{t.onboardingCategoriesSubtitle}</p>
         {['expense', 'income'].map((type) => <div className="onboarding-group" key={type}>
-          <div className="onboarding-group-head"><strong>{type === 'expense' ? t.expense : t.income}</strong><span>{categories[type].length} / {MIN_CATEGORIES}</span></div>
+          <div className="onboarding-group-head"><strong>{type === 'expense' ? t.expense : t.income}</strong><span>{categories[type].length} / {MIN_CATEGORIES[type]}</span></div>
           <div className="onboarding-chips">
             {[...categorySuggestions(type), ...customCategories[type]].map((name) => <button type="button" key={name} className={categories[type].includes(name) ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={categories[type].includes(name)} onClick={() => toggleCategory(type, name)}>{t.categoryNames[name] || name}</button>)}
           </div>
@@ -134,9 +140,10 @@ export default function OnboardingPage() {
         <div className="onboarding-chips onboarding-chips-platforms">
           {PLATFORM_SUGGESTIONS.map((name) => <button type="button" key={name} className={platforms.includes(name) ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={platforms.includes(name)} onClick={() => togglePlatform(name)}>{name}</button>)}
         </div>
+        {!platformsReady && <p className="onboarding-hint">{t.onboardingPlatformsHint}</p>}
         <div className="onboarding-actions">
           <button type="button" className="ghost-button" onClick={() => setStep(0)}><ArrowLeft size={16} /> {t.back}</button>
-          <button type="button" className="submit-button" onClick={() => setStep(2)}>{t.continue} <ArrowRight size={16} /></button>
+          <button type="button" className="submit-button" disabled={!platformsReady} onClick={() => setStep(2)}>{t.continue} <ArrowRight size={16} /></button>
         </div>
       </> : step === 2 ? <>
         <h1 id="onboarding-title">{t.onboardingInvestmentsTitle}<span>.</span></h1>
@@ -144,13 +151,15 @@ export default function OnboardingPage() {
         <div className="onboarding-chips onboarding-chips-investments">
           {INVESTMENT_TYPES.map(({ key, icon: Icon }) => <button type="button" key={key} className={visibility[key] ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={visibility[key]} onClick={() => toggleInvestment(key)}><Icon size={15} /> {t[key]}</button>)}
         </div>
+        {!investmentsReady && <p className="onboarding-hint">{t.onboardingInvestmentsHint}</p>}
         <div className="onboarding-actions">
           <button type="button" className="ghost-button" onClick={() => setStep(1)}><ArrowLeft size={16} /> {t.back}</button>
-          <button type="button" className="submit-button" onClick={() => setStep(3)}>{t.continue} <ArrowRight size={16} /></button>
+          <button type="button" className="submit-button" disabled={!investmentsReady} onClick={() => setStep(3)}>{t.continue} <ArrowRight size={16} /></button>
         </div>
       </> : step === 3 ? <>
-        <h1 id="onboarding-title">{t.onboardingFireTitle}<span>.</span></h1>
+        <div className="onboarding-title-row"><h1 id="onboarding-title">{t.onboardingFireTitle}<span>.</span></h1><span className="onboarding-optional">{t.optional}</span></div>
         <p className="onboarding-sub">{t.onboardingFireSubtitle}</p>
+        <a className="onboarding-learn-more" href="https://www.investopedia.com/terms/f/financial-independence-retire-early-fire.asp" target="_blank" rel="noopener noreferrer">{t.learnMore} <ExternalLink size={13} /></a>
         <div className="onboarding-fire">
           <div className="onboarding-fire-toggle">
             <div className="visibility-label"><strong>{t.fireMeterSettings}</strong><span>{t.showFireMeter}</span></div>
