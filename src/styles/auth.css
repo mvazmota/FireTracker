@@ -35,6 +35,10 @@
 .onboarding-chips-platforms { justify-content: center; margin-bottom: 22px; }
 .onboarding-chips-investments { justify-content: center; margin-bottom: 22px; }
 .onboarding-chips-investments .onboarding-chip { display: inline-flex; align-items: center; gap: 7px; }
+.onboarding-fire { text-align: left; margin-bottom: 22px; }
+.onboarding-fire .field-label { margin-bottom: 8px; }
+.onboarding-fire .amount-input { margin-bottom: 10px; }
+.onboarding-fire-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; padding-top: 14px; border-top: 1px solid #f0f2ef; }
 .onboarding-chip { padding: 8px 13px; border: 1px solid #e2e9e2; border-radius: 999px; background: #fff; color: #5c6b60; font-size: 12px; font-weight: 600; transition: .15s; }
 .onboarding-chip:hover { border-color: #c3d6c5; background: #f4f8f3; }
 .onboarding-chip.chip-on { border-color: #8fb894; background: #eaf3ea; color: #3f6b4a; }

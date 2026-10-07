@@ -103,11 +103,13 @@ export function SettingsProvider({ children }) {
   }, [persist])
 
   /** Finishes onboarding with everything the user picked. */
-  const saveOnboarding = useCallback(({ categories, platforms, investmentVisibility }) => {
+  const saveOnboarding = useCallback(({ categories, platforms, investmentVisibility, fireGoal, fireMeterVisible }) => {
     persist({
       categories,
       platforms,
       ...(investmentVisibility ? { investmentVisibility } : {}),
+      ...(Number.isFinite(fireGoal) && fireGoal > 0 ? { fireGoal } : {}),
+      ...(typeof fireMeterVisible === 'boolean' ? { fireMeterVisible } : {}),
       onboarded: true,
     })
   }, [persist])

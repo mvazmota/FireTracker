@@ -12,17 +12,19 @@ import AnimalAvatar, { ANIMAL_LABEL_KEYS, ANIMAL_PRESETS, animalAvatarValue, ani
 /**
  * First-run setup: a new account has no categories and no platforms, so we ask
  * for them before the app is usable, then for the investment spaces to show,
- * and finally an optional profile picture. The choice steps are
- * suggestion-driven to keep it quick; custom entries can be added later from
- * the normal forms.
+ * an optional FIRE goal, and finally an optional profile picture. The choice
+ * steps are suggestion-driven to keep it quick; custom entries can be added
+ * later from the normal forms.
  */
 export default function OnboardingPage() {
   const { t, language, changeLanguage } = useI18n()
-  const { profile, investmentVisibility, saveProfile, saveOnboarding } = useSettings()
+  const { profile, investmentVisibility, fireGoal, fireMeterVisible, saveProfile, saveOnboarding } = useSettings()
   const [step, setStep] = useState(0)
   const [categories, setCategories] = useState({ expense: [], income: [] })
   const [platforms, setPlatforms] = useState([])
   const [visibility, setVisibility] = useState(() => ({ ...investmentVisibility }))
+  const [goalInput, setGoalInput] = useState(String(fireGoal))
+  const [showFire, setShowFire] = useState(fireMeterVisible)
   const [avatar, setAvatar] = useState(profile.avatar || '')
   const [photoError, setPhotoError] = useState('')
   const fileInput = useRef(null)
@@ -58,10 +60,17 @@ export default function OnboardingPage() {
 
   function finish() {
     if (avatar !== (profile.avatar || '')) saveProfile({ ...profile, avatar })
-    saveOnboarding({ categories, platforms, investmentVisibility: visibility })
+    saveOnboarding({
+      categories,
+      platforms,
+      investmentVisibility: visibility,
+      fireGoal: Number(goalInput) > 0 ? Number(goalInput) : fireGoal,
+      fireMeterVisible: showFire,
+    })
   }
 
   const categoriesReady = categories.expense.length > 0 && categories.income.length > 0
+  const goalValid = goalInput.trim() === '' || (Number.isFinite(Number(goalInput)) && Number(goalInput) > 0)
 
   return <div className="onboarding-page">
     <div className="login-language">
@@ -74,9 +83,9 @@ export default function OnboardingPage() {
     <section className="onboarding-card" aria-labelledby="onboarding-title">
       <span className="login-brand-mark"><Flame size={22} fill="currentColor" /></span>
       <div className="onboarding-progress" aria-hidden="true">
-        {[0, 1, 2, 3].map((index) => <span key={index} className={step >= index ? 'onboarding-dot active-dot' : 'onboarding-dot'} />)}
+        {[0, 1, 2, 3, 4].map((index) => <span key={index} className={step >= index ? 'onboarding-dot active-dot' : 'onboarding-dot'} />)}
       </div>
-      <p className="onboarding-step">{t.stepLabel} {step + 1}/4</p>
+      <p className="onboarding-step">{t.stepLabel} {step + 1}/5</p>
 
       {step === 0 ? <>
         <h1 id="onboarding-title">{t.onboardingCategoriesTitle}<span>.</span></h1>
@@ -109,6 +118,22 @@ export default function OnboardingPage() {
           <button type="button" className="ghost-button" onClick={() => setStep(1)}><ArrowLeft size={16} /> {t.back}</button>
           <button type="button" className="submit-button" onClick={() => setStep(3)}>{t.continue} <ArrowRight size={16} /></button>
         </div>
+      </> : step === 3 ? <>
+        <h1 id="onboarding-title">{t.onboardingFireTitle}<span>.</span></h1>
+        <p className="onboarding-sub">{t.onboardingFireSubtitle}</p>
+        <div className="onboarding-fire">
+          <label className="field-label" htmlFor="onboarding-fire-goal">{t.goalAmount}</label>
+          <div className="amount-input"><span>€</span><input id="onboarding-fire-goal" type="number" min="1" step="1000" value={goalInput} onChange={(event) => setGoalInput(event.target.value)} /></div>
+          {!goalValid && <p className="form-error">{t.goalError}</p>}
+          <div className="onboarding-fire-toggle">
+            <div className="visibility-label"><strong>{t.fireMeterSettings}</strong><span>{t.showFireMeter}</span></div>
+            <button type="button" className={showFire ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={showFire} aria-label={t.showFireMeter} onClick={() => setShowFire((current) => !current)}><span /></button>
+          </div>
+        </div>
+        <div className="onboarding-actions">
+          <button type="button" className="ghost-button" onClick={() => setStep(2)}><ArrowLeft size={16} /> {t.back}</button>
+          <button type="button" className="submit-button" disabled={!goalValid} onClick={() => setStep(4)}>{t.continue} <ArrowRight size={16} /></button>
+        </div>
       </> : <>
         <h1 id="onboarding-title">{t.onboardingAvatarTitle}<span>.</span></h1>
         <p className="onboarding-sub">{t.onboardingAvatarSubtitle}</p>
@@ -130,7 +155,7 @@ export default function OnboardingPage() {
         <input ref={fileInput} className="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={uploadPhoto} />
         {photoError && <p className="form-error">{photoError}</p>}
         <div className="onboarding-actions">
-          <button type="button" className="ghost-button" onClick={() => setStep(2)}><ArrowLeft size={16} /> {t.back}</button>
+          <button type="button" className="ghost-button" onClick={() => setStep(3)}><ArrowLeft size={16} /> {t.back}</button>
           <button type="button" className="submit-button" onClick={finish}><Check size={16} /> {t.finishSetup}</button>
         </div>
       </>}
