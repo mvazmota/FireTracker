@@ -1,0 +1,34 @@
+{
+  // Firepath: a Worker that serves the built SPA and the /api routes.
+  // Deploy with: npm run deploy
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "firetracker",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+    // Always let the Worker handle API calls, even though they match no asset.
+    "run_worker_first": ["/api/*"]
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "firepath-db",
+      // Replace with the id printed by: npx wrangler d1 create firepath-db
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ],
+
+  "vars": {
+    // Comma-separated list of origins allowed to call the auth endpoints.
+    "TRUSTED_ORIGINS": "http://localhost:8787,http://127.0.0.1:8787"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

@@ -8,20 +8,28 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:worker": "wrangler dev",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && npx wrangler pages deploy dist --project-name firepath",
-    "preview:cf": "npm run build && npx wrangler pages dev dist"
+    "deploy": "npm run build && wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply firepath-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply firepath-db --remote",
+    "auth:generate": "better-auth generate --config ./scripts/auth-cli.mjs --output ./worker/db/auth-schema.sql -y"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
+    "better-auth": "^1.7.7",
+    "hono": "^4.13.13",
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
     "vite": "latest"
   },
   "devDependencies": {
+    "@better-auth/cli": "^1.4.22",
     "babel-plugin-react-compiler": "^1.0.0",
-    "oxc-transform-react": "^0.152.0"
+    "better-sqlite3": "^13.0.3",
+    "oxc-transform-react": "^0.152.0",
+    "wrangler": "^4.148.0"
   }
 }

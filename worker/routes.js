@@ -1,0 +1,135 @@
+import { Hono } from 'hono'
+import { ASSET_TABLES, TRANSACTIONS, clearUserRows, listForUser, removeById, upsert } from './tables.js'
+
+const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireGoal', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'customCategories']
+
+const jsonOrNull = (value) => (value == null ? null : JSON.stringify(value))
+const parseOrNull = (value) => {
+  if (value == null) return null
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
+}
+
+async function loadSettings(db, userId) {
+  const row = await db.prepare('select * from "user_settings" where "userId" = ?').bind(userId).first()
+  if (!row) return { profile: null, settings: null }
+  return {
+    profile: { name: row.name ?? '', avatar: row.avatar ?? '', createdAt: row.createdAt ?? '' },
+    settings: {
+      language: row.language ?? undefined,
+      fireGoal: row.fireGoal ?? undefined,
+      fireMeterVisible: row.fireMeterVisible == null ? undefined : Boolean(row.fireMeterVisible),
+      investmentVisibility: parseOrNull(row.investmentVisibility) ?? undefined,
+      platforms: parseOrNull(row.platforms) ?? undefined,
+      customCategories: parseOrNull(row.customCategories) ?? undefined,
+    },
+  }
+}
+
+async function saveSettings(db, userId, body) {
+  const existing = await db.prepare('select * from "user_settings" where "userId" = ?').bind(userId).first()
+  const merged = {
+    name: body?.profile?.name ?? existing?.name ?? '',
+    avatar: body?.profile?.avatar ?? existing?.avatar ?? '',
+    createdAt: body?.profile?.createdAt ?? existing?.createdAt ?? new Date().toISOString().slice(0, 10),
+    language: body?.settings?.language ?? existing?.language ?? 'en',
+    fireGoal: body?.settings?.fireGoal ?? existing?.fireGoal ?? 300000,
+    fireMeterVisible: body?.settings?.fireMeterVisible ?? (existing?.fireMeterVisible == null ? true : Boolean(existing.fireMeterVisible)),
+    investmentVisibility: body?.settings?.investmentVisibility ?? parseOrNull(existing?.investmentVisibility) ?? null,
+    platforms: body?.settings?.platforms ?? parseOrNull(existing?.platforms) ?? null,
+    customCategories: body?.settings?.customCategories ?? parseOrNull(existing?.customCategories) ?? null,
+  }
+  const values = [
+    userId,
+    merged.name,
+    merged.avatar,
+    merged.createdAt,
+    merged.language,
+    merged.fireGoal,
+    merged.fireMeterVisible ? 1 : 0,
+    jsonOrNull(merged.investmentVisibility),
+    jsonOrNull(merged.platforms),
+    jsonOrNull(merged.customCategories),
+  ]
+  const columns = ['userId', ...SETTINGS_COLUMNS]
+  const assignments = SETTINGS_COLUMNS.map((column) => `"${column}" = excluded."${column}"`).join(', ')
+  await db
+    .prepare(`insert into "user_settings" (${columns.map((c) => `"${c}"`).join(', ')}) values (${columns.map(() => '?').join(', ')}) on conflict("userId") do update set ${assignments}`)
+    .bind(...values)
+    .run()
+}
+
+export const api = new Hono()
+
+api.use('*', async (c, next) => {
+  const session = await c.get('auth').api.getSession({ headers: c.req.raw.headers })
+  if (!session?.user) return c.json({ error: 'unauthorized' }, 401)
+  c.set('userId', session.user.id)
+  await next()
+})
+
+/** Everything the client needs on load. */
+api.get('/state', async (c) => {
+  const db = c.env.DB
+  const userId = c.get('userId')
+  const [transactions, etfs, crypto, p2p, bonds, savings] = await Promise.all([
+    listForUser(db, userId, TRANSACTIONS),
+    listForUser(db, userId, ASSET_TABLES.etfs),
+    listForUser(db, userId, ASSET_TABLES.crypto),
+    listForUser(db, userId, ASSET_TABLES.p2p),
+    listForUser(db, userId, ASSET_TABLES.bonds),
+    listForUser(db, userId, ASSET_TABLES.savings),
+  ])
+  const { profile, settings } = await loadSettings(db, userId)
+  return c.json({ transactions, etfs, crypto, p2p, bonds, savings, profile, settings })
+})
+
+api.put('/transactions/:id', async (c) => {
+  const body = await c.req.json()
+  const record = { ...body, id: c.req.param('id') }
+  if (!record.title || !record.category || !record.type || !record.date) return c.json({ error: 'invalid transaction' }, 400)
+  await upsert(c.env.DB, c.get('userId'), TRANSACTIONS, record)
+  return c.json({ ok: true })
+})
+
+api.delete('/transactions/:id', async (c) => {
+  await removeById(c.env.DB, c.get('userId'), TRANSACTIONS, c.req.param('id'))
+  return c.json({ ok: true })
+})
+
+api.put('/assets/:type/:id', async (c) => {
+  const config = ASSET_TABLES[c.req.param('type')]
+  if (!config) return c.json({ error: 'unknown asset type' }, 400)
+  const body = await c.req.json()
+  await upsert(c.env.DB, c.get('userId'), config, { ...body, id: c.req.param('id') })
+  return c.json({ ok: true })
+})
+
+api.delete('/assets/:type/:id', async (c) => {
+  const config = ASSET_TABLES[c.req.param('type')]
+  if (!config) return c.json({ error: 'unknown asset type' }, 400)
+  await removeById(c.env.DB, c.get('userId'), config, c.req.param('id'))
+  return c.json({ ok: true })
+})
+
+api.put('/settings', async (c) => {
+  await saveSettings(c.env.DB, c.get('userId'), await c.req.json())
+  return c.json({ ok: true })
+})
+
+/** Bulk import — used once to move existing local data into the account. */
+api.post('/import', async (c) => {
+  const db = c.env.DB
+  const userId = c.get('userId')
+  const body = await c.req.json()
+  await clearUserRows(db, userId)
+  for (const type of Object.keys(ASSET_TABLES)) {
+    for (const record of body[type] || []) await upsert(db, userId, ASSET_TABLES[type], record)
+  }
+  for (const record of body.transactions || []) await upsert(db, userId, TRANSACTIONS, record)
+  await saveSettings(db, userId, { profile: body.profile, settings: body.settings })
+  return c.json({ ok: true })
+})
