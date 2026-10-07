@@ -12,8 +12,12 @@
 .login-input input::placeholder { color: #b1b9b3; }
 .login-card .submit-button { height: 44px; margin-top: 4px; }
 .login-hint { margin: -8px 0 14px; color: #a4aca6; font-size: 10px; }
-.login-remember { display: inline-flex; align-items: center; margin: -8px 0 14px; padding: 4px 9px; border: 1px solid #e4ece4; border-radius: 999px; background: #f6faf6; color: #5f7d66; font-size: 10px; font-weight: 600; transition: .15s; }
-.login-remember:hover { border-color: #bdd4bf; background: #eef6ee; }
+.remember-toggle { display: inline-flex; align-items: center; gap: 9px; margin-top: 14px; color: #6f7d73; font-size: 11px; font-weight: 600; cursor: pointer; user-select: none; }
+.remember-toggle input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.remember-box { display: grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid #cfdbd0; border-radius: 4px; background: #fff; transition: .15s; }
+.remember-toggle input:checked + .remember-box { border-color: #5c956d; background: #5c956d; }
+.remember-toggle input:checked + .remember-box::after { content: ''; width: 3px; height: 7px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(45deg) translate(-1px, -1px); }
+.remember-toggle input:focus-visible + .remember-box { box-shadow: 0 0 0 3px #e3ece3; }
 .login-toggle { margin-top: 14px; padding: 6px 9px; border: 0; border-radius: 6px; background: transparent; color: #477557; font-size: 11px; font-weight: 600; }
 .login-toggle:hover { background: #eff5ef; }
 .login-card .submit-button:disabled { opacity: .7; cursor: default; }
