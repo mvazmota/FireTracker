@@ -4,9 +4,11 @@ import SavingsDepositModal from './SavingsDepositModal.jsx'
 import { useState } from 'react'
 import { Landmark, Pencil, Plus, TrendingUp, Wallet, X } from 'lucide-react'
 import { formatCurrency, formatRate } from '../../lib/format.js'
-import { messages } from '../../i18n/messages.jsx'
-export default function SavingsPage({ language, accounts, onSave, onDelete, platforms }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+import { useSettings } from '../../context/SettingsProvider.jsx'
+export default function SavingsPage({ accounts, onSave, onDelete }) {
+  const { platforms } = useSettings()
+  const { t, locale, language } = useI18n()
   const [editing, setEditing] = useState(null)
   const [historyAccount, setHistoryAccount] = useState(null)
   const [depositAccount, setDepositAccount] = useState(null)
@@ -29,8 +31,8 @@ export default function SavingsPage({ language, accounts, onSave, onDelete, plat
       {accounts.length ? <div className="holdings-table-wrap"><table className="holdings-table savings-table"><thead><tr><th>{t.savingsAccountName}</th><th>{t.institution}</th><th>{t.marketValue}</th><th>{t.savingsTarget}</th><th>{t.savingsRate}</th><th>{t.history}</th><th /></tr></thead><tbody>{accounts.map((account) => { const targetProgress = account.target ? Math.max(0, Math.min(100, account.balance / account.target * 100)) : 0; return <tr key={account.id}><td><span className="holding-fund"><span className="holding-symbol"><Wallet size={15} /></span><span className="holding-name">{account.name}{account.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span></span></td><td>{account.institution}</td><td className="holding-value">{formatCurrency(account.balance, language)}</td><td>{account.target ? <div className="savings-target-cell"><strong>{formatCurrency(account.target, language)}</strong><div><span style={{ width: `${targetProgress}%` }} /></div><small>{targetProgress.toFixed(0)}%</small></div> : '—'}</td><td>{formatRate(account.annualRate, language)}</td><td><button className="history-table-button" onClick={() => setHistoryAccount(account)}>{account.history?.length || 0} {t.snapshots}</button></td><td><div className="transaction-actions"><button className="deposit-row" onClick={() => setDepositAccount(account)} aria-label={`${t.addMoney}: ${account.name}`} title={t.addMoney}><Plus size={15} /></button><button className="edit-row" onClick={() => setEditing(account)} aria-label={`${t.editSavingsAccount}: ${account.name}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(account)} aria-label={`${t.removeRecord}: ${account.name}`} title={t.delete}><X size={15} /></button></div></td></tr> })}</tbody></table></div> : <div className="empty-transactions"><span className="empty-icon"><Wallet size={21} /></span><strong>{t.noSavings}</strong><p>{t.addFirstSavings}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {t.addSavingsAccount}</button></div>}
     </section>
     <footer className="page-footer"><span>{t.savingsAccountNote}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
-    {(showModal || editing) && <SavingsAccountModal language={language} account={editing} onClose={closeAccountModal} onSave={saveAccount} platforms={platforms} />}
-    {depositAccount && <SavingsDepositModal language={language} account={depositAccount} onClose={() => setDepositAccount(null)} onDeposit={addDeposit} />}
-    {historyAccount && <InvestmentHistoryModal language={language} kind="savings" record={historyAccount} onClose={() => setHistoryAccount(null)} onSave={(record) => { onSave(record); setHistoryAccount(null) }} />}
+    {(showModal || editing) && <SavingsAccountModal account={editing} onClose={closeAccountModal} onSave={saveAccount} />}
+    {depositAccount && <SavingsDepositModal account={depositAccount} onClose={() => setDepositAccount(null)} onDeposit={addDeposit} />}
+    {historyAccount && <InvestmentHistoryModal kind="savings" record={historyAccount} onClose={() => setHistoryAccount(null)} onSave={(record) => { onSave(record); setHistoryAccount(null) }} />}
   </div>
 }

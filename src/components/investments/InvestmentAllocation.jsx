@@ -1,9 +1,9 @@
 import { ChartLine } from 'lucide-react'
 import { formatCurrency } from '../../lib/format.js'
-import { messages } from '../../i18n/messages.jsx'
 
-export default function InvestmentAllocation({ holdings, language, emptyLabel }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function InvestmentAllocation({ holdings, emptyLabel }) {
+  const { t, locale, language } = useI18n()
   const palette = ['#78b7a0', '#89a9da', '#efa77c', '#ad9be0', '#df89a0', '#e7c46f']
   const totalValue = holdings.reduce((sum, holding) => sum + holding.units * holding.currentPrice, 0)
   let offset = 0

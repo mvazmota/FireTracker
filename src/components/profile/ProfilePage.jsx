@@ -1,11 +1,10 @@
 import Avatar from '../ui/Avatar.jsx'
 import { useRef, useState } from 'react'
 import { Bitcoin, Camera, ChartLine, Check, HandCoins, Landmark, SlidersHorizontal, Wallet } from 'lucide-react'
-import { messages } from '../../i18n/messages.jsx'
 import { initialsForName, resizeImageFile } from '../../lib/image.js'
-export default function ProfilePage({ language, profile, visibility, onSaveProfile, onToggleVisibility }) {
-  const t = messages[language]
-  const locale = language === 'pt' ? 'pt-PT' : 'en-IE'
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function ProfilePage({ profile, visibility, onSaveProfile, onToggleVisibility }) {
+  const { t, locale, language } = useI18n()
   const [name, setName] = useState(profile.name || '')
   const [photoError, setPhotoError] = useState('')
   const fileInput = useRef(null)

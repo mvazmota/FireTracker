@@ -3,9 +3,11 @@ import InvestmentHistoryModal from './InvestmentHistoryModal.jsx'
 import { useState } from 'react'
 import { ChartLine, HandCoins, Landmark, Pencil, Plus, TrendingUp, Wallet, X } from 'lucide-react'
 import { formatCurrency, formatPercent } from '../../lib/format.js'
-import { messages } from '../../i18n/messages.jsx'
-export default function FixedIncomePage({ language, kind, records, onSave, onDelete, platforms }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+import { useSettings } from '../../context/SettingsProvider.jsx'
+export default function FixedIncomePage({ kind, records, onSave, onDelete }) {
+  const { platforms } = useSettings()
+  const { t, locale, language } = useI18n()
   const isBond = kind === 'bonds'
   const [editing, setEditing] = useState(null)
   const [historyRecord, setHistoryRecord] = useState(null)
@@ -18,7 +20,6 @@ export default function FixedIncomePage({ language, kind, records, onSave, onDel
   const investedTotal = records.reduce((sum, item) => sum + (isBond ? item.investedValue : item.invested), 0)
   const marketTotal = records.reduce((sum, item) => sum + item.currentValue, 0)
   const gain = marketTotal - investedTotal
-  const locale = language === 'pt' ? 'pt-PT' : 'en-IE'
   const countLabel = isBond ? t.bondCount : t.p2pCount
 
   function closeModal() { setShowModal(false); setEditing(null) }
@@ -35,7 +36,7 @@ export default function FixedIncomePage({ language, kind, records, onSave, onDel
     </section>
     <section className="panel history-access-panel"><div className="transactions-heading"><div><h2>{t.monthlyHistory}</h2><p>{t.historySubtitle}</p></div></div><div className="history-access-grid">{records.map((record) => <button className="history-access-card" key={record.id} onClick={() => setHistoryRecord(record)}><span className="history-access-icon">{isBond ? <Landmark size={16} /> : <HandCoins size={16} />}</span><span className="history-access-name">{record.name}</span><span className="history-access-count">{record.history?.length || 0} {t.snapshots}</span><ChartLine size={15} className="history-access-arrow" /></button>)}</div></section>
     <footer className="page-footer"><span>{isBond ? t.bondNote : t.p2pNote}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
-    {(showModal || editing) && <FixedIncomeModal language={language} kind={kind} record={editing} onClose={closeModal} onSave={saveRecord} platforms={platforms} />}
-    {historyRecord && <InvestmentHistoryModal language={language} kind={kind} record={historyRecord} onClose={() => setHistoryRecord(null)} onSave={saveHistory} />}
+    {(showModal || editing) && <FixedIncomeModal kind={kind} record={editing} onClose={closeModal} onSave={saveRecord} />}
+    {historyRecord && <InvestmentHistoryModal kind={kind} record={historyRecord} onClose={() => setHistoryRecord(null)} onSave={saveHistory} />}
   </div>
 }

@@ -1,8 +1,7 @@
-import { messages } from '../../i18n/messages.jsx'
 
-export default function PositionEvolutionChart({ timeline, language, range, visibility }) {
-  const t = messages[language]
-  const locale = language === 'pt' ? 'pt-PT' : 'en-IE'
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function PositionEvolutionChart({ timeline, range, visibility }) {
+  const { t, locale, language } = useI18n()
   const visible = range === 'all' ? timeline : timeline.slice(-Number(range))
   const width = Math.max(760, visible.length * 56)
   const height = 260

@@ -1,9 +1,11 @@
 import PlatformSelector from '../ui/PlatformSelector.jsx'
 import { useState } from 'react'
 import { Check, Plus, X } from 'lucide-react'
-import { messages } from '../../i18n/messages.jsx'
-export default function FixedIncomeModal({ language, kind, record, onClose, onSave, platforms }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+import { useSettings } from '../../context/SettingsProvider.jsx'
+export default function FixedIncomeModal({ kind, record, onClose, onSave }) {
+  const { platforms } = useSettings()
+  const { t, locale, language } = useI18n()
   const isBond = kind === 'bonds'
   const [platform, setPlatform] = useState(record?.platform || '')
   const [name, setName] = useState(record?.name || '')
@@ -38,12 +40,12 @@ export default function FixedIncomeModal({ language, kind, record, onClose, onSa
     <form onSubmit={submit}>
       {isBond ? <>
         <label className="field-label" htmlFor="fixed-name">{t.bondName}</label><input className="investment-field" id="fixed-name" autoFocus placeholder={language === 'pt' ? 'ex.: Obrigação do Tesouro' : 'e.g. Treasury bond 2030'} value={name} onChange={(event) => setName(event.target.value)} />
-        <PlatformSelector id="fixed-platform" label={t.platform} value={platform} onChange={setPlatform} platforms={platforms} language={language} />
+        <PlatformSelector id="fixed-platform" label={t.platform} value={platform} onChange={setPlatform} />
         <div className="form-row"><div><label className="field-label" htmlFor="fixed-issuer">{t.issuer}</label><input className="investment-field" id="fixed-issuer" placeholder={language === 'pt' ? 'ex.: República Portuguesa' : 'e.g. Government of Portugal'} value={issuer} onChange={(event) => setIssuer(event.target.value)} /></div><div><label className="field-label" htmlFor="fixed-maturity">{t.maturityDate}</label><input className="investment-field" id="fixed-maturity" type="date" value={maturityDate} onChange={(event) => setMaturityDate(event.target.value)} /></div></div>
         <div className="form-row"><div><label className="field-label" htmlFor="fixed-nominal">{t.nominalValue}</label><div className="amount-input"><span>€</span><input id="fixed-nominal" type="number" min="0.01" step="0.01" placeholder={t.pricePlaceholder} value={nominalValue} onChange={(event) => setNominalValue(event.target.value)} /></div></div><div><label className="field-label" htmlFor="fixed-purchase">{t.purchaseValue}</label><div className="amount-input"><span>€</span><input id="fixed-purchase" type="number" min="0.01" step="0.01" placeholder={t.pricePlaceholder} value={purchaseValue} onChange={(event) => setPurchaseValue(event.target.value)} /></div></div></div>
         <div className="form-row"><div><label className="field-label" htmlFor="fixed-current">{t.bondCurrentValue}</label><div className="amount-input"><span>€</span><input id="fixed-current" type="number" min="0" step="0.01" placeholder={t.pricePlaceholder} value={currentValue} onChange={(event) => setCurrentValue(event.target.value)} /></div></div><div><label className="field-label" htmlFor="fixed-rate">{t.couponRate}</label><div className="amount-input"><input id="fixed-rate" type="number" min="0" step="0.01" placeholder="0.00" value={annualRate} onChange={(event) => setAnnualRate(event.target.value)} /><span>%</span></div></div></div>
       </> : <>
-        <div className="form-row"><div><PlatformSelector id="fixed-platform" label={t.platform} value={platform} onChange={setPlatform} platforms={platforms} language={language} /></div><div><label className="field-label" htmlFor="fixed-name">{t.projectName}</label><input className="investment-field" id="fixed-name" autoFocus placeholder={language === 'pt' ? 'ex.: Carteira diversificada' : 'e.g. Diversified loan portfolio'} value={name} onChange={(event) => setName(event.target.value)} /></div></div>
+        <div className="form-row"><div><PlatformSelector id="fixed-platform" label={t.platform} value={platform} onChange={setPlatform} /></div><div><label className="field-label" htmlFor="fixed-name">{t.projectName}</label><input className="investment-field" id="fixed-name" autoFocus placeholder={language === 'pt' ? 'ex.: Carteira diversificada' : 'e.g. Diversified loan portfolio'} value={name} onChange={(event) => setName(event.target.value)} /></div></div>
         <div className="form-row"><div><label className="field-label" htmlFor="fixed-invested">{t.amountInvested}</label><div className="amount-input"><span>€</span><input id="fixed-invested" type="number" min="0.01" step="0.01" placeholder={t.pricePlaceholder} value={invested} onChange={(event) => setInvested(event.target.value)} /></div></div><div><label className="field-label" htmlFor="fixed-current">{t.accountValue}</label><div className="amount-input"><span>€</span><input id="fixed-current" type="number" min="0" step="0.01" placeholder={t.pricePlaceholder} value={currentValue} onChange={(event) => setCurrentValue(event.target.value)} /></div></div></div>
         <label className="field-label" htmlFor="fixed-rate">{t.expectedReturn}</label><div className="amount-input"><input id="fixed-rate" type="number" min="0" step="0.01" placeholder="0.00" value={annualRate} onChange={(event) => setAnnualRate(event.target.value)} /><span>%</span></div>
       </>}

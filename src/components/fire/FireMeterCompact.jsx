@@ -1,10 +1,9 @@
 import { Flame, Pencil } from 'lucide-react'
 import { formatCurrency } from '../../lib/format.js'
-import { messages } from '../../i18n/messages.jsx'
 
-export default function FireMeterCompact({ language, position, goal, onEdit }) {
-  const t = messages[language]
-  const locale = language === 'pt' ? 'pt-PT' : 'en-IE'
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function FireMeterCompact({ position, goal, onEdit }) {
+  const { t, locale, language } = useI18n()
   const progress = goal > 0 ? (position / goal) * 100 : 0
   const barWidth = Math.max(0, Math.min(100, progress))
   const remaining = Math.max(0, goal - position)

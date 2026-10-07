@@ -1,8 +1,7 @@
-import { messages } from '../../i18n/messages.jsx'
 
-export default function AnnualFlowChart({ transactions, year, language }) {
-  const t = messages[language]
-  const locale = language === 'pt' ? 'pt-PT' : 'en-IE'
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function AnnualFlowChart({ transactions, year }) {
+  const { t, locale, language } = useI18n()
   const months = Array.from({ length: 12 }, (_, index) => ({
     label: new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(year, index, 1)),
     income: 0,

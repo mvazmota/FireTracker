@@ -1,9 +1,9 @@
 import { formatCurrency } from '../../lib/format.js'
 import { categoryInfo } from '../../data/categories.js'
-import { messages } from '../../i18n/messages.jsx'
 
-export default function SpendingBreakdown({ transactions, language }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function SpendingBreakdown({ transactions }) {
+  const { t, locale, language } = useI18n()
   const expenses = transactions.filter((item) => item.type === 'expense')
   const total = expenses.reduce((sum, item) => sum + item.amount, 0)
   const groups = expenses.reduce((result, item) => {

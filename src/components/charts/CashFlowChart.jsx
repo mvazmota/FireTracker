@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
-import { messages } from '../../i18n/messages.jsx'
 
-export default function CashFlowChart({ transactions, selectedMonth, language }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function CashFlowChart({ transactions, selectedMonth }) {
+  const { t, locale, language } = useI18n()
   const weeks = useMemo(() => {
     const result = Array.from({ length: 5 }, (_, index) => ({ label: `${t.week} ${index + 1}`, income: 0, expense: 0 }))
     transactions.forEach((item) => {

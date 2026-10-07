@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Check, X } from 'lucide-react'
-import { messages } from '../../i18n/messages.jsx'
 
-export default function FireGoalModal({ language, goal, onClose, onSave }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function FireGoalModal({ goal, onClose, onSave }) {
+  const { t, locale, language } = useI18n()
   const [amount, setAmount] = useState(String(goal))
   const [error, setError] = useState('')
   function submit(event) {

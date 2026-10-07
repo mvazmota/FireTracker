@@ -1,10 +1,10 @@
 import { Ellipsis } from 'lucide-react'
 import { formatCurrency } from '../../lib/format.js'
 import { categories, categoryInfo } from '../../data/categories.js'
-import { messages } from '../../i18n/messages.jsx'
 
-export default function AnnualCategoryBreakdown({ transactions, year, language }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function AnnualCategoryBreakdown({ transactions, year }) {
+  const { t, locale, language } = useI18n()
   const expenses = transactions.filter((item) => item.type === 'expense' && Number(item.date.slice(0, 4)) === year)
   const total = expenses.reduce((sum, item) => sum + item.amount, 0)
   const groups = expenses.reduce((result, item) => { const existing = result.find((group) => group.name === item.category); if (existing) existing.amount += item.amount; else result.push({ name: item.category, amount: item.amount, ...categoryInfo(item.category) }); return result }, []).sort((a, b) => b.amount - a.amount).slice(0, 5)

@@ -3,10 +3,10 @@ import AnnualFlowChart from '../charts/AnnualFlowChart.jsx'
 import { useMemo, useState } from 'react'
 import { ArrowDownLeft, ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, ChartLine, Plus, Sparkles, Wallet } from 'lucide-react'
 import { formatCurrency } from '../../lib/format.js'
-import { messages } from '../../i18n/messages.jsx'
 import { demoTransactionsForEmptyMonths } from '../../lib/simulation.js'
-export default function StatisticsPage({ language, transactions, onFillSample }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function StatisticsPage({ transactions, onFillSample }) {
+  const { t, locale, language } = useI18n()
   const [year, setYear] = useState(() => new Date().getFullYear())
   const yearTransactions = useMemo(() => transactions.filter((item) => Number(item.date.slice(0, 4)) === year), [transactions, year])
   const totals = useMemo(() => yearTransactions.reduce((result, item) => { result[item.type] += item.amount; return result }, { income: 0, expense: 0 }), [yearTransactions])
@@ -26,7 +26,7 @@ export default function StatisticsPage({ language, transactions, onFillSample })
       <article className="summary-card balance-card"><div className="summary-label">{t.yearlyBalance}<span className="summary-symbol"><Wallet size={16} /></span></div><div className="summary-amount">{formatCurrency(net, language)}</div><div className="summary-foot">{net >= 0 ? t.keepGoing : t.overBudget}</div><div className="balance-art"><span /><span /><span /></div></article>
       <article className="summary-card"><div className="summary-label">{t.yearlySavings}<span className="summary-symbol savings-symbol"><Sparkles size={15} /></span></div><div className="summary-amount">{savingRate.toFixed(0)}<span className="percent">%</span></div><div className="summary-foot savings-breakdown-foot"><span>{t.cashSavedBreakdown}: {formatCurrency(yearlyCashSaved, language)}</span><span>{t.investedBreakdown}: {formatCurrency(yearlyInvested, language)}</span></div><div className="card-progress"><span className="savings-progress" style={{ width: `${Math.max(0, Math.min(100, savingRate))}%` }} /></div></article>
     </section>
-    <section className="insights-grid annual-insights"><article className="panel annual-flow-panel"><div className="panel-heading"><div><h2>{t.annualFlow}</h2><p>{t.annualFlowSubtitle}</p></div><span className="panel-icon"><ChartLine size={17} /></span></div><AnnualFlowChart transactions={yearTransactions} year={year} language={language} /></article><AnnualCategoryBreakdown transactions={yearTransactions} year={year} language={language} /></section>
+    <section className="insights-grid annual-insights"><article className="panel annual-flow-panel"><div className="panel-heading"><div><h2>{t.annualFlow}</h2><p>{t.annualFlowSubtitle}</p></div><span className="panel-icon"><ChartLine size={17} /></span></div><AnnualFlowChart transactions={yearTransactions} year={year} /></article><AnnualCategoryBreakdown transactions={yearTransactions} year={year} /></section>
     <div className="sample-data-note"><Sparkles size={14} /><span>{t.sampleInfo}</span></div>
     <footer className="page-footer"><span>{t.footer}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
   </div>

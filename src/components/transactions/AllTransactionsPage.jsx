@@ -4,10 +4,9 @@ import { ArrowDownLeft, Coffee, Pencil, Plus, Search, X } from 'lucide-react'
 import { formatCurrency } from '../../lib/format.js'
 import { formatDateTime } from '../../lib/dates.js'
 import { categoryInfo } from '../../data/categories.js'
-import { messages } from '../../i18n/messages.jsx'
-export default function AllTransactionsPage({ language, transactions, onAdd, onEdit, onDelete }) {
-  const t = messages[language]
-  const locale = language === 'pt' ? 'pt-PT' : 'en-IE'
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function AllTransactionsPage({ transactions, onAdd, onEdit, onDelete }) {
+  const { t, locale, language } = useI18n()
   const [filter, setFilter] = useState('all')
   const [query, setQuery] = useState('')
   const [limit, setLimit] = useState(20)

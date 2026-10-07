@@ -1,9 +1,11 @@
 import PlatformSelector from '../ui/PlatformSelector.jsx'
 import { useState } from 'react'
 import { Check, Plus, X } from 'lucide-react'
-import { messages } from '../../i18n/messages.jsx'
-export default function SavingsAccountModal({ language, account, onClose, onSave, platforms }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+import { useSettings } from '../../context/SettingsProvider.jsx'
+export default function SavingsAccountModal({ account, onClose, onSave }) {
+  const { platforms } = useSettings()
+  const { t, locale, language } = useI18n()
   const [name, setName] = useState(account?.name || '')
   const [institution, setInstitution] = useState(account?.institution || '')
   const [balance, setBalance] = useState(String(account?.balance ?? ''))
@@ -22,7 +24,7 @@ export default function SavingsAccountModal({ language, account, onClose, onSave
     <div className="modal-top"><div><p className="eyebrow">{account ? t.editSavingsAccount.toUpperCase() : t.addSavingsAccount.toUpperCase()}</p><h2 id="savings-modal-title">{account ? t.editSavingsAccount : t.addSavingsAccount}</h2></div><button className="icon-button" onClick={onClose} aria-label={t.close}><X size={19} /></button></div>
     <form onSubmit={submit}>
       <label className="field-label" htmlFor="savings-name">{t.savingsAccountName}</label><input className="investment-field" id="savings-name" autoFocus placeholder={language === 'pt' ? 'ex.: Fundo de emergência' : 'e.g. Emergency fund'} value={name} onChange={(event) => setName(event.target.value)} />
-      <div className="form-row"><div><PlatformSelector id="savings-institution" label={t.institution} value={institution} onChange={setInstitution} platforms={platforms} language={language} /></div><div><label className="field-label" htmlFor="savings-rate">{t.savingsRate}</label><div className="amount-input"><input id="savings-rate" type="number" min="0" step="0.01" placeholder="0.00" value={rate} onChange={(event) => setRate(event.target.value)} /><span>%</span></div></div></div>
+      <div className="form-row"><div><PlatformSelector id="savings-institution" label={t.institution} value={institution} onChange={setInstitution} /></div><div><label className="field-label" htmlFor="savings-rate">{t.savingsRate}</label><div className="amount-input"><input id="savings-rate" type="number" min="0" step="0.01" placeholder="0.00" value={rate} onChange={(event) => setRate(event.target.value)} /><span>%</span></div></div></div>
       <label className="field-label" htmlFor="savings-balance">{t.openingBalance}</label><div className="amount-input"><span>€</span><input id="savings-balance" type="number" min="0" step="0.01" placeholder="0.00" value={balance} disabled={Boolean(account)} onChange={(event) => setBalance(event.target.value)} /></div>
       {account && <p className="history-intro">{t.savingsAccountNote}</p>}
       {error && <p className="form-error">{error}</p>}<button className="submit-button" type="submit">{account ? <Check size={17} /> : <Plus size={17} />} {account ? t.saveRecord : t.addSavingsAccount}</button>

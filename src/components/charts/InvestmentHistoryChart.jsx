@@ -1,9 +1,8 @@
 import { ChartLine } from 'lucide-react'
-import { messages } from '../../i18n/messages.jsx'
 
-export default function InvestmentHistoryChart({ history, language }) {
-  const t = messages[language]
-  const locale = language === 'pt' ? 'pt-PT' : 'en-IE'
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function InvestmentHistoryChart({ history }) {
+  const { t, locale, language } = useI18n()
   const ordered = [...(history || [])].sort((a, b) => a.month.localeCompare(b.month))
   if (!ordered.length) return <div className="history-empty-chart"><span className="empty-icon"><ChartLine size={20} /></span><p>{t.noHistory}</p></div>
   const width = Math.max(520, ordered.length * 54)

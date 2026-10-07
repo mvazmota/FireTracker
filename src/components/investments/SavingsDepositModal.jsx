@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { formatCurrency } from '../../lib/format.js'
-import { messages } from '../../i18n/messages.jsx'
 
-export default function SavingsDepositModal({ language, account, onClose, onDeposit }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function SavingsDepositModal({ account, onClose, onDeposit }) {
+  const { t, locale, language } = useI18n()
   const [amount, setAmount] = useState('')
   const [error, setError] = useState('')
   function submit(event) {

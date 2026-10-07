@@ -1,9 +1,11 @@
 import PlatformSelector from '../ui/PlatformSelector.jsx'
 import { useState } from 'react'
 import { Check, Plus, X } from 'lucide-react'
-import { messages } from '../../i18n/messages.jsx'
-export default function InvestmentModal({ language, holding, onClose, onSave, platforms, assetType = 'etf' }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+import { useSettings } from '../../context/SettingsProvider.jsx'
+export default function InvestmentModal({ holding, onClose, onSave, assetType = 'etf' }) {
+  const { platforms } = useSettings()
+  const { t, locale, language } = useI18n()
   const isCrypto = assetType === 'crypto'
   const [symbol, setSymbol] = useState(holding?.symbol || '')
   const [name, setName] = useState(holding?.name || '')
@@ -30,7 +32,7 @@ export default function InvestmentModal({ language, holding, onClose, onSave, pl
         <form onSubmit={submit}>
           <div className="form-row"><div><label className="field-label" htmlFor="etf-symbol">{t.ticker}</label><input className="investment-field" id="etf-symbol" autoFocus placeholder={t.tickerPlaceholder} value={symbol} onChange={(event) => setSymbol(event.target.value.toUpperCase())} /></div><div><label className="field-label" htmlFor="etf-units">{t.unitsOwned}</label><input className="investment-field" id="etf-units" type="number" min="0.0001" step="any" placeholder={t.unitsPlaceholder} value={units} onChange={(event) => setUnits(event.target.value)} /></div></div>
           <label className="field-label" htmlFor="etf-name">{isCrypto ? t.cryptoName : t.fundName}</label><input className="investment-field" id="etf-name" placeholder={isCrypto ? t.cryptoPlaceholder : t.fundPlaceholder} value={name} onChange={(event) => setName(event.target.value)} />
-          <PlatformSelector id="asset-platform" label={t.platform} value={platform} onChange={setPlatform} platforms={platforms} language={language} />
+          <PlatformSelector id="asset-platform" label={t.platform} value={platform} onChange={setPlatform} />
           <div className="form-row"><div><label className="field-label" htmlFor="etf-average-cost">{t.averageBuyPrice}</label><div className="amount-input"><span>€</span><input id="etf-average-cost" type="number" min="0" step="0.01" placeholder={t.pricePlaceholder} value={averageCost} onChange={(event) => setAverageCost(event.target.value)} /></div></div><div><label className="field-label" htmlFor="etf-current-price">{t.currentPriceEuro}</label><div className="amount-input"><span>€</span><input id="etf-current-price" type="number" min="0" step="0.01" placeholder={t.pricePlaceholder} value={currentPrice} onChange={(event) => setCurrentPrice(event.target.value)} /></div></div></div>
           {error && <p className="form-error">{error}</p>}
           <button className="submit-button" type="submit">{holding ? <Check size={17} /> : <Plus size={17} />} {holding ? t.saveETF : t.addToPortfolio}</button>

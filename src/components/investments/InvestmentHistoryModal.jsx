@@ -3,16 +3,15 @@ import { useEffect, useState } from 'react'
 import { Check, X } from 'lucide-react'
 import { monthKey } from '../../lib/dates.js'
 import { assetMarketValue, portfolioCostBasis } from '../../lib/portfolio.js'
-import { messages } from '../../i18n/messages.jsx'
-export default function InvestmentHistoryModal({ language, kind, record, onClose, onSave }) {
-  const t = messages[language]
+import { useI18n } from '../../i18n/LanguageProvider.jsx'
+export default function InvestmentHistoryModal({ kind, record, onClose, onSave }) {
+  const { t, locale, language } = useI18n()
   const now = new Date()
   const currentMonth = monthKey(now)
   const currentValue = assetMarketValue(record, kind)
   const [month, setMonth] = useState(currentMonth)
   const [value, setValue] = useState(String(currentValue))
   const [error, setError] = useState('')
-  const locale = language === 'pt' ? 'pt-PT' : 'en-IE'
   const label = kind === 'etfs' || kind === 'crypto' ? `${record.symbol} · ${record.name}` : record.name
 
   useEffect(() => {
@@ -36,7 +35,7 @@ export default function InvestmentHistoryModal({ language, kind, record, onClose
 
   return <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="modal history-modal" role="dialog" aria-modal="true" aria-labelledby="history-modal-title">
     <div className="modal-top"><div><p className="eyebrow">{t.monthlyHistory.toUpperCase()}</p><h2 id="history-modal-title">{label}</h2></div><button className="icon-button" onClick={onClose} aria-label={t.close}><X size={19} /></button></div>
-    <p className="history-intro">{t.historySubtitle}</p><InvestmentHistoryChart history={record.history} language={language} />
+    <p className="history-intro">{t.historySubtitle}</p><InvestmentHistoryChart history={record.history} />
     <form className="history-form" onSubmit={submit}><div className="form-row"><div><label className="field-label" htmlFor="history-month">{t.month}</label><input className="investment-field" id="history-month" type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></div><div><label className="field-label" htmlFor="history-value">{t.portfolioValue}</label><div className="amount-input"><span>€</span><input id="history-value" type="number" min="0" step="0.01" placeholder="0.00" value={value} onChange={(event) => setValue(event.target.value)} /></div></div></div>{error && <p className="form-error">{error}</p>}<button className="submit-button" type="submit"><Check size={17} /> {t.saveSnapshot}</button></form>
     <p className="history-count">{record.history?.length || 0} {t.snapshots}</p>
   </section></div>
