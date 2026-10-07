@@ -70,13 +70,13 @@ export default function OnboardingPage() {
   }
 
   const categoriesReady = categories.expense.length > 0 && categories.income.length > 0
-  const goalValid = goalInput.trim() === '' || (Number.isFinite(Number(goalInput)) && Number(goalInput) > 0)
+  const goalValid = !showFire || goalInput.trim() === '' || (Number.isFinite(Number(goalInput)) && Number(goalInput) > 0)
 
   return <div className="onboarding-page">
     <div className="login-language">
       <div className="language-switch" role="group" aria-label={t.language}>
         <button type="button" className={language === 'en' ? 'language-option selected-language' : 'language-option'} aria-pressed={language === 'en'} onClick={() => changeLanguage('en')}>EN</button>
-        <button type="button" className={language === 'pt' ? 'language-option selected-language' : 'language-option'} aria-pressed={language === 'pt'} onClick={() => changeLanguage('pt')}>PT-PT</button>
+        <button type="button" className={language === 'pt' ? 'language-option selected-language' : 'language-option'} aria-pressed={language === 'pt'} onClick={() => changeLanguage('pt')} aria-label="Português (Portugal)" title="Português (Portugal)">PT</button>
       </div>
     </div>
 
@@ -122,13 +122,13 @@ export default function OnboardingPage() {
         <h1 id="onboarding-title">{t.onboardingFireTitle}<span>.</span></h1>
         <p className="onboarding-sub">{t.onboardingFireSubtitle}</p>
         <div className="onboarding-fire">
-          <label className="field-label" htmlFor="onboarding-fire-goal">{t.goalAmount}</label>
-          <div className="amount-input"><span>€</span><input id="onboarding-fire-goal" type="number" min="1" step="1000" value={goalInput} onChange={(event) => setGoalInput(event.target.value)} /></div>
-          {!goalValid && <p className="form-error">{t.goalError}</p>}
           <div className="onboarding-fire-toggle">
             <div className="visibility-label"><strong>{t.fireMeterSettings}</strong><span>{t.showFireMeter}</span></div>
             <button type="button" className={showFire ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={showFire} aria-label={t.showFireMeter} onClick={() => setShowFire((current) => !current)}><span /></button>
           </div>
+          <label className="field-label" htmlFor="onboarding-fire-goal">{t.goalAmount}</label>
+          <div className={showFire ? 'amount-input' : 'amount-input amount-input-off'}><span>€</span><input id="onboarding-fire-goal" type="number" min="1" step="1000" value={goalInput} disabled={!showFire} onChange={(event) => setGoalInput(event.target.value)} /></div>
+          {!goalValid && <p className="form-error">{t.goalError}</p>}
         </div>
         <div className="onboarding-actions">
           <button type="button" className="ghost-button" onClick={() => setStep(2)}><ArrowLeft size={16} /> {t.back}</button>

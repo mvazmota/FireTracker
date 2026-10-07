@@ -127,6 +127,9 @@
 .amount-input, .date-input { display: flex; align-items: center; gap: 7px; padding: 0 10px; }
 .amount-input > span { color: #8a968e; font-size: 12px; }
 .amount-input input, .date-input input { width: 100%; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: transparent; color: #4b584f; font-size: 10px; }
+.amount-input.amount-input-off { background: #f7f9f6; border-color: #eef1ee; }
+.amount-input.amount-input-off input { color: #aab2ac; }
+.amount-input input:disabled { cursor: not-allowed; }
 .date-input { gap: 6px; color: #89958d; }
 .date-input input::-webkit-calendar-picker-indicator { width: 12px; margin: 0; opacity: .55; }
 .select-wrap { position: relative; display: flex; align-items: center; padding: 0 10px; color: #89958d; }

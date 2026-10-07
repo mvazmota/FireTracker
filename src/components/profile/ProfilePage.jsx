@@ -91,20 +91,20 @@ export default function ProfilePage() {
 
     <section className="panel visibility-panel">
       <div className="panel-heading"><div><h2>{t.fireMeterSettings}</h2><p>{t.fireMeterSettingsSubtitle}</p></div><span className="panel-icon"><Flame size={17} /></span></div>
-      <form className="fire-goal-form" onSubmit={submitGoal}>
-        <label className="field-label" htmlFor="fire-goal-input">{t.goalAmount}</label>
-        <div className="profile-name-edit">
-          <div className="amount-input"><span>€</span><input id="fire-goal-input" type="number" min="1" step="1000" value={goalInput} onChange={(event) => { setGoalInput(event.target.value); setGoalSaved(false) }} /></div>
-          <button className="primary-button" type="submit"><Check size={15} /> {t.saveChanges}</button>
-          {goalSaved && <span className="settings-saved">{t.goalSaved}</span>}
-        </div>
-        {goalError && <p className="form-error">{goalError}</p>}
-      </form>
-      <div className="visibility-row">
+      <div className="visibility-row fire-toggle-row">
         <span className="portfolio-mini-icon fire-tint"><Flame size={17} /></span>
         <div className="visibility-label"><strong>{t.fireMeterSettings}</strong><span>{t.showFireMeter}</span></div>
         <button type="button" className={fireMeterVisible ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={fireMeterVisible} aria-label={t.showFireMeter} onClick={toggleFireMeter}><span /></button>
       </div>
+      <form className="fire-goal-form" onSubmit={submitGoal}>
+        <label className="field-label" htmlFor="fire-goal-input">{t.goalAmount}</label>
+        <div className="profile-name-edit">
+          <div className={fireMeterVisible ? 'amount-input' : 'amount-input amount-input-off'}><span>€</span><input id="fire-goal-input" type="number" min="1" step="1000" value={goalInput} disabled={!fireMeterVisible} onChange={(event) => { setGoalInput(event.target.value); setGoalSaved(false) }} /></div>
+          <button className="primary-button" type="submit" disabled={!fireMeterVisible}><Check size={15} /> {t.saveChanges}</button>
+          {goalSaved && <span className="settings-saved">{t.goalSaved}</span>}
+        </div>
+        {goalError && <p className="form-error">{goalError}</p>}
+      </form>
     </section>
 
     <section className="panel visibility-panel"><div className="panel-heading"><div><h2>{t.investmentSettings}</h2><p>{t.investmentSettingsSubtitle}</p></div><span className="panel-icon"><SlidersHorizontal size={17} /></span></div><div className="visibility-list">{INVESTMENT_TYPES.map(({ key, icon: Icon, tint }) => <div className="visibility-row" key={key}><span className={`portfolio-mini-icon ${tint}`}><Icon size={17} /></span><div className="visibility-label"><strong>{t[key]}</strong><span>{t.visibleSetting}</span></div><button type="button" className={investmentVisibility[key] ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={investmentVisibility[key]} aria-label={`${t.visibleSetting}: ${t[key]}`} onClick={() => toggleInvestmentVisibility(key)}><span /></button></div>)}</div><p className="visibility-note">{t.hiddenAssetsNote}</p></section>

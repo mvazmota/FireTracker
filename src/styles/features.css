@@ -192,6 +192,7 @@
 .visibility-switch.switch-on > span { transform: translateX(17px); }
 .visibility-note { margin: 9px 0 1px; padding-top: 9px; border-top: 1px solid #f0f2ef; color: #9aa39d; font-size: 9px; line-height: 1.5; }
 .fire-tint { color: #dc8659; background: #fbf0e4; }
+.fire-toggle-row { margin-top: 8px; }
 .fire-goal-form { margin: 13px 0 4px; }
 .fire-goal-form .field-label { margin-bottom: 8px; }
 .fire-goal-form .amount-input { margin-bottom: 0; }
