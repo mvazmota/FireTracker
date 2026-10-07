@@ -2,6 +2,16 @@ import { useState } from 'react'
 import { Flame, Lock, Mail, User } from 'lucide-react'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useAuth } from '../../context/AuthProvider.jsx'
+import { REMEMBERED_EMAIL_KEY } from '../../lib/constants.js'
+
+/** The email of the last account used on this browser, if any. */
+function readRememberedEmail() {
+  try {
+    return localStorage.getItem(REMEMBERED_EMAIL_KEY) || ''
+  } catch {
+    return ''
+  }
+}
 
 /** Sign-in / sign-up screen backed by Better Auth (email + password). */
 export default function LoginPage() {
@@ -11,10 +21,12 @@ export default function LoginPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberedEmail] = useState(readRememberedEmail)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
   const isSignUp = mode === 'signUp'
+  const canRecallEmail = rememberedEmail && rememberedEmail !== email.trim()
 
   async function submit(event) {
     event.preventDefault()
@@ -22,7 +34,15 @@ export default function LoginPage() {
     setBusy(true)
     try {
       const result = isSignUp ? await signUp(name.trim(), email.trim(), password) : await signIn(email.trim(), password)
-      if (result?.error) setError(result.error.message || t.authError)
+      if (result?.error) {
+        setError(result.error.message || t.authError)
+      } else {
+        try {
+          localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim())
+        } catch {
+          // Remembering the email is a convenience; ignore storage failures.
+        }
+      }
     } catch {
       setError(t.authError)
     } finally {
@@ -54,13 +74,14 @@ export default function LoginPage() {
         </>}
         <label className="field-label" htmlFor="login-email">{t.email}</label>
         <div className="login-input"><Mail size={16} /><input id="login-email" type="email" autoFocus autoComplete="email" placeholder={t.emailPlaceholder} value={email} onChange={(event) => setEmail(event.target.value)} /></div>
+        {canRecallEmail && <button type="button" className="login-remember" onClick={() => setEmail(rememberedEmail)} title={rememberedEmail}>{t.rememberMe}</button>}
         <label className="field-label" htmlFor="login-password">{t.password}</label>
         <div className="login-input"><Lock size={16} /><input id="login-password" type="password" autoComplete={isSignUp ? 'new-password' : 'current-password'} placeholder={t.passwordPlaceholder} value={password} onChange={(event) => setPassword(event.target.value)} /></div>
+        {isSignUp && <p className="login-hint">{t.passwordHint}</p>}
         {error && <p className="form-error">{error}</p>}
         <button className="submit-button" type="submit" disabled={busy}>{busy ? t.loading : isSignUp ? t.signUp : t.login}</button>
       </form>
       <button type="button" className="login-toggle" onClick={switchMode}>{isSignUp ? t.toggleToSignIn : t.toggleToSignUp}</button>
-      <p className="login-note">{t.passwordHint}</p>
     </section>
   </div>
 }
