@@ -7,10 +7,13 @@ import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
 import { useData } from '../../context/DataProvider.jsx'
 import { useFinance } from '../../context/FinanceProvider.jsx'
+import { useAuth } from '../../context/AuthProvider.jsx'
+import { usePortfolioSummary } from '../../hooks/usePortfolioSummary.js'
 import { INVESTMENT_TYPES } from '../../data/investmentTypes.js'
+import FireMeterCompact from '../fire/FireMeterCompact.jsx'
 
 export default function ProfilePage() {
-  const { t, locale } = useI18n()
+  const { t, locale, language } = useI18n()
   const {
     profile,
     saveProfile,
@@ -27,7 +30,11 @@ export default function ProfilePage() {
     removeCategory,
     removePlatform,
   } = useSettings()
+  const { user } = useAuth()
   const { transactions } = useFinance()
+  // A stable date: the FIRE figures below are lifetime totals, not monthly.
+  const today = useMemo(() => new Date(), [])
+  const { globalPosition } = usePortfolioSummary(today)
 
   const [name, setName] = useState(profile.name || '')
   const [photoError, setPhotoError] = useState('')
@@ -121,7 +128,16 @@ export default function ProfilePage() {
   return <div className="page-content profile-page">
     <section className="welcome-row"><div><p className="eyebrow">{t.account.toUpperCase()}</p><h1>{t.profileHeading}<span>.</span></h1><p className="welcome-sub">{t.profileSubtitle}</p></div></section>
 
-    <section className="panel profile-card"><div className="profile-avatar-block"><button type="button" className="profile-avatar-button" onClick={() => fileInput.current?.click()} aria-label={profile.avatar ? t.changePhoto : t.uploadPhoto}><Avatar profile={profile} className="profile-avatar-large" /><span className="profile-avatar-overlay"><Camera size={18} /></span></button><input ref={fileInput} className="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={uploadPhoto} />{profile.avatar ? <button type="button" className="profile-photo-remove" onClick={removePhoto}>{t.removePhoto}</button> : <span className="profile-photo-hint">{t.uploadPhoto}</span>}{photoError && <p className="profile-photo-error">{photoError}</p>}<span className="profile-avatar-caption">{t.avatarOrAnimal}</span><div className="profile-avatar-choices">{ANIMAL_PRESETS.map((id) => { const selected = profile.avatar === animalAvatarValue(id); const label = t[ANIMAL_LABEL_KEYS[id]]; return <button type="button" key={id} className={selected ? 'avatar-choice avatar-choice-on' : 'avatar-choice'} aria-pressed={selected} aria-label={label} title={label} onClick={() => chooseAnimal(id)}><AnimalAvatar id={id} /></button> })}</div></div><form className="profile-form" onSubmit={submitProfile}><label className="field-label" htmlFor="profile-name">{t.yourName}</label><div className="profile-name-edit"><input id="profile-name" value={name} placeholder={t.namePlaceholder} maxLength={60} onChange={(event) => setName(event.target.value)} /><button className="primary-button" type="submit"><Check size={15} /> {t.saveProfile}</button></div></form><div className="profile-created"><span>{t.accountCreated}</span><strong>{createdAt}</strong></div></section>
+    <section className="panel profile-card"><div className="profile-avatar-block"><button type="button" className="profile-avatar-button" onClick={() => fileInput.current?.click()} aria-label={profile.avatar ? t.changePhoto : t.uploadPhoto}><Avatar profile={profile} className="profile-avatar-large" /><span className="profile-avatar-overlay"><Camera size={18} /></span></button><input ref={fileInput} className="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={uploadPhoto} />{profile.avatar ? <button type="button" className="profile-photo-remove" onClick={removePhoto}>{t.removePhoto}</button> : <span className="profile-photo-hint">{t.uploadPhoto}</span>}{photoError && <p className="profile-photo-error">{photoError}</p>}<span className="profile-avatar-caption">{t.avatarOrAnimal}</span><div className="profile-avatar-choices">{ANIMAL_PRESETS.map((id) => { const selected = profile.avatar === animalAvatarValue(id); const label = t[ANIMAL_LABEL_KEYS[id]]; return <button type="button" key={id} className={selected ? 'avatar-choice avatar-choice-on' : 'avatar-choice'} aria-pressed={selected} aria-label={label} title={label} onClick={() => chooseAnimal(id)}><AnimalAvatar id={id} /></button> })}</div></div>
+      <div className="profile-details">
+        <form className="profile-form" onSubmit={submitProfile}><label className="field-label" htmlFor="profile-name">{t.yourName}</label><div className="profile-name-edit"><input id="profile-name" value={name} placeholder={t.namePlaceholder} maxLength={60} onChange={(event) => setName(event.target.value)} /><button className="primary-button" type="submit"><Check size={15} /> {t.saveProfile}</button></div></form>
+        <dl className="profile-facts">
+          <div><dt>{t.email}</dt><dd title={user?.email || ''}>{user?.email || '—'}</dd></div>
+          <div><dt>{t.language}</dt><dd>{language === 'pt' ? 'Português (Portugal)' : 'English'}</dd></div>
+          <div><dt>{t.accountCreated}</dt><dd>{createdAt}</dd></div>
+        </dl>
+      </div>
+    </section>
 
     <div className="settings-pair">
       <section className="panel visibility-panel">
@@ -140,6 +156,10 @@ export default function ProfilePage() {
           </div>
           {goalError && <p className="form-error">{goalError}</p>}
         </form>
+        <div className="fire-preview">
+          <span className="fire-preview-label">{t.firePreview}</span>
+          <FireMeterCompact position={globalPosition} goal={Number(goalInput) > 0 ? Number(goalInput) : fireGoal} />
+        </div>
       </section>
 
       <section className="panel visibility-panel"><div className="panel-heading"><div><h2>{t.investmentSettings}</h2><p>{t.investmentSettingsSubtitle}</p></div><span className="panel-icon"><SlidersHorizontal size={17} /></span></div><div className="visibility-list">{INVESTMENT_TYPES.map(({ key, icon: Icon, tint }) => <div className="visibility-row" key={key}><span className={`portfolio-mini-icon ${tint}`}><Icon size={17} /></span><div className="visibility-label"><strong>{t[key]}</strong><span>{t.visibleSetting}</span></div><button type="button" className={investmentVisibility[key] ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={investmentVisibility[key]} aria-label={`${t.visibleSetting}: ${t[key]}`} onClick={() => toggleInvestmentVisibility(key)}><span /></button></div>)}</div><p className="visibility-note">{t.hiddenAssetsNote}</p></section>
