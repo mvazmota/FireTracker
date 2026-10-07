@@ -70,6 +70,10 @@
 .topbar-right { display: flex; align-items: center; gap: 19px; }
 .today-label { display: flex; align-items: center; gap: 7px; color: #929b95; font-size: 10px; }
 .online-dot { width: 6px; height: 6px; border-radius: 50%; background: #7eb28b; }
+.today-label.sync-failed { color: #b4574a; }
+.today-label.sync-failed .online-dot { background: #c1685a; }
+.sync-retry { padding: 3px 9px; border: 1px solid #e7cdc4; border-radius: 999px; background: #fbf1ef; color: #b4574a; font-size: 10px; font-weight: 600; transition: .15s; }
+.sync-retry:hover { border-color: #dcb3a6; background: #f7e6e0; }
 .top-avatar { width: 30px; height: 30px; font-size: 11px; }
 .top-avatar-button { display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; transition: box-shadow .15s; }
 .top-avatar-button:hover, .top-avatar-button:focus-visible { box-shadow: 0 0 0 3px #e3ece3; }

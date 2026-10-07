@@ -1,18 +1,19 @@
 import { INVESTMENT_CATEGORIES } from './constants.js'
+import { roundMoney } from './money.js'
 
 /** Cost basis of an investment record, by asset type. */
 export function portfolioCostBasis(record, type) {
-  if (type === 'etfs' || type === 'crypto') return record.units * record.averageCost
-  if (type === 'p2p') return record.invested
-  if (type === 'bonds') return record.investedValue
+  if (type === 'etfs' || type === 'crypto') return roundMoney(record.units * record.averageCost)
+  if (type === 'p2p') return roundMoney(record.invested)
+  if (type === 'bonds') return roundMoney(record.investedValue)
   return 0
 }
 
 /** Current market value of an investment record, by asset type. */
 export function assetMarketValue(record, kind) {
-  if (kind === 'etfs' || kind === 'crypto') return record.units * record.currentPrice
-  if (kind === 'savings') return record.balance
-  return record.currentValue
+  if (kind === 'etfs' || kind === 'crypto') return roundMoney(record.units * record.currentPrice)
+  if (kind === 'savings') return roundMoney(record.balance)
+  return roundMoney(record.currentValue)
 }
 
 /** Maps an "Investment" transaction back to the asset type that produced it. */

@@ -4,6 +4,7 @@ import { dateKey } from '../lib/dates.js'
 import { api } from '../lib/api.js'
 import { useAuth } from './AuthProvider.jsx'
 import { useData } from './DataProvider.jsx'
+import { useSync } from './SyncProvider.jsx'
 
 const SettingsContext = createContext(null)
 
@@ -25,6 +26,7 @@ const emptySettings = () => ({
 export function SettingsProvider({ children }) {
   const { user } = useAuth()
   const { data } = useData()
+  const { run } = useSync()
   const [profile, setProfile] = useState(() => ({ name: '', avatar: '', createdAt: dateKey(new Date()) }))
   const [settings, setSettings] = useState(emptySettings)
   const [hydrated, setHydrated] = useState(false)
@@ -69,13 +71,13 @@ export function SettingsProvider({ children }) {
   const persist = useCallback((patch) => {
     const next = { ...settingsRef.current, ...patch }
     applySettings(next)
-    api.putSettings({ settings: next }).catch(() => {})
-  }, [applySettings])
+    run(() => api.putSettings({ settings: next }))
+  }, [applySettings, run])
 
   const saveProfile = useCallback((next) => {
     setProfile(next)
-    api.putSettings({ profile: next }).catch(() => {})
-  }, [])
+    run(() => api.putSettings({ profile: next }))
+  }, [run])
 
   const saveFireGoal = useCallback((next) => persist({ fireGoal: next }), [persist])
 

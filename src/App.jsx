@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowDownLeft, ArrowLeft, ArrowRight, ArrowUpRight, Bitcoin, CalendarDays, Camera, ChartLine,
   Check, ChevronDown, CircleHelp, Clock, Coffee, CreditCard, Ellipsis, Flame, HandCoins, Landmark,
@@ -10,11 +10,13 @@ import AppProviders from './app/AppProviders.jsx'
 import { useI18n } from './i18n/LanguageProvider.jsx'
 import { useAuth } from './context/AuthProvider.jsx'
 import { useData } from './context/DataProvider.jsx'
+import { useSync } from './context/SyncProvider.jsx'
 import { useSettings } from './context/SettingsProvider.jsx'
 import { useFinance } from './context/FinanceProvider.jsx'
 import { usePortfolioSummary } from './hooks/usePortfolioSummary.js'
-import LoginPage from './components/auth/LoginPage.jsx'
-import OnboardingPage from './components/onboarding/OnboardingPage.jsx'
+// Only needed before the app is usable, so they are kept out of the main chunk.
+const LoginPage = lazy(() => import('./components/auth/LoginPage.jsx'))
+const OnboardingPage = lazy(() => import('./components/onboarding/OnboardingPage.jsx'))
 import { dateForMonth, formatDateTime } from './lib/dates.js'
 import { formatCurrency } from './lib/format.js'
 import { categoryInfo } from './data/categories.js'
@@ -49,6 +51,7 @@ function AppShell() {
   const { language, locale, t, changeLanguage } = useI18n()
   const { user, isPending, signOut } = useAuth()
   const { error: dataError, reload: reloadData } = useData()
+  const { status: syncStatus, retry: retrySync } = useSync()
   const {
     profile,
     fireGoal,
@@ -167,10 +170,10 @@ function AppShell() {
   }
 
   if (isPending) return <div className="app-loading">{t.loading}</div>
-  if (!user) return <LoginPage />
+  if (!user) return <Suspense fallback={<div className="app-loading">{t.loading}</div>}><LoginPage /></Suspense>
   if (dataError) return <div className="app-loading"><div className="load-error"><p>{t.loadError}</p><button type="button" className="ghost-button" onClick={reloadData}>{t.retry}</button></div></div>
   if (!settingsReady || !financeReady) return <div className="app-loading">{t.loading}</div>
-  if (!onboarded) return <OnboardingPage />
+  if (!onboarded) return <Suspense fallback={<div className="app-loading">{t.loading}</div>}><OnboardingPage /></Suspense>
 
   return (
     <div className="app-shell" lang={locale}>
@@ -203,7 +206,7 @@ function AppShell() {
       </nav>
 
       <main className="main-content" id="overview">
-        <header className="topbar"><div className="breadcrumb">{t.yourSpace} <span>/</span> <strong>{t[activePage] || t.overview}</strong></div><div className="topbar-right"><div className="language-switch" role="group" aria-label={t.language}><button type="button" className={language === 'en' ? 'language-option selected-language' : 'language-option'} aria-label="English" aria-pressed={language === 'en'} onClick={() => changeLanguage('en')}>EN</button><button type="button" className={language === 'pt' ? 'language-option selected-language' : 'language-option'} aria-label="Português (Portugal)" title="Português (Portugal)" aria-pressed={language === 'pt'} onClick={() => changeLanguage('pt')}>PT</button></div><span className="today-label"><span className="online-dot" />{t.saved}</span><button type="button" className="top-avatar-button" onClick={selectProfilePage} title={t.profile} aria-label={t.profile}><Avatar profile={profile} className="top-avatar" /></button><button className="logout-button" type="button" onClick={() => signOut()} title={t.logout} aria-label={t.logout}><LogOut size={14} /><span>{t.logout}</span></button></div></header>
+        <header className="topbar"><div className="breadcrumb">{t.yourSpace} <span>/</span> <strong>{t[activePage] || t.overview}</strong></div><div className="topbar-right"><div className="language-switch" role="group" aria-label={t.language}><button type="button" className={language === 'en' ? 'language-option selected-language' : 'language-option'} aria-label="English" aria-pressed={language === 'en'} onClick={() => changeLanguage('en')}>EN</button><button type="button" className={language === 'pt' ? 'language-option selected-language' : 'language-option'} aria-label="Português (Portugal)" title="Português (Portugal)" aria-pressed={language === 'pt'} onClick={() => changeLanguage('pt')}>PT</button></div><span className={syncStatus === 'error' ? 'today-label sync-failed' : 'today-label'}><span className="online-dot" />{syncStatus === 'error' ? t.saveFailed : syncStatus === 'saving' ? t.saving : t.saved}</span>{syncStatus === 'error' && <button className="sync-retry" type="button" onClick={retrySync}>{t.retry}</button>}<button type="button" className="top-avatar-button" onClick={selectProfilePage} title={t.profile} aria-label={t.profile}><Avatar profile={profile} className="top-avatar" /></button><button className="logout-button" type="button" onClick={() => signOut()} title={t.logout} aria-label={t.logout}><LogOut size={14} /><span>{t.logout}</span></button></div></header>
         {activePage === 'profile' ? <ProfilePage /> : activePage === 'position' ? <GlobalPositionPage transactions={transactions} records={{ etfs: investmentVisibility.etfs ? holdings : [], crypto: investmentVisibility.crypto ? cryptoHoldings : [], p2p: investmentVisibility.p2p ? p2pRecords : [], bonds: investmentVisibility.bonds ? bondHoldings : [], savings: investmentVisibility.savings ? savingsAccounts : [] }} visibility={investmentVisibility} currentPosition={globalPosition} currentCash={trackedCash} /> : activePage === 'transactions' ? <AllTransactionsPage transactions={transactions} onAdd={() => setShowModal(true)} onEdit={setEditingTransaction} onDelete={removeTransaction} /> : activePage === 'etfs' || activePage === 'crypto' ? <InvestmentsPage holdings={activePage === 'etfs' ? holdings : cryptoHoldings} assetType={activePage === 'etfs' ? 'etf' : 'crypto'} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'p2p' || activePage === 'bonds' ? <FixedIncomePage kind={activePage} records={activePage === 'p2p' ? p2pRecords : bondHoldings} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'savings' ? <SavingsPage accounts={savingsAccounts} onSave={saveSavingsAccount} onDelete={(account) => saveSavingsAccounts(savingsAccounts.filter((item) => item.id !== account.id))} /> : activePage === 'statistics' ? <StatisticsPage transactions={transactions} onFillSample={fillSampleHistory} /> : <div className="page-content">
           <section className="welcome-row"><div><p className="eyebrow">{t.snapshot}</p><h1>{t.headline}<span>.</span></h1><p className="welcome-sub">{t.welcome}</p></div><button className="primary-button" onClick={() => setShowModal(true)}><Plus size={18} strokeWidth={2.4} /> {t.addTransaction}</button></section>
 

@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { ASSET_TABLES, TRANSACTIONS, clearUserRows, listForUser, removeById, runBatched, upsert, upsertStatement } from './tables.js'
+import { ASSET_TABLES, TRANSACTIONS, clearUserRows, listForUser, removeById, roundCents, runBatched, upsert, upsertStatement } from './tables.js'
 
 const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireGoal', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'categories', 'onboarded']
 
@@ -37,7 +37,7 @@ async function saveSettings(db, userId, body) {
     avatar: body?.profile?.avatar ?? existing?.avatar ?? '',
     createdAt: body?.profile?.createdAt ?? existing?.createdAt ?? new Date().toISOString().slice(0, 10),
     language: body?.settings?.language ?? existing?.language ?? 'en',
-    fireGoal: body?.settings?.fireGoal ?? existing?.fireGoal ?? 300000,
+    fireGoal: roundCents(body?.settings?.fireGoal ?? existing?.fireGoal ?? 300000),
     fireMeterVisible: body?.settings?.fireMeterVisible ?? (existing?.fireMeterVisible == null ? true : Boolean(existing.fireMeterVisible)),
     investmentVisibility: body?.settings?.investmentVisibility ?? parseOrNull(existing?.investmentVisibility) ?? null,
     platforms: body?.settings?.platforms ?? parseOrNull(existing?.platforms) ?? null,

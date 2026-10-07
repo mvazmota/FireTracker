@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useI18n } from '../i18n/LanguageProvider.jsx'
 import { useSettings } from './SettingsProvider.jsx'
 import { useData } from './DataProvider.jsx'
+import { useSync } from './SyncProvider.jsx'
 import { DEMO_PLATFORM_BY_TYPE } from '../lib/constants.js'
 import { monthKey, normalizeTransactionDate, timeStamp } from '../lib/dates.js'
 import { api } from '../lib/api.js'
@@ -28,6 +29,7 @@ export function FinanceProvider({ children }) {
   const { t } = useI18n()
   const { rememberPlatform, rememberCategory } = useSettings()
   const { data } = useData()
+  const { run } = useSync()
 
   const [transactions, setTransactions] = useState([])
   const [holdings, setHoldings] = useState([])
@@ -99,22 +101,22 @@ export function FinanceProvider({ children }) {
     })
     if (changedRecords.length) {
       setTransactions(next)
-      changedRecords.forEach((record) => api.putTransaction(record).catch(() => {}))
+      changedRecords.forEach((record) => run(() => api.putTransaction(record)))
     }
-  }, [hydrated, transactions, holdings, cryptoHoldings, p2pRecords, bondHoldings, savingsAccounts, t])
+  }, [hydrated, transactions, holdings, cryptoHoldings, p2pRecords, bondHoldings, savingsAccounts, t, run])
 
   const saveTransaction = useCallback((transaction) => {
     rememberPlatform(transaction.platform)
     rememberCategory(transaction.type, transaction.category)
     const exists = transactions.some((item) => item.id === transaction.id)
     setTransactions(exists ? transactions.map((item) => (item.id === transaction.id ? transaction : item)) : [...transactions, transaction])
-    api.putTransaction(transaction).catch(() => {})
-  }, [transactions, rememberPlatform, rememberCategory])
+    run(() => api.putTransaction(transaction))
+  }, [transactions, rememberPlatform, rememberCategory, run])
 
   const removeTransaction = useCallback((id) => {
     setTransactions((current) => current.filter((item) => item.id !== id))
-    api.deleteTransaction(id).catch(() => {})
-  }, [])
+    run(() => api.deleteTransaction(id))
+  }, [run])
 
   const savePortfolioRecord = useCallback((type, record, captureCurrent = true) => {
     rememberPlatform(record.platform)
@@ -132,7 +134,7 @@ export function FinanceProvider({ children }) {
     const previousRecord = current.find((item) => item.id === savedRecord.id)
     const delta = portfolioCostBasis(savedRecord, type) - (previousRecord ? portfolioCostBasis(previousRecord, type) : 0)
     settersByType[type](previousRecord ? current.map((item) => (item.id === savedRecord.id ? savedRecord : item)) : [...current, savedRecord])
-    api.putAsset(type, savedRecord).catch(() => {})
+    run(() => api.putAsset(type, savedRecord))
 
     if (Math.abs(delta) < 0.005) return
     const month = monthKey(new Date())
@@ -162,24 +164,24 @@ export function FinanceProvider({ children }) {
         flowDelta,
       }
       setTransactions([...transactions.filter((item) => item.id !== sourceId), flow])
-      api.putTransaction(flow).catch(() => {})
+      run(() => api.putTransaction(flow))
     } else if (priorFlow) {
       setTransactions(transactions.filter((item) => item.id !== sourceId))
-      api.deleteTransaction(sourceId).catch(() => {})
+      run(() => api.deleteTransaction(sourceId))
     }
-  }, [holdings, cryptoHoldings, p2pRecords, bondHoldings, transactions, settersByType, rememberPlatform, t])
+  }, [holdings, cryptoHoldings, p2pRecords, bondHoldings, transactions, settersByType, rememberPlatform, t, run])
 
   const removePortfolioRecord = useCallback((type, id) => {
     const current = { etfs: holdings, crypto: cryptoHoldings, p2p: p2pRecords, bonds: bondHoldings }[type]
     settersByType[type](current.filter((item) => item.id !== id))
-    api.deleteAsset(type, id).catch(() => {})
-  }, [holdings, cryptoHoldings, p2pRecords, bondHoldings, settersByType])
+    run(() => api.deleteAsset(type, id))
+  }, [holdings, cryptoHoldings, p2pRecords, bondHoldings, settersByType, run])
 
   const saveSavingsAccounts = useCallback((next) => {
     const removed = savingsAccounts.filter((account) => !next.some((item) => item.id === account.id))
     setSavingsAccounts(next)
-    removed.forEach((account) => api.deleteAsset('savings', account.id).catch(() => {}))
-  }, [savingsAccounts])
+    removed.forEach((account) => run(() => api.deleteAsset('savings', account.id)))
+  }, [savingsAccounts, run])
 
   const saveSavingsAccount = useCallback((account) => {
     rememberPlatform(account.institution)
@@ -192,7 +194,7 @@ export function FinanceProvider({ children }) {
     ].sort((a, b) => a.month.localeCompare(b.month))
     const savedAccount = { ...account, history }
     setSavingsAccounts(previous ? savingsAccounts.map((item) => (item.id === account.id ? savedAccount : item)) : [...savingsAccounts, savedAccount])
-    api.putAsset('savings', savedAccount).catch(() => {})
+    run(() => api.putAsset('savings', savedAccount))
 
     if (Math.abs(delta) < 0.005) return
     const sourceId = `savings-flow-${account.id}-${month}`
@@ -212,19 +214,19 @@ export function FinanceProvider({ children }) {
         flowDelta,
       }
       setTransactions([...transactions.filter((item) => item.id !== sourceId), flow])
-      api.putTransaction(flow).catch(() => {})
+      run(() => api.putTransaction(flow))
     } else if (priorFlow) {
       setTransactions(transactions.filter((item) => item.id !== sourceId))
-      api.deleteTransaction(sourceId).catch(() => {})
+      run(() => api.deleteTransaction(sourceId))
     }
-  }, [savingsAccounts, transactions, rememberPlatform, t])
+  }, [savingsAccounts, transactions, rememberPlatform, t, run])
 
   const fillSampleHistory = useCallback(() => {
     const samples = demoTransactionsForEmptyMonths(transactions)
     if (!samples.length) return
     setTransactions([...transactions, ...samples])
-    samples.forEach((item) => api.putTransaction(item).catch(() => {}))
-  }, [transactions])
+    samples.forEach((item) => run(() => api.putTransaction(item)))
+  }, [transactions, run])
 
   const value = useMemo(() => ({
     transactions,

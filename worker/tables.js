@@ -1,6 +1,25 @@
 // Maps the client-side object shapes onto D1 columns.
 // History arrays are stored as JSON text; booleans as 0/1.
 
+/** Rounds a money total to whole cents; leaves null and non-numbers alone. */
+export const roundCents = (value) => {
+  const amount = Number(value)
+  if (value == null || !Number.isFinite(amount)) return value
+  return Math.round((amount + Number.EPSILON) * 100) / 100
+}
+
+/**
+ * Columns that hold a money total. Per-unit prices (averageCost, currentPrice)
+ * and quantities (units) are deliberately excluded — they legitimately need
+ * more than two decimals.
+ */
+const MONEY_COLUMNS = {
+  transactions: ['amount', 'flowDelta'],
+  p2p: ['invested', 'currentValue'],
+  bonds: ['nominalValue', 'investedValue', 'currentValue'],
+  savings: ['balance', 'target'],
+}
+
 const toJson = (value) => (value == null ? null : JSON.stringify(value))
 const fromJson = (value) => {
   if (value == null) return undefined
@@ -55,7 +74,8 @@ export const TRANSACTIONS = {
 /** Builds (but does not run) the upsert for a row, scoped to the given user. */
 export function upsertStatement(db, userId, config, record) {
   const columns = ['userId', ...config.columns]
-  const values = [userId, ...config.toRow(record)]
+  const money = MONEY_COLUMNS[config.table] || []
+  const values = [userId, ...config.toRow(record).map((value, index) => (money.includes(config.columns[index]) ? roundCents(value) : value))]
   const placeholders = columns.map(() => '?').join(', ')
   const assignments = config.columns
     .filter((column) => column !== 'id')
