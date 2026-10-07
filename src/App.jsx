@@ -8,6 +8,7 @@ import {
 
 import AppProviders from './app/AppProviders.jsx'
 import { useI18n } from './i18n/LanguageProvider.jsx'
+import { useAuth } from './context/AuthProvider.jsx'
 import { useSettings } from './context/SettingsProvider.jsx'
 import { useFinance } from './context/FinanceProvider.jsx'
 import { usePortfolioSummary } from './hooks/usePortfolioSummary.js'
@@ -75,6 +76,7 @@ import { messages } from './i18n/messages.jsx'
 
 function AppShell() {
   const { language, locale, t, changeLanguage } = useI18n()
+  const { user, isPending, signOut } = useAuth()
   const {
     profile,
     fireGoal,
@@ -97,8 +99,6 @@ function AppShell() {
     fillSampleHistory,
   } = useFinance()
 
-  // Sign-in is presentational only — no credentials are verified.
-  const [isSignedIn, setIsSignedIn] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState(() => dateForMonth(new Date()))
   const [activePage, setActivePage] = useState('overview')
   const [activeMobileTab, setActiveMobileTab] = useState('overview')
@@ -190,7 +190,8 @@ function AppShell() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  if (!isSignedIn) return <LoginPage onLogin={() => setIsSignedIn(true)} />
+  if (isPending) return <div className="app-loading">{t.loading}</div>
+  if (!user) return <LoginPage />
 
   return (
     <div className="app-shell" lang={locale}>
@@ -223,7 +224,7 @@ function AppShell() {
       </nav>
 
       <main className="main-content" id="overview">
-        <header className="topbar"><div className="breadcrumb">{t.yourSpace} <span>/</span> <strong>{t[activePage] || t.overview}</strong></div><div className="topbar-right"><div className="language-switch" role="group" aria-label={t.language}><button type="button" className={language === 'en' ? 'language-option selected-language' : 'language-option'} aria-label="English" aria-pressed={language === 'en'} onClick={() => changeLanguage('en')}>EN</button><button type="button" className={language === 'pt' ? 'language-option selected-language' : 'language-option'} aria-label="Português (Portugal)" title="Português (Portugal)" aria-pressed={language === 'pt'} onClick={() => changeLanguage('pt')}>PT-PT</button></div><span className="today-label"><span className="online-dot" />{t.saved}</span><Avatar profile={profile} className="top-avatar" /><button className="logout-button" type="button" onClick={() => setIsSignedIn(false)} title={t.logout} aria-label={t.logout}><LogOut size={14} /><span>{t.logout}</span></button></div></header>
+        <header className="topbar"><div className="breadcrumb">{t.yourSpace} <span>/</span> <strong>{t[activePage] || t.overview}</strong></div><div className="topbar-right"><div className="language-switch" role="group" aria-label={t.language}><button type="button" className={language === 'en' ? 'language-option selected-language' : 'language-option'} aria-label="English" aria-pressed={language === 'en'} onClick={() => changeLanguage('en')}>EN</button><button type="button" className={language === 'pt' ? 'language-option selected-language' : 'language-option'} aria-label="Português (Portugal)" title="Português (Portugal)" aria-pressed={language === 'pt'} onClick={() => changeLanguage('pt')}>PT-PT</button></div><span className="today-label"><span className="online-dot" />{t.saved}</span><Avatar profile={profile} className="top-avatar" /><button className="logout-button" type="button" onClick={() => signOut()} title={t.logout} aria-label={t.logout}><LogOut size={14} /><span>{t.logout}</span></button></div></header>
         {activePage === 'profile' ? <ProfilePage /> : activePage === 'position' ? <GlobalPositionPage transactions={transactions} records={{ etfs: investmentVisibility.etfs ? holdings : [], crypto: investmentVisibility.crypto ? cryptoHoldings : [], p2p: investmentVisibility.p2p ? p2pRecords : [], bonds: investmentVisibility.bonds ? bondHoldings : [], savings: investmentVisibility.savings ? savingsAccounts : [] }} visibility={investmentVisibility} currentPosition={globalPosition} currentCash={trackedCash} /> : activePage === 'transactions' ? <AllTransactionsPage transactions={transactions} onAdd={() => setShowModal(true)} onEdit={setEditingTransaction} onDelete={removeTransaction} /> : activePage === 'etfs' || activePage === 'crypto' ? <InvestmentsPage holdings={activePage === 'etfs' ? holdings : cryptoHoldings} assetType={activePage === 'etfs' ? 'etf' : 'crypto'} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'p2p' || activePage === 'bonds' ? <FixedIncomePage kind={activePage} records={activePage === 'p2p' ? p2pRecords : bondHoldings} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'savings' ? <SavingsPage accounts={savingsAccounts} onSave={saveSavingsAccount} onDelete={(account) => saveSavingsAccounts(savingsAccounts.filter((item) => item.id !== account.id))} /> : activePage === 'statistics' ? <StatisticsPage transactions={transactions} onFillSample={fillSampleHistory} /> : <div className="page-content">
           <section className="welcome-row"><div><p className="eyebrow">{t.snapshot}</p><h1>{t.headline}<span>.</span></h1><p className="welcome-sub">{t.welcome}</p></div><button className="primary-button" onClick={() => setShowModal(true)}><Plus size={18} strokeWidth={2.4} /> {t.addTransaction}</button></section>
 

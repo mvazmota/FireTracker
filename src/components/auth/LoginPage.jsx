@@ -1,19 +1,38 @@
 import { useState } from 'react'
-import { Flame, Lock, User } from 'lucide-react'
+import { Flame, Lock, Mail, User } from 'lucide-react'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
+import { useAuth } from '../../context/AuthProvider.jsx'
 
-/**
- * Non-functional sign-in screen. No credentials are checked — submitting
- * simply calls `onLogin`, which reveals the app.
- */
-export default function LoginPage({ onLogin }) {
+/** Sign-in / sign-up screen backed by Better Auth (email + password). */
+export default function LoginPage() {
   const { t, language, changeLanguage } = useI18n()
-  const [username, setUsername] = useState('')
+  const { signIn, signUp } = useAuth()
+  const [mode, setMode] = useState('signIn')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  function submit(event) {
+  const isSignUp = mode === 'signUp'
+
+  async function submit(event) {
     event.preventDefault()
-    onLogin(username.trim())
+    setError('')
+    setBusy(true)
+    try {
+      const result = isSignUp ? await signUp(name.trim(), email.trim(), password) : await signIn(email.trim(), password)
+      if (result?.error) setError(result.error.message || t.authError)
+    } catch {
+      setError(t.authError)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function switchMode() {
+    setMode(isSignUp ? 'signIn' : 'signUp')
+    setError('')
   }
 
   return <div className="login-page">
@@ -26,16 +45,22 @@ export default function LoginPage({ onLogin }) {
 
     <section className="login-card" aria-labelledby="login-title">
       <span className="login-brand-mark"><Flame size={22} fill="currentColor" /></span>
-      <h1 id="login-title">{t.loginTitle}<span>.</span></h1>
+      <h1 id="login-title">{isSignUp ? t.signUp : t.loginTitle}<span>.</span></h1>
       <p>{t.loginSubtitle}</p>
       <form onSubmit={submit}>
-        <label className="field-label" htmlFor="login-username">{t.username}</label>
-        <div className="login-input"><User size={16} /><input id="login-username" autoFocus autoComplete="username" placeholder={t.usernamePlaceholder} value={username} onChange={(event) => setUsername(event.target.value)} /></div>
+        {isSignUp && <>
+          <label className="field-label" htmlFor="login-name">{t.yourName}</label>
+          <div className="login-input"><User size={16} /><input id="login-name" autoComplete="name" placeholder={t.namePlaceholder} value={name} onChange={(event) => setName(event.target.value)} /></div>
+        </>}
+        <label className="field-label" htmlFor="login-email">{t.email}</label>
+        <div className="login-input"><Mail size={16} /><input id="login-email" type="email" autoFocus autoComplete="email" placeholder={t.emailPlaceholder} value={email} onChange={(event) => setEmail(event.target.value)} /></div>
         <label className="field-label" htmlFor="login-password">{t.password}</label>
-        <div className="login-input"><Lock size={16} /><input id="login-password" type="password" autoComplete="current-password" placeholder={t.passwordPlaceholder} value={password} onChange={(event) => setPassword(event.target.value)} /></div>
-        <button className="submit-button" type="submit">{t.login}</button>
+        <div className="login-input"><Lock size={16} /><input id="login-password" type="password" autoComplete={isSignUp ? 'new-password' : 'current-password'} placeholder={t.passwordPlaceholder} value={password} onChange={(event) => setPassword(event.target.value)} /></div>
+        {error && <p className="form-error">{error}</p>}
+        <button className="submit-button" type="submit" disabled={busy}>{busy ? t.loading : isSignUp ? t.signUp : t.login}</button>
       </form>
-      <p className="login-note">{t.loginNote}</p>
+      <button type="button" className="login-toggle" onClick={switchMode}>{isSignUp ? t.toggleToSignIn : t.toggleToSignUp}</button>
+      <p className="login-note">{t.passwordHint}</p>
     </section>
   </div>
 }

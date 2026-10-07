@@ -14,4 +14,11 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
   },
+  server: {
+    // The Worker owns /api. Proxying keeps the UI and API same-origin in dev,
+    // mirroring production where both are served by the same Worker.
+    proxy: {
+      '/api': { target: 'http://127.0.0.1:8787' },
+    },
+  },
 })

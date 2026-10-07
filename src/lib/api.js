@@ -1,0 +1,28 @@
+// Thin wrapper around the Worker API. Cookies carry the session, so every
+// request must include credentials.
+
+async function request(path, options = {}) {
+  const response = await fetch(path, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  })
+  if (!response.ok) {
+    const detail = await response.json().catch(() => ({}))
+    throw new Error(detail.error || `Request failed (${response.status})`)
+  }
+  return response.json().catch(() => ({}))
+}
+
+export const api = {
+  getState: () => request('/api/state'),
+
+  putTransaction: (transaction) => request(`/api/transactions/${encodeURIComponent(transaction.id)}`, { method: 'PUT', body: JSON.stringify(transaction) }),
+  deleteTransaction: (id) => request(`/api/transactions/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  putAsset: (type, record) => request(`/api/assets/${type}/${encodeURIComponent(record.id)}`, { method: 'PUT', body: JSON.stringify(record) }),
+  deleteAsset: (type, id) => request(`/api/assets/${type}/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  putSettings: (payload) => request('/api/settings', { method: 'PUT', body: JSON.stringify(payload) }),
+  importAll: (payload) => request('/api/import', { method: 'POST', body: JSON.stringify(payload) }),
+}
