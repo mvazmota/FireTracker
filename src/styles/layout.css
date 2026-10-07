@@ -57,6 +57,8 @@
 .profile-more { flex: 0 0 auto; margin-left: auto; color: #8f9993; }
 .avatar, .top-avatar { display: grid; place-items: center; width: 33px; height: 33px; border-radius: 50%; background: #e9efe4; color: #527455; font-size: 13px; font-weight: 700; }
 .avatar-photo { background-size: cover; background-position: center; color: transparent; }
+.avatar-animal { overflow: hidden; background: #e9efe4; }
+.animal-avatar { display: block; }
 .main-content { margin-left: 230px; min-height: 100vh; }
 .topbar { height: 62px; padding: 0 49px; border-bottom: 1px solid #eaeee9; background: rgba(255,255,255,.72); display: flex; justify-content: space-between; align-items: center; }
 .breadcrumb { color: #929b95; font-size: 11px; }
