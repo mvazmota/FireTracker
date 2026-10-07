@@ -188,6 +188,13 @@
 .visibility-switch.switch-on { background: #5c956d; }
 .visibility-switch.switch-on > span { transform: translateX(17px); }
 .visibility-note { margin: 9px 0 1px; padding-top: 9px; border-top: 1px solid #f0f2ef; color: #9aa39d; font-size: 9px; line-height: 1.5; }
+.fire-tint { color: #dc8659; background: #fbf0e4; }
+.fire-goal-form { margin: 13px 0 4px; }
+.fire-goal-form .field-label { margin-bottom: 8px; }
+.fire-goal-form .amount-input { margin-bottom: 0; }
+.fire-goal-form .profile-name-edit { align-items: center; }
+.fire-goal-form .profile-name-edit .amount-input { flex: 0 0 190px; }
+.settings-saved { display: inline-flex; align-items: center; color: #5f9169; font-size: 9px; font-weight: 600; }
 .savings-breakdown-foot { display: block; white-space: normal; line-height: 1.55; }
 .savings-breakdown-foot > span { display: block; overflow: hidden; text-overflow: ellipsis; }
 .savings-table { min-width: 920px; }

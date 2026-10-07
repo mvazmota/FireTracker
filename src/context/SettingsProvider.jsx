@@ -3,6 +3,7 @@ import { categories } from '../data/categories.js'
 import {
   CUSTOM_CATEGORIES_STORAGE_KEY,
   FIRE_GOAL_STORAGE_KEY,
+  FIRE_METER_STORAGE_KEY,
   PLATFORMS_STORAGE_KEY,
   PROFILE_STORAGE_KEY,
   VISIBILITY_STORAGE_KEY,
@@ -10,6 +11,7 @@ import {
 import {
   loadCustomCategories,
   loadFireGoal,
+  loadFireMeterVisible,
   loadInvestmentVisibility,
   loadPlatforms,
   loadUserProfile,
@@ -22,6 +24,7 @@ const SettingsContext = createContext(null)
 export function SettingsProvider({ children }) {
   const [profile, setProfile] = useState(loadUserProfile)
   const [fireGoal, setFireGoal] = useState(loadFireGoal)
+  const [fireMeterVisible, setFireMeterVisible] = useState(loadFireMeterVisible)
   const [investmentVisibility, setInvestmentVisibility] = useState(loadInvestmentVisibility)
   const [platforms, setPlatforms] = useState(loadPlatforms)
   const [customCategories, setCustomCategories] = useState(loadCustomCategories)
@@ -34,6 +37,14 @@ export function SettingsProvider({ children }) {
   const saveFireGoal = useCallback((next) => {
     setFireGoal(next)
     writeJSON(FIRE_GOAL_STORAGE_KEY, next)
+  }, [])
+
+  const toggleFireMeter = useCallback(() => {
+    setFireMeterVisible((current) => {
+      const next = !current
+      writeJSON(FIRE_METER_STORAGE_KEY, next)
+      return next
+    })
   }, [])
 
   const toggleInvestmentVisibility = useCallback((type) => {
@@ -71,17 +82,19 @@ export function SettingsProvider({ children }) {
   const value = useMemo(() => ({
     profile,
     fireGoal,
+    fireMeterVisible,
     investmentVisibility,
     platforms,
     customCategories,
     saveProfile,
     saveFireGoal,
+    toggleFireMeter,
     toggleInvestmentVisibility,
     rememberPlatform,
     rememberCategory,
   }), [
-    profile, fireGoal, investmentVisibility, platforms, customCategories,
-    saveProfile, saveFireGoal, toggleInvestmentVisibility, rememberPlatform, rememberCategory,
+    profile, fireGoal, fireMeterVisible, investmentVisibility, platforms, customCategories,
+    saveProfile, saveFireGoal, toggleFireMeter, toggleInvestmentVisibility, rememberPlatform, rememberCategory,
   ])
 
   return <SettingsContext value={value}>{children}</SettingsContext>

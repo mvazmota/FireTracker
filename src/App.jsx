@@ -77,12 +77,8 @@ function AppShell() {
   const {
     profile,
     fireGoal,
+    fireMeterVisible,
     investmentVisibility,
-    platforms,
-    customCategories,
-    saveProfile,
-    saveFireGoal,
-    toggleInvestmentVisibility,
   } = useSettings()
   const {
     transactions,
@@ -105,7 +101,6 @@ function AppShell() {
   const [activeMobileTab, setActiveMobileTab] = useState('overview')
   const [showModal, setShowModal] = useState(false)
   const [editingTransaction, setEditingTransaction] = useState(null)
-  const [showFireGoalModal, setShowFireGoalModal] = useState(false)
 
   const summary = usePortfolioSummary(selectedMonth)
   const {
@@ -150,11 +145,6 @@ function AppShell() {
   function handleSaveTransaction(transaction) {
     saveTransaction(transaction)
     closeModal()
-  }
-
-  function handleSaveFireGoal(nextGoal) {
-    saveFireGoal(nextGoal)
-    setShowFireGoalModal(false)
   }
 
   function shiftMonth(amount) {
@@ -211,7 +201,7 @@ function AppShell() {
         {investmentVisibility.bonds && <a className={activePage === 'bonds' ? 'nav-link active' : 'nav-link'} href="#bonds" onClick={(event) => { event.preventDefault(); selectPortfolioPage('bonds') }}><span className="nav-icon"><Landmark size={18} /></span>{t.bonds}</a>}
         {investmentVisibility.savings && <a className={activePage === 'savings' ? 'nav-link active' : 'nav-link'} href="#savings" onClick={(event) => { event.preventDefault(); selectPortfolioPage('savings') }}><span className="nav-icon"><Wallet size={18} /></span>{t.savings}</a>}
         <a className={activePage === 'statistics' ? 'nav-link active' : 'nav-link'} href="#statistics" onClick={(event) => { event.preventDefault(); selectStatistics() }}><span className="nav-icon"><CalendarDays size={18} /></span>{t.statistics}</a>
-        <div className="sidebar-bottom"><FireMeterCompact position={globalPosition} goal={fireGoal} onEdit={() => setShowFireGoalModal(true)} /><button className="help-link" type="button"><CircleHelp size={17} /> {t.help}</button><div className="profile"><button className={activePage === 'profile' ? 'profile-button active-profile' : 'profile-button'} type="button" onClick={selectProfilePage}><Avatar profile={profile} /><div className="profile-meta"><strong>{profile.name || t.account}</strong><span>{t.profile}</span></div><Ellipsis size={18} className="profile-more" /></button></div></div>
+        <div className="sidebar-bottom">{fireMeterVisible && <FireMeterCompact position={globalPosition} goal={fireGoal} />}<button className="help-link" type="button"><CircleHelp size={17} /> {t.help}</button><div className="profile"><button className={activePage === 'profile' ? 'profile-button active-profile' : 'profile-button'} type="button" onClick={selectProfilePage}><Avatar profile={profile} /><div className="profile-meta"><strong>{profile.name || t.account}</strong><span>{t.profile}</span></div><Ellipsis size={18} className="profile-more" /></button></div></div>
       </aside>
 
       <nav className="mobile-nav" aria-label={t.yourSpace}>
@@ -229,7 +219,7 @@ function AppShell() {
 
       <main className="main-content" id="overview">
         <header className="topbar"><div className="breadcrumb">{t.yourSpace} <span>/</span> <strong>{t[activePage] || t.overview}</strong></div><div className="topbar-right"><div className="language-switch" role="group" aria-label={t.language}><button type="button" className={language === 'en' ? 'language-option selected-language' : 'language-option'} aria-label="English" aria-pressed={language === 'en'} onClick={() => changeLanguage('en')}>EN</button><button type="button" className={language === 'pt' ? 'language-option selected-language' : 'language-option'} aria-label="Português (Portugal)" title="Português (Portugal)" aria-pressed={language === 'pt'} onClick={() => changeLanguage('pt')}>PT-PT</button></div><span className="today-label"><span className="online-dot" />{t.saved}</span><Avatar profile={profile} className="top-avatar" /></div></header>
-        {activePage === 'profile' ? <ProfilePage profile={profile} visibility={investmentVisibility} onSaveProfile={saveProfile} onToggleVisibility={toggleInvestmentVisibility} /> : activePage === 'position' ? <GlobalPositionPage transactions={transactions} records={{ etfs: investmentVisibility.etfs ? holdings : [], crypto: investmentVisibility.crypto ? cryptoHoldings : [], p2p: investmentVisibility.p2p ? p2pRecords : [], bonds: investmentVisibility.bonds ? bondHoldings : [], savings: investmentVisibility.savings ? savingsAccounts : [] }} visibility={investmentVisibility} currentPosition={globalPosition} currentCash={trackedCash} /> : activePage === 'transactions' ? <AllTransactionsPage transactions={transactions} onAdd={() => setShowModal(true)} onEdit={setEditingTransaction} onDelete={removeTransaction} /> : activePage === 'etfs' || activePage === 'crypto' ? <InvestmentsPage holdings={activePage === 'etfs' ? holdings : cryptoHoldings} assetType={activePage === 'etfs' ? 'etf' : 'crypto'} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'p2p' || activePage === 'bonds' ? <FixedIncomePage kind={activePage} records={activePage === 'p2p' ? p2pRecords : bondHoldings} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'savings' ? <SavingsPage accounts={savingsAccounts} onSave={saveSavingsAccount} onDelete={(account) => saveSavingsAccounts(savingsAccounts.filter((item) => item.id !== account.id))} /> : activePage === 'statistics' ? <StatisticsPage transactions={transactions} onFillSample={fillSampleHistory} /> : <div className="page-content">
+        {activePage === 'profile' ? <ProfilePage /> : activePage === 'position' ? <GlobalPositionPage transactions={transactions} records={{ etfs: investmentVisibility.etfs ? holdings : [], crypto: investmentVisibility.crypto ? cryptoHoldings : [], p2p: investmentVisibility.p2p ? p2pRecords : [], bonds: investmentVisibility.bonds ? bondHoldings : [], savings: investmentVisibility.savings ? savingsAccounts : [] }} visibility={investmentVisibility} currentPosition={globalPosition} currentCash={trackedCash} /> : activePage === 'transactions' ? <AllTransactionsPage transactions={transactions} onAdd={() => setShowModal(true)} onEdit={setEditingTransaction} onDelete={removeTransaction} /> : activePage === 'etfs' || activePage === 'crypto' ? <InvestmentsPage holdings={activePage === 'etfs' ? holdings : cryptoHoldings} assetType={activePage === 'etfs' ? 'etf' : 'crypto'} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'p2p' || activePage === 'bonds' ? <FixedIncomePage kind={activePage} records={activePage === 'p2p' ? p2pRecords : bondHoldings} onSave={(record, captureCurrent) => savePortfolioRecord(activePage, record, captureCurrent)} onDelete={(id) => removePortfolioRecord(activePage, id)} /> : activePage === 'savings' ? <SavingsPage accounts={savingsAccounts} onSave={saveSavingsAccount} onDelete={(account) => saveSavingsAccounts(savingsAccounts.filter((item) => item.id !== account.id))} /> : activePage === 'statistics' ? <StatisticsPage transactions={transactions} onFillSample={fillSampleHistory} /> : <div className="page-content">
           <section className="welcome-row"><div><p className="eyebrow">{t.snapshot}</p><h1>{t.headline}<span>.</span></h1><p className="welcome-sub">{t.welcome}</p></div><button className="primary-button" onClick={() => setShowModal(true)}><Plus size={18} strokeWidth={2.4} /> {t.addTransaction}</button></section>
 
           <section className="global-position-panel" aria-label={t.globalPosition}>
@@ -237,7 +227,7 @@ function AppShell() {
             <div className="global-position-details"><div className="global-breakdown"><div><span>{t.trackedCash}</span><strong className={trackedCash < 0 ? 'negative-return' : ''}>{formatCurrency(trackedCash, language)}</strong></div><div><span>{t.globalETFValue}</span><strong>{formatCurrency(totalPortfolioValue, language)}</strong></div><button className="text-button" onClick={() => selectPortfolioPage('etfs')}><ChartLine size={15} /> {t.viewInvestments}<ArrowRight size={14} /></button></div><p className="global-position-note">{t.globalPositionNote}</p></div>
           </section>
 
-          <div className="fire-compact-mobile"><FireMeterCompact position={globalPosition} goal={fireGoal} onEdit={() => setShowFireGoalModal(true)} /></div>
+          {fireMeterVisible && <div className="fire-compact-mobile"><FireMeterCompact position={globalPosition} goal={fireGoal} /></div>}
 
           <section className="portfolio-overview"><div className="overview-section-heading"><h2>{t.portfolioSummary}</h2><p>{t.portfolioSummarySubtitle}</p></div><div className="portfolio-mini-grid">
             {[
@@ -270,7 +260,6 @@ function AppShell() {
         </div>}
       </main>
       {(showModal || editingTransaction) && <TransactionModal selectedMonth={selectedMonth} transaction={editingTransaction} onClose={closeModal} onSave={handleSaveTransaction} />}
-      {showFireGoalModal && <FireGoalModal goal={fireGoal} onClose={() => setShowFireGoalModal(false)} onSave={handleSaveFireGoal} />}
     </div>
   )
 }
@@ -289,7 +278,6 @@ import CashFlowChart from './components/charts/CashFlowChart.jsx'
 import InvestmentHistoryChart from './components/charts/InvestmentHistoryChart.jsx'
 import PositionEvolutionChart from './components/charts/PositionEvolutionChart.jsx'
 import SpendingBreakdown from './components/charts/SpendingBreakdown.jsx'
-import FireGoalModal from './components/fire/FireGoalModal.jsx'
 import FireMeterCompact from './components/fire/FireMeterCompact.jsx'
 import FixedIncomeModal from './components/investments/FixedIncomeModal.jsx'
 import FixedIncomePage from './components/investments/FixedIncomePage.jsx'

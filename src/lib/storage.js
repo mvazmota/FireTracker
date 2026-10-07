@@ -1,5 +1,5 @@
 import { dateKey, normalizeTransactionDate } from './dates.js'
-import { DEFAULT_FIRE_GOAL, DEFAULT_PLATFORMS, DEFAULT_VISIBILITY, DEMO_PLATFORM_BY_TYPE, SIMULATION_VERSION, SIMULATION_VERSION_KEY, STORAGE_KEY, INVESTMENT_STORAGE_KEY, CRYPTO_STORAGE_KEY, P2P_STORAGE_KEY, BONDS_STORAGE_KEY, SAVINGS_STORAGE_KEY, FIRE_GOAL_STORAGE_KEY, PLATFORMS_STORAGE_KEY, CUSTOM_CATEGORIES_STORAGE_KEY, PROFILE_STORAGE_KEY, VISIBILITY_STORAGE_KEY } from './constants.js'
+import { DEFAULT_FIRE_GOAL, DEFAULT_PLATFORMS, DEFAULT_VISIBILITY, DEMO_PLATFORM_BY_TYPE, SIMULATION_VERSION, SIMULATION_VERSION_KEY, STORAGE_KEY, INVESTMENT_STORAGE_KEY, CRYPTO_STORAGE_KEY, P2P_STORAGE_KEY, BONDS_STORAGE_KEY, SAVINGS_STORAGE_KEY, FIRE_GOAL_STORAGE_KEY, FIRE_METER_STORAGE_KEY, PLATFORMS_STORAGE_KEY, CUSTOM_CATEGORIES_STORAGE_KEY, PROFILE_STORAGE_KEY, VISIBILITY_STORAGE_KEY } from './constants.js'
 import { demoBonds, demoCrypto, demoInvestments, demoP2P, demoSavings, demoTransactions, threeYearSimulation } from './simulation.js'
 
 /** Safe JSON read. Returns `fallback` when storage is unavailable or corrupt. */
@@ -107,6 +107,11 @@ export function loadUserProfile() {
   const profile = { name: '', createdAt: dateKey(new Date()) }
   writeJSON(PROFILE_STORAGE_KEY, profile)
   return profile
+}
+
+/** Whether the compact FIRE meter appears in the sidebar. Defaults to on. */
+export function loadFireMeterVisible() {
+  return readJSON(FIRE_METER_STORAGE_KEY, true) !== false
 }
 
 export function loadInvestmentVisibility() {
