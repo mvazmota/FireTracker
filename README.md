@@ -16,7 +16,14 @@ src/
   main.jsx                 app entry — mounts <App/> inside an error boundary
   App.jsx                  <App/> wraps <AppShell/> in the providers
   app/AppProviders.jsx     composes the language, settings and finance providers
-  components/              shared UI (ErrorBoundary, and feature components)
+  components/
+    ErrorBoundary.jsx      keeps a crash from blanking the page
+    ui/                    Avatar, IconBadge, PlatformSelector
+    layout-facing pages/   overview, position, transactions, statistics, profile
+    transactions/          TransactionModal, AllTransactionsPage
+    investments/           ETF, crypto, P2P, bond and savings screens + modals
+    charts/                cash-flow, spending and evolution charts
+    fire/                  FireMeterCompact, FireGoalModal
   context/
     SettingsProvider.jsx   profile, FIRE goal, visibility, platforms, categories
     FinanceProvider.jsx    transactions + assets, and every mutation
