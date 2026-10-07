@@ -24,7 +24,12 @@
 
   "vars": {
     // Comma-separated list of origins allowed to call the auth endpoints.
-    "TRUSTED_ORIGINS": "http://localhost:8787,http://127.0.0.1:8787,http://localhost:5199,http://127.0.0.1:5199,https://firetracker.m-vaz-mota.workers.dev"
+    "TRUSTED_ORIGINS": "http://localhost:8787,http://127.0.0.1:8787,http://localhost:5199,http://127.0.0.1:5199,https://firetracker.m-vaz-mota.workers.dev",
+
+    // Sender for password reset emails. Replace with an address on a domain you
+    // have verified with Resend, e.g. "Firepath <noreply@yourdomain.com>".
+    // The default only delivers to your own Resend account address.
+    "MAIL_FROM": "Firepath <onboarding@resend.dev>"
   },
 
   "observability": {

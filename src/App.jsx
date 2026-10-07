@@ -17,6 +17,7 @@ import { usePortfolioSummary } from './hooks/usePortfolioSummary.js'
 // Only needed before the app is usable, so they are kept out of the main chunk.
 const LoginPage = lazy(() => import('./components/auth/LoginPage.jsx'))
 const OnboardingPage = lazy(() => import('./components/onboarding/OnboardingPage.jsx'))
+const ResetPasswordPage = lazy(() => import('./components/auth/ResetPasswordPage.jsx'))
 import { dateForMonth, formatDateTime } from './lib/dates.js'
 import { formatCurrency } from './lib/format.js'
 import { categoryInfo } from './data/categories.js'
@@ -169,6 +170,8 @@ function AppShell() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // The reset email links to /reset-password, which the Worker serves as the SPA.
+  if (window.location.pathname.startsWith('/reset-password')) return <Suspense fallback={<div className="app-loading">{t.loading}</div>}><ResetPasswordPage /></Suspense>
   if (isPending) return <div className="app-loading">{t.loading}</div>
   if (!user) return <Suspense fallback={<div className="app-loading">{t.loading}</div>}><LoginPage /></Suspense>
   if (dataError) return <div className="app-loading"><div className="load-error"><p>{t.loadError}</p><button type="button" className="ghost-button" onClick={reloadData}>{t.retry}</button></div></div>

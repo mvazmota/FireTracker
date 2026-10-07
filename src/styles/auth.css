@@ -18,6 +18,12 @@
 .remember-toggle input:checked + .remember-box { border-color: #5c956d; background: #5c956d; }
 .remember-toggle input:checked + .remember-box::after { content: ''; width: 3px; height: 7px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(45deg) translate(-1px, -1px); }
 .remember-toggle input:focus-visible + .remember-box { box-shadow: 0 0 0 3px #e3ece3; }
+.login-extras { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.login-extras .remember-toggle { margin-top: 0; }
+.login-link { padding: 0; border: 0; background: transparent; color: #477557; font-size: 11px; font-weight: 600; }
+.login-link:hover { text-decoration: underline; }
+.login-notice { margin: 0 0 14px; padding: 10px 12px; border-radius: 8px; background: #eef6ee; color: #3f6b4a; font-size: 11px; line-height: 1.5; }
+.login-link-button { display: flex; width: 100%; margin-top: 6px; text-decoration: none; }
 .login-toggle { margin-top: 14px; padding: 6px 9px; border: 0; border-radius: 6px; background: transparent; color: #477557; font-size: 11px; font-weight: 600; }
 .login-toggle:hover { background: #eff5ef; }
 .login-card .submit-button:disabled { opacity: .7; cursor: default; }

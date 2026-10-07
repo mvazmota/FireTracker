@@ -1,4 +1,15 @@
 import { betterAuth } from 'better-auth'
+import { sendResetEmail } from './email.js'
+
+/** The account's preferred language, so the reset email is written in it. */
+async function userLanguage(env, userId) {
+  try {
+    const row = await env.DB.prepare('select "language" from "user_settings" where "userId" = ?').bind(userId).first()
+    return row?.language === 'pt' ? 'pt' : 'en'
+  } catch {
+    return 'en'
+  }
+}
 
 /**
  * Builds a Better Auth instance bound to this request's D1 database.
@@ -17,6 +28,11 @@ export function createAuth(env) {
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 8,
+      // Sends the "choose a new password" link. Without an email provider the
+      // link is logged instead, so the flow stays testable.
+      sendResetPassword: async ({ user, url }) => {
+        await sendResetEmail(env, { to: user.email, url, language: await userLanguage(env, user.id) })
+      },
     },
     session: {
       expiresIn: 60 * 60 * 24 * 30,
