@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { ASSET_TABLES, TRANSACTIONS, clearUserRows, listForUser, removeById, upsert } from './tables.js'
+import { ASSET_TABLES, TRANSACTIONS, clearUserRows, listForUser, removeById, runBatched, upsert, upsertStatement } from './tables.js'
 
 const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireGoal', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'categories', 'onboarded']
 
@@ -123,16 +123,21 @@ api.put('/settings', async (c) => {
   return c.json({ ok: true })
 })
 
-/** Bulk import — used once to move existing local data into the account. */
+/**
+ * Bulk import — used to seed the demo account and to restore it. Statements are
+ * batched so importing hundreds of rows takes a few round trips, not hundreds.
+ */
 api.post('/import', async (c) => {
   const db = c.env.DB
   const userId = c.get('userId')
   const body = await c.req.json()
   await clearUserRows(db, userId)
+  const statements = []
   for (const type of Object.keys(ASSET_TABLES)) {
-    for (const record of body[type] || []) await upsert(db, userId, ASSET_TABLES[type], record)
+    for (const record of body[type] || []) statements.push(upsertStatement(db, userId, ASSET_TABLES[type], record))
   }
-  for (const record of body.transactions || []) await upsert(db, userId, TRANSACTIONS, record)
+  for (const record of body.transactions || []) statements.push(upsertStatement(db, userId, TRANSACTIONS, record))
+  await runBatched(db, statements)
   await saveSettings(db, userId, { profile: body.profile, settings: body.settings })
   return c.json({ ok: true })
 })

@@ -18,14 +18,13 @@
     {
       "binding": "DB",
       "database_name": "firepath-db",
-      // Replace with the id printed by: npx wrangler d1 create firepath-db
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+      "database_id": "d3c05e4a-3daa-4d33-82cf-6739b1180cbc"
     }
   ],
 
   "vars": {
     // Comma-separated list of origins allowed to call the auth endpoints.
-    "TRUSTED_ORIGINS": "http://localhost:8787,http://127.0.0.1:8787,http://localhost:5199,http://127.0.0.1:5199"
+    "TRUSTED_ORIGINS": "http://localhost:8787,http://127.0.0.1:8787,http://localhost:5199,http://127.0.0.1:5199,https://firetracker.m-vaz-mota.workers.dev"
   },
 
   "observability": {

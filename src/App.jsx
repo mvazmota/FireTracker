@@ -9,6 +9,7 @@ import {
 import AppProviders from './app/AppProviders.jsx'
 import { useI18n } from './i18n/LanguageProvider.jsx'
 import { useAuth } from './context/AuthProvider.jsx'
+import { useData } from './context/DataProvider.jsx'
 import { useSettings } from './context/SettingsProvider.jsx'
 import { useFinance } from './context/FinanceProvider.jsx'
 import { usePortfolioSummary } from './hooks/usePortfolioSummary.js'
@@ -47,6 +48,7 @@ import { messages } from './i18n/messages.jsx'
 function AppShell() {
   const { language, locale, t, changeLanguage } = useI18n()
   const { user, isPending, signOut } = useAuth()
+  const { error: dataError, reload: reloadData } = useData()
   const {
     profile,
     fireGoal,
@@ -166,6 +168,7 @@ function AppShell() {
 
   if (isPending) return <div className="app-loading">{t.loading}</div>
   if (!user) return <LoginPage />
+  if (dataError) return <div className="app-loading"><div className="load-error"><p>{t.loadError}</p><button type="button" className="ghost-button" onClick={reloadData}>{t.retry}</button></div></div>
   if (!settingsReady || !financeReady) return <div className="app-loading">{t.loading}</div>
   if (!onboarded) return <OnboardingPage />
 

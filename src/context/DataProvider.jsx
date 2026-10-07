@@ -54,6 +54,7 @@ export function DataProvider({ children }) {
   const { user, isPending } = useAuth()
   const [data, setData] = useState(null)
   const [ready, setReady] = useState(false)
+  const [error, setError] = useState(null)
   // Guards against StrictMode's double effect (and duplicate seeding).
   const startedFor = useRef(null)
 
@@ -66,8 +67,10 @@ export function DataProvider({ children }) {
         next = await api.getState()
       }
       setData(next)
-    } catch {
+      setError(null)
+    } catch (cause) {
       setData(null)
+      setError(cause)
     } finally {
       setReady(true)
     }
@@ -78,6 +81,7 @@ export function DataProvider({ children }) {
     if (!user) {
       startedFor.current = null
       setData(null)
+      setError(null)
       setReady(true)
       return
     }
@@ -94,7 +98,7 @@ export function DataProvider({ children }) {
     await load()
   }, [load])
 
-  const value = useMemo(() => ({ data, ready, reload: load, isDemo, resetDemo }), [data, ready, load, isDemo, resetDemo])
+  const value = useMemo(() => ({ data, ready, error, reload: load, isDemo, resetDemo }), [data, ready, error, load, isDemo, resetDemo])
   return <DataContext value={value}>{children}</DataContext>
 }
 

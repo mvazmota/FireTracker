@@ -52,8 +52,8 @@ export const TRANSACTIONS = {
   fromRow: (r) => ({ id: r.id, title: r.title, category: r.category, type: r.type, amount: r.amount, date: r.date, platform: r.platform ?? '', sourceType: r.sourceType ?? undefined, sourceId: r.sourceId ?? undefined, investmentType: r.investmentType ?? undefined, flowDelta: r.flowDelta ?? undefined, isDemo: Boolean(r.isDemo) }),
 }
 
-/** Inserts or updates a row, scoped to the given user. */
-export async function upsert(db, userId, config, record) {
+/** Builds (but does not run) the upsert for a row, scoped to the given user. */
+export function upsertStatement(db, userId, config, record) {
   const columns = ['userId', ...config.columns]
   const values = [userId, ...config.toRow(record)]
   const placeholders = columns.map(() => '?').join(', ')
@@ -62,7 +62,22 @@ export async function upsert(db, userId, config, record) {
     .map((column) => `"${column}" = excluded."${column}"`)
     .join(', ')
   const sql = `insert into "${config.table}" (${columns.map((c) => `"${c}"`).join(', ')}) values (${placeholders}) on conflict("id") do update set ${assignments}`
-  await db.prepare(sql).bind(...values).run()
+  return db.prepare(sql).bind(...values)
+}
+
+/** Inserts or updates a row, scoped to the given user. */
+export async function upsert(db, userId, config, record) {
+  await upsertStatement(db, userId, config, record).run()
+}
+
+/**
+ * Runs prepared statements in chunks. `db.batch` sends each chunk in a single
+ * round trip, which matters for bulk imports of hundreds of rows.
+ */
+export async function runBatched(db, statements, chunkSize = 100) {
+  for (let index = 0; index < statements.length; index += chunkSize) {
+    await db.batch(statements.slice(index, index + chunkSize))
+  }
 }
 
 export async function removeById(db, userId, config, id) {
