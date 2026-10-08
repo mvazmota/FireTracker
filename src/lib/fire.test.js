@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { monthKey } from './dates.js'
-import { DEFAULT_FIRE_PLAN, WITHDRAWAL_RATE, annualAverages, estimateProjection, fireCalculator, fireProjection, fireTarget, normalizePlan, planForStrategy, projectionRange, projectSeries, yearsToTarget } from './fire.js'
+import { DEFAULT_FIRE_PLAN, WITHDRAWAL_RATE, annualAverages, estimateProjection, fireCalculator, fireLevers, fireProjection, fireTarget, normalizePlan, planForStrategy, projectionRange, projectSeries, spendingByCategory, yearsToTarget } from './fire.js'
 
 const TODAY = new Date(2026, 5, 15)
 
@@ -325,8 +325,7 @@ describe('fireProjection with a plan', () => {
   })
 })
 
-describe('projectionRange', () => {
-  const base = { current: 0, annualSavings: 12000, target: 300000, years: 40 }
+describe('projectionRange', () => {  const base = { current: 0, annualSavings: 12000, target: 300000, years: 40 }
 
   it('is reproducible for a given seed', () => {
     const first = projectionRange({ ...base, seed: 7 })
@@ -390,5 +389,61 @@ describe('projectionRange', () => {
     expect(range.successRate).toBe(0)
     expect(range.p50).toBeNull()
     expect(range.band).toBeUndefined()
+  })
+})
+
+describe('spendingByCategory', () => {
+  it('annualises each category and turns it into the pot it needs', () => {
+    const result = spendingByCategory(fullYear(), undefined, TODAY)
+    expect(result.months).toBe(12)
+    expect(result.categories).toHaveLength(1)
+    expect(result.categories[0]).toMatchObject({ category: 'Housing', annual: 4800, monthly: 400, months: 12, pot: 120000 })
+  })
+
+  it('leaves investment transfers out of spending', () => {
+    const result = spendingByCategory(fullYear(), undefined, TODAY)
+    expect(result.categories.map((entry) => entry.category)).not.toContain('Investment')
+  })
+
+  it('separates what happens every month from what comes and goes', () => {
+    const months = monthsBack(TODAY, 12)
+    const rows = [
+      ...months.map((month) => ({ date: `${month}-05T09:00:00`, type: 'expense', amount: 400, category: 'Housing' })),
+      { date: `${months[6]}-12T09:00:00`, type: 'expense', amount: 600, category: 'Entertainment' },
+    ]
+    const result = spendingByCategory(rows, undefined, TODAY)
+    expect(result.everyMonth).toBe(400)
+    // A single holiday, spread across the year it happened in.
+    expect(result.occasional).toBe(50)
+    expect(result.categories.map((entry) => entry.months)).toEqual([12, 1])
+  })
+
+  it('uses the plan withdrawal rate for the pot', () => {
+    const result = spendingByCategory(fullYear(), { withdrawalRate: 0.05 }, TODAY)
+    expect(result.categories[0].pot).toBe(96000)
+  })
+})
+
+describe('fireLevers', () => {
+  const base = { current: 0, annualSavings: 12000, annualSpending: 20000, target: 500000 }
+
+  it('gives earning more and saving more the same effect', () => {
+    const levers = fireLevers(base)
+    expect(levers.earnMore).toBe(levers.saveMore)
+    expect(levers.saveMore).toBeGreaterThan(0)
+  })
+
+  it('makes spending less worth more than earning the same amount', () => {
+    const levers = fireLevers(base)
+    expect(levers.spendLess).toBeGreaterThan(levers.earnMore)
+  })
+
+  it('shrinks the target when spending falls', () => {
+    expect(fireLevers(base).smallerTarget).toBe(470000)
+  })
+
+  it('has nothing to say when the target is never reached', () => {
+    expect(fireLevers({ ...base, annualSavings: -5000 })).toBeNull()
+    expect(fireLevers({ ...base, target: 0 })).toBeNull()
   })
 })

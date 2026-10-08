@@ -24,7 +24,9 @@ euros.
 - **FIRE tab** — your plan and its projections in one place. Pick a strategy
   (traditional, lean, fat, semi-retired or custom) and tune the withdrawal rate,
   retirement spending, post-FIRE income and assumed real return; the number,
-  horizon and chart follow as you type.
+  horizon and chart follow as you type. It also shows what your habits are worth:
+  what each €100 a month does to the horizon, and what every spending category
+  costs you in pot terms.
 - **Onboarding** — a five-step first run that opens with a FIRE calculator and
   sets your starting number, then seeds your categories, platforms and
   investment types.

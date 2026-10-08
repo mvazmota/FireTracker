@@ -1,16 +1,18 @@
 import { useMemo, useState } from 'react'
-import { CalendarClock, Flame, PiggyBank, SlidersHorizontal, TrendingUp, Wallet } from 'lucide-react'
+import { CalendarClock, Coins, Flame, Gauge, PiggyBank, SlidersHorizontal, TrendingUp, Wallet } from 'lucide-react'
 import FireProjectionChart from './FireProjectionChart.jsx'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
+import { useFinance } from '../../context/FinanceProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
 import { usePortfolioSummary } from '../../hooks/usePortfolioSummary.js'
 import { useFireProjection } from '../../hooks/useFireProjection.js'
-import { FIRE_STRATEGIES, normalizePlan, planForStrategy, projectSeries, projectionRange } from '../../lib/fire.js'
+import { FIRE_STRATEGIES, fireLevers, normalizePlan, planForStrategy, projectSeries, projectionRange, spendingByCategory } from '../../lib/fire.js'
 import { formatCurrency } from '../../lib/format.js'
 
 /** The FIRE plan, the projections it produces, and the two together. */
 export default function FirePage() {
   const { t, locale, language } = useI18n()
+  const { transactions } = useFinance()
   const { fireEstimate, firePlan, saveFirePlan } = useSettings()
   const today = useMemo(() => new Date(), [])
   const { globalPosition } = usePortfolioSummary(today)
@@ -60,6 +62,19 @@ export default function FirePage() {
   const savingsRate = projection.income > 0 ? (projection.savings / projection.income) * 100 : 0
   const years = projection.years == null ? null : Math.ceil(projection.years)
   const spread = range.p10 != null && range.p90 != null && range.p10 !== range.p90
+
+  // What a habit is worth, and what each one costs. Both are consequences of the
+  // user's own figures, with no opinion attached to them.
+  const levers = useMemo(
+    () => fireLevers({ current: projection.current, annualSavings: projection.savings, annualSpending: projection.spendingToCover, target: goalValue, realReturn: projection.realReturn, withdrawalRate: projection.withdrawalRate }),
+    [projection.current, projection.savings, projection.spendingToCover, goalValue, projection.realReturn, projection.withdrawalRate],
+  )
+  const spending = useMemo(
+    () => spendingByCategory(transactions, draftPlan, today),
+    [transactions, draftPlan, today],
+  )
+  const sooner = (value) => (value == null ? '—' : `${Math.round(value * 12)} ${Math.round(value * 12) === 1 ? t.monthSooner : t.monthsSooner}`)
+  const categoryLabel = (name) => t.categoryNames[name] || name
 
   const stats = [
     { key: 'position', icon: <Wallet size={16} />, tint: 'savings-tint', label: t.currentPosition, value: formatCurrency(projection.current, language), note: `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(progress)}% ${t.ofGoal}` },
@@ -178,10 +193,37 @@ export default function FirePage() {
         </article>)}
       </section>
 
+      {levers && <section className="panel fire-levers">
+        <div className="panel-heading"><div><h2>{t.fireLevers}</h2><p>{t.fireLeversSubtitle.replace('{amount}', formatCurrency(levers.monthly, language))}</p></div><span className="panel-icon"><Gauge size={17} /></span></div>
+        <ul className="fire-lever-list">
+          <li><span>{t.fireLeverSave.replace('{amount}', formatCurrency(levers.monthly, language))}</span><strong>{sooner(levers.saveMore)}</strong></li>
+          <li><span>{t.fireLeverEarn.replace('{amount}', formatCurrency(levers.monthly, language))}</span><strong>{sooner(levers.earnMore)}</strong></li>
+          <li className="fire-lever-strong"><span>{t.fireLeverSpend.replace('{amount}', formatCurrency(levers.monthly, language))}</span><strong>{sooner(levers.spendLess)}</strong></li>
+        </ul>
+        <p className="fire-lever-note">{t.fireLeverNote}</p>
+      </section>}
+
       <section className="panel fire-chart-panel">
         <div className="panel-heading"><div><h2>{t.fireProjection}</h2><p>{t.fireProjectionSubtitle}</p></div><span className="panel-icon"><CalendarClock size={17} /></span></div>
         <FireProjectionChart series={series} band={range.band} target={goalValue} startYear={today.getFullYear()} language={language} />
       </section>
+
+      {spending.categories.length > 0 && <section className="panel fire-spending">
+        <div className="panel-heading"><div><h2>{t.fireSpending}</h2><p>{t.fireSpendingSubtitle.replace('{rate}', ratePercent)}</p></div><span className="panel-icon"><Coins size={17} /></span></div>
+        <ul className="fire-spending-list">
+          {spending.categories.map((entry) => <li key={entry.category}>
+            <span className="fire-spending-name">{categoryLabel(entry.category)}</span>
+            <span className="fire-spending-monthly">{formatCurrency(entry.monthly, language)}<i>{t.firePerMonth}</i></span>
+            <span className="fire-spending-months">{entry.months} {t.of} {spending.months}</span>
+            <strong className="fire-spending-pot">{formatCurrency(entry.pot, language)}</strong>
+          </li>)}
+        </ul>
+        <div className="fire-spending-split">
+          <div><span>{t.fireEveryMonth}</span><strong>{formatCurrency(spending.everyMonth, language)}<i>{t.firePerMonth}</i></strong></div>
+          <div><span>{t.fireOccasional}</span><strong>{formatCurrency(spending.occasional, language)}<i>{t.firePerMonth}</i></strong></div>
+        </div>
+        <p className="fire-spending-note">{t.fireSpendingNote}</p>
+      </section>}
 
       <section className="panel fire-assumptions">
         <div className="panel-heading"><div><h2>{t.fireAssumptions}</h2><p>{t.fireAssumptionsSubtitle}</p></div><span className="panel-icon"><Flame size={17} /></span></div>

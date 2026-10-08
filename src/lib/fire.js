@@ -69,6 +69,14 @@ function isTransfer(item) {
   return isInvestmentTransaction(item) || isSavingsTransaction(item)
 }
 
+/** The months the averages look at: a rolling year, oldest first. */
+function recentMonths(today) {
+  return {
+    from: monthKey(new Date(today.getFullYear(), today.getMonth() - (MAX_WINDOW_MONTHS - 1), 1)),
+    current: monthKey(today),
+  }
+}
+
 /**
  * Averages the last year of activity and annualises it.
  *
@@ -81,8 +89,7 @@ function isTransfer(item) {
  * the 4% rule only has to cover living costs.
  */
 export function annualAverages(transactions, today = new Date()) {
-  const current = monthKey(today)
-  const from = monthKey(new Date(today.getFullYear(), today.getMonth() - (MAX_WINDOW_MONTHS - 1), 1))
+  const { from, current } = recentMonths(today)
 
   const activeMonths = new Set()
   let income = 0
@@ -109,8 +116,91 @@ export function annualAverages(transactions, today = new Date()) {
   }
 }
 
-/** The pot needed to cover annual spending at the safe withdrawal rate. */
-export function fireTarget(annualExpenses, withdrawalRate = WITHDRAWAL_RATE) {
+/**
+ * What each spending habit costs in pot terms.
+ *
+ * Every expense category is annualised over the same window the FIRE number
+ * uses, then turned into the pot it needs at the plan's withdrawal rate. The
+ * month count is what separates a habit from an occasional purchase: a category
+ * present in every month is something you do, one present in two is something
+ * that happened. Occasional spending is still spread across the year, which is
+ * why a single holiday lands as a small monthly figure.
+ */
+export function spendingByCategory(transactions, plan, today = new Date()) {
+  const { withdrawalRate } = normalizePlan(plan)
+  const { from, current } = recentMonths(today)
+  const found = new Map()
+  const activeMonths = new Set()
+
+  for (const item of transactions) {
+    const month = item.date.slice(0, 7)
+    if (month < from || month > current) continue
+    if (item.type !== 'expense' || isTransfer(item)) continue
+    activeMonths.add(month)
+    const entry = found.get(item.category) || { category: item.category, total: 0, months: new Set() }
+    entry.total += item.amount
+    entry.months.add(month)
+    found.set(item.category, entry)
+  }
+
+  const months = Math.max(1, activeMonths.size)
+  const scale = 12 / months
+  const categories = [...found.values()]
+    .map((entry) => {
+      const annual = roundMoney(entry.total * scale)
+      return {
+        category: entry.category,
+        annual,
+        monthly: roundMoney(annual / 12),
+        months: entry.months.size,
+        pot: fireTarget(annual, withdrawalRate),
+      }
+    })
+    .sort((a, b) => b.annual - a.annual)
+
+  const sumWhere = (test) => roundMoney(categories.filter(test).reduce((total, entry) => total + entry.monthly, 0))
+
+  return {
+    months,
+    withdrawalRate,
+    categories,
+    // Spending present in every recorded month, against spending that comes and
+    // goes. A statement about the records, not about what is essential: rent and
+    // groceries both land here, and so does anything bought monthly.
+    everyMonth: sumWhere((entry) => entry.months === months),
+    occasional: sumWhere((entry) => entry.months < months),
+  }
+}
+
+/**
+ * What a change of habit would do to the horizon.
+ *
+ * Earning more and saving more give the same number on purpose: neither changes
+ * the pot you need, only how fast you fill it. Spending less is worth more than
+ * both, because the pot only has to cover what you spend — so it shrinks the
+ * target as well as filling it faster. That asymmetry belongs to the withdrawal
+ * rate, not to any opinion about what anyone should do.
+ */
+export function fireLevers({ current, annualSavings, annualSpending, target, realReturn = REAL_RETURN, withdrawalRate = WITHDRAWAL_RATE, monthly = 100 }) {
+  const now = yearsToTarget({ current, annualSavings, target, realReturn })
+  if (now == null || !(target > 0)) return null
+
+  const step = monthly * 12
+  const faster = yearsToTarget({ current, annualSavings: annualSavings + step, target, realReturn })
+  const smallerTarget = fireTarget(Math.max(0, annualSpending - step), withdrawalRate)
+  const leaner = yearsToTarget({ current, annualSavings: annualSavings + step, target: smallerTarget, realReturn })
+
+  return {
+    monthly,
+    years: now,
+    saveMore: faster == null ? null : now - faster,
+    earnMore: faster == null ? null : now - faster,
+    spendLess: leaner == null ? null : now - leaner,
+    smallerTarget,
+  }
+}
+
+/** The pot needed to cover annual spending at the safe withdrawal rate. */export function fireTarget(annualExpenses, withdrawalRate = WITHDRAWAL_RATE) {
   if (!(annualExpenses > 0) || !(withdrawalRate > 0)) return 0
   return roundMoney(annualExpenses / withdrawalRate)
 }

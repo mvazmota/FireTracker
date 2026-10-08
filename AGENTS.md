@@ -73,6 +73,11 @@ In development run the two servers together, and run Vite on **port 5199**
   always produces the same range — do not swap in `Math.random`, or the numbers
   will jitter on every render. `projectSeries` is the deterministic expected case
   and both are shown on purpose: the line is the plan, the band is reality.
+- **Feedback is consequences, not advice.** `fireLevers` and
+  `spendingByCategory` exist to show what the user's own figures imply — what a
+  habit is worth in months, what a category costs in pot terms, which spending
+  recurs. Nothing here recommends an investment, a category to cut or a target
+  to aim for, and that is deliberate: the app is a mirror. Keep it that way.
 - **FIRE maths** (`src/lib/fire.js`): the annual average divides by the number of
   months that **contain transactions**, not months elapsed — elapsed months
   understate spending and flatter the FIRE date. Transfers into investments or

@@ -202,6 +202,26 @@
 .fire-hero-number span { color: #6f7d73; font: 600 14px 'Manrope', sans-serif; letter-spacing: 0; }
 .fire-hero-note { margin: 10px 0 0; max-width: 48ch; color: #89938d; font-size: 13px; line-height: 1.55; }
 .fire-hero-odds { color: #a3aca6; }
+.fire-levers { margin-top: 15px; padding: 18px 20px 16px; }
+.fire-lever-list { display: grid; gap: 2px; margin: 14px 0 0; padding: 0; list-style: none; }
+.fire-lever-list li { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding: 11px 0; border-top: 1px solid #f0f2ef; }
+.fire-lever-list li span { color: #526057; font-size: 14px; }
+.fire-lever-list li strong { color: #3f7351; font: 700 14px 'Manrope', sans-serif; white-space: nowrap; }
+.fire-lever-list li.fire-lever-strong strong { color: #2f7a52; }
+.fire-lever-note { margin: 12px 0 0; color: #8a958d; font-size: 13px; line-height: 1.55; }
+.fire-spending { margin-top: 15px; padding: 18px 20px 16px; }
+.fire-spending-list { display: grid; gap: 0; margin: 14px 0 0; padding: 0; list-style: none; }
+.fire-spending-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: baseline; gap: 14px; padding: 10px 0; border-top: 1px solid #f0f2ef; }
+.fire-spending-name { color: #526057; font-size: 14px; font-weight: 600; }
+.fire-spending-monthly { color: #7d8982; font-size: 13px; white-space: nowrap; }
+.fire-spending-monthly i, .fire-spending-split i { color: #a3aca6; font-style: normal; }
+.fire-spending-months { color: #a3aca6; font-size: 12px; white-space: nowrap; }
+.fire-spending-pot { color: #2d3c33; font: 700 14px 'Manrope', sans-serif; white-space: nowrap; }
+.fire-spending-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; padding: 14px 16px; border-radius: 12px; background: #f7faf6; }
+.fire-spending-split div { display: flex; flex-direction: column; gap: 3px; }
+.fire-spending-split span { color: #8a958d; font-size: 12px; font-weight: 600; }
+.fire-spending-split strong { color: #2d3c33; font: 700 17px 'Manrope', sans-serif; letter-spacing: -0.4px; }
+.fire-spending-note { margin: 12px 0 0; color: #8a958d; font-size: 13px; line-height: 1.55; }
 .fire-progress-track { height: 12px; overflow: hidden; border-radius: 8px; background: #eef1ec; }
 .fire-progress-track > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #8fc39a, #4f8a63); transition: width .4s ease; }
 .fire-progress-legend { display: flex; justify-content: space-between; margin-top: 9px; color: #8a958d; font-size: 12px; font-weight: 600; }
