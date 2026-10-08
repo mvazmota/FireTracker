@@ -85,7 +85,13 @@ export function SettingsProvider({ children }) {
 
   const saveFireGoal = useCallback((next) => persist({ fireGoal: next }), [persist])
 
-  const saveFirePlan = useCallback((next) => persist({ firePlan: next }), [persist])
+  /** Saves the whole FIRE setup — plan and goal — in one write. */
+  const saveFireSettings = useCallback(({ plan, goal }) => {
+    persist({
+      ...(plan ? { firePlan: plan } : {}),
+      ...(Number.isFinite(goal) && goal > 0 ? { fireGoal: goal } : {}),
+    })
+  }, [persist])
 
   const toggleFireMeter = useCallback(() => persist({ fireMeterVisible: !settingsRef.current.fireMeterVisible }), [persist])
 
@@ -145,7 +151,7 @@ export function SettingsProvider({ children }) {
     hydrated,
     saveProfile,
     saveFireGoal,
-    saveFirePlan,
+    saveFireSettings,
     toggleFireMeter,
     toggleInvestmentVisibility,
     rememberPlatform,
@@ -155,7 +161,7 @@ export function SettingsProvider({ children }) {
     saveOnboarding,
   }), [
     profile, settings, hydrated,
-    saveProfile, saveFireGoal, saveFirePlan, toggleFireMeter, toggleInvestmentVisibility,
+    saveProfile, saveFireGoal, saveFireSettings, toggleFireMeter, toggleInvestmentVisibility,
     rememberPlatform, rememberCategory, removeCategory, removePlatform, saveOnboarding,
   ])
 

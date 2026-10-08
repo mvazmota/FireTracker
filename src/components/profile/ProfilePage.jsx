@@ -24,9 +24,8 @@ export default function ProfilePage() {
     investmentVisibility,
     toggleInvestmentVisibility,
     fireGoal,
-    saveFireGoal,
     firePlan,
-    saveFirePlan,
+    saveFireSettings,
     fireMeterVisible,
     toggleFireMeter,
     categories,
@@ -67,7 +66,6 @@ export default function ProfilePage() {
   const [returnInput, setReturnInput] = useState(String(Math.round(storedPlan.realReturn * 1000) / 10))
   const [spendingInput, setSpendingInput] = useState(storedPlan.retirementSpending == null ? '' : String(storedPlan.retirementSpending))
   const [incomeInput, setIncomeInput] = useState(storedPlan.postFireIncome > 0 ? String(storedPlan.postFireIncome) : '')
-  const [planSaved, setPlanSaved] = useState(false)
 
   const draftPlan = useMemo(() => normalizePlan({
     strategy,
@@ -87,7 +85,7 @@ export default function ProfilePage() {
   /** A strategy fills the fields in; every value stays editable afterwards. */
   function chooseStrategy(key) {
     setStrategy(key)
-    setPlanSaved(false)
+    setGoalSaved(false)
     if (key === 'custom') return
     const preset = planForStrategy(key, { annualSpending: tracked.expenses, annualIncome: tracked.income })
     setRateInput(String(Math.round(preset.withdrawalRate * 1000) / 10))
@@ -96,10 +94,14 @@ export default function ProfilePage() {
     setIncomeInput(preset.postFireIncome > 0 ? String(preset.postFireIncome) : '')
   }
 
-  function submitPlan(event) {
+  /** The plan and the goal are one setup, so they save together. */
+  function submitFireSettings(event) {
     event.preventDefault()
-    saveFirePlan(draftPlan)
-    setPlanSaved(true)
+    const value = Number(goalInput)
+    if (!Number.isFinite(value) || value <= 0) return setGoalError(t.goalError)
+    setGoalError('')
+    saveFireSettings({ plan: draftPlan, goal: value })
+    setGoalSaved(true)
   }
 
   // How many transactions use each category, so in-use ones can be protected.
@@ -115,15 +117,6 @@ export default function ProfilePage() {
   function submitProfile(event) {
     event.preventDefault()
     saveProfile({ ...profile, name: name.trim() })
-  }
-
-  function submitGoal(event) {
-    event.preventDefault()
-    const value = Number(goalInput)
-    if (!Number.isFinite(value) || value <= 0) return setGoalError(t.goalError)
-    setGoalError('')
-    saveFireGoal(value)
-    setGoalSaved(true)
   }
 
   async function uploadPhoto(event) {
@@ -211,22 +204,58 @@ export default function ProfilePage() {
     </section>
 
     <div className="settings-pair">
-      <section className="panel visibility-panel">
-        <div className="panel-heading"><div><h2>{t.fireMeterSettings}</h2><p>{t.fireMeterSettingsSubtitle}</p></div><span className="panel-icon"><Flame size={17} /></span></div>
-        <div className="visibility-row fire-toggle-row">
-          <span className="portfolio-mini-icon fire-tint"><Flame size={17} /></span>
-          <div className="visibility-label"><strong>{t.fireMeterSettings}</strong><span>{t.showFireMeter}</span></div>
-          <button type="button" className={fireMeterVisible ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={fireMeterVisible} aria-label={t.showFireMeter} onClick={toggleFireMeter}><span /></button>
-        </div>
-        <form className="fire-goal-form" onSubmit={submitGoal}>
+      <section className="panel visibility-panel fire-settings-panel">
+        <div className="panel-heading"><div><h2>{t.fireSettings}</h2><p>{t.fireSettingsSubtitle}</p></div><span className="panel-icon"><Flame size={17} /></span></div>
+
+        <form className="fire-plan-form" onSubmit={submitFireSettings}>
+          <div className="fire-plan-strategies">
+            {FIRE_STRATEGIES.map((key) => <button type="button" key={key} className={strategy === key ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={strategy === key} onClick={() => chooseStrategy(key)}>{t.fireStrategies[key]}</button>)}
+          </div>
+          <p className="fire-plan-hint">{t.fireStrategyHints[strategy]}</p>
+
+          <div className="form-row">
+            <div>
+              <label className="field-label" htmlFor="fire-plan-rate">{t.firePlanRate}</label>
+              <div className="amount-input"><input id="fire-plan-rate" type="number" min="1" max="10" step="0.1" value={rateInput} onChange={(event) => { setRateInput(event.target.value); setGoalSaved(false) }} /><span>%</span></div>
+            </div>
+            <div>
+              <label className="field-label" htmlFor="fire-plan-return">{t.firePlanReturn}</label>
+              <div className="amount-input"><input id="fire-plan-return" type="number" min="0" max="10" step="0.1" value={returnInput} onChange={(event) => { setReturnInput(event.target.value); setGoalSaved(false) }} /><span>%</span></div>
+            </div>
+          </div>
+          <div className="form-row">
+            <div>
+              <label className="field-label" htmlFor="fire-plan-spending">{t.firePlanSpending}</label>
+              <div className="amount-input"><span>€</span><input id="fire-plan-spending" type="number" min="0" step="1000" placeholder={String(Math.round(tracked.expenses))} value={spendingInput} onChange={(event) => { setSpendingInput(event.target.value); setGoalSaved(false) }} /></div>
+            </div>
+            <div>
+              <label className="field-label" htmlFor="fire-plan-income">{t.firePlanIncome}</label>
+              <div className="amount-input"><span>€</span><input id="fire-plan-income" type="number" min="0" step="1000" placeholder="0" value={incomeInput} onChange={(event) => { setIncomeInput(event.target.value); setGoalSaved(false) }} /></div>
+            </div>
+          </div>
+          <p className="fire-plan-hint">{t.firePlanSpendingHint}</p>
+
           <label className="field-label" htmlFor="fire-goal-input">{t.goalAmount}</label>
-          <div className="profile-name-edit">
-            <div className={fireMeterVisible ? 'amount-input' : 'amount-input amount-input-off'}><span>€</span><input id="fire-goal-input" type="number" min="1" step="1000" value={goalInput} disabled={!fireMeterVisible} onChange={(event) => { setGoalInput(event.target.value); setGoalSaved(false) }} /></div>
-            <button className="primary-button" type="submit" disabled={!fireMeterVisible}><Check size={15} /> {t.saveChanges}</button>
-            {goalSaved && <span className="settings-saved">{t.goalSaved}</span>}
+          <div className="amount-input"><span>€</span><input id="fire-goal-input" type="number" min="1" step="1000" value={goalInput} onChange={(event) => { setGoalInput(event.target.value); setGoalSaved(false) }} /></div>
+
+          <div className="fire-plan-preview">
+            <div><span>{t.firePlanNumber}</span><strong>{formatCurrency(planProjection.target, language)}</strong></div>
+            <div><span>{t.firePlanCovers}</span><strong>{formatCurrency(planProjection.spendingToCover, language)}</strong></div>
+            <div><span>{t.firePlanHorizon}</span><strong>{planProjection.years == null ? t.fireOffTrackShort : `${Math.ceil(planProjection.years)} ${t.yearsToFire}`}</strong></div>
+          </div>
+
+          <div className="fire-plan-actions">
+            <button className="primary-button" type="submit"><Check size={15} /> {t.saveChanges}</button>
+            {goalSaved && <span className="settings-saved">{t.firePlanSaved}</span>}
           </div>
           {goalError && <p className="form-error">{goalError}</p>}
         </form>
+
+        <div className="fire-toggle-row">
+          <div className="visibility-label"><strong>{t.showFireMeter}</strong><span>{t.fireMeterHint}</span></div>
+          <button type="button" className={fireMeterVisible ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={fireMeterVisible} aria-label={t.showFireMeter} onClick={toggleFireMeter}><span /></button>
+        </div>
+
         <div className="fire-preview">
           <span className="fire-preview-label">{t.firePreview}</span>
           <FireMeterCompact position={globalPosition} goal={Number(goalInput) > 0 ? Number(goalInput) : fireGoal} />
@@ -235,50 +264,6 @@ export default function ProfilePage() {
 
       <section className="panel visibility-panel"><div className="panel-heading"><div><h2>{t.investmentSettings}</h2><p>{t.investmentSettingsSubtitle}</p></div><span className="panel-icon"><SlidersHorizontal size={17} /></span></div><div className="visibility-list">{INVESTMENT_TYPES.map(({ key, icon: Icon, tint }) => <div className="visibility-row" key={key}><span className={`portfolio-mini-icon ${tint}`}><Icon size={17} /></span><div className="visibility-label"><strong>{t[key]}</strong><span>{t.visibleSetting}</span></div><button type="button" className={investmentVisibility[key] ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={investmentVisibility[key]} aria-label={`${t.visibleSetting}: ${t[key]}`} onClick={() => toggleInvestmentVisibility(key)}><span /></button></div>)}</div><p className="visibility-note">{t.hiddenAssetsNote}</p></section>
     </div>
-
-    <section className="panel fire-plan-panel">
-      <div className="panel-heading"><div><h2>{t.firePlan}</h2><p>{t.firePlanSubtitle}</p></div><span className="panel-icon"><Flame size={17} /></span></div>
-
-      <div className="fire-plan-strategies">
-        {FIRE_STRATEGIES.map((key) => <button type="button" key={key} className={strategy === key ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={strategy === key} onClick={() => chooseStrategy(key)}>{t.fireStrategies[key]}</button>)}
-      </div>
-      <p className="fire-plan-hint">{t.fireStrategyHints[strategy]}</p>
-
-      <form className="fire-plan-form" onSubmit={submitPlan}>
-        <div className="form-row">
-          <div>
-            <label className="field-label" htmlFor="fire-plan-rate">{t.firePlanRate}</label>
-            <div className="amount-input"><input id="fire-plan-rate" type="number" min="1" max="10" step="0.1" value={rateInput} onChange={(event) => { setRateInput(event.target.value); setPlanSaved(false) }} /><span>%</span></div>
-          </div>
-          <div>
-            <label className="field-label" htmlFor="fire-plan-return">{t.firePlanReturn}</label>
-            <div className="amount-input"><input id="fire-plan-return" type="number" min="0" max="10" step="0.1" value={returnInput} onChange={(event) => { setReturnInput(event.target.value); setPlanSaved(false) }} /><span>%</span></div>
-          </div>
-        </div>
-        <div className="form-row">
-          <div>
-            <label className="field-label" htmlFor="fire-plan-spending">{t.firePlanSpending}</label>
-            <div className="amount-input"><span>€</span><input id="fire-plan-spending" type="number" min="0" step="1000" placeholder={String(Math.round(tracked.expenses))} value={spendingInput} onChange={(event) => { setSpendingInput(event.target.value); setPlanSaved(false) }} /></div>
-          </div>
-          <div>
-            <label className="field-label" htmlFor="fire-plan-income">{t.firePlanIncome}</label>
-            <div className="amount-input"><span>€</span><input id="fire-plan-income" type="number" min="0" step="1000" placeholder="0" value={incomeInput} onChange={(event) => { setIncomeInput(event.target.value); setPlanSaved(false) }} /></div>
-          </div>
-        </div>
-        <p className="fire-plan-hint">{t.firePlanSpendingHint}</p>
-
-        <div className="fire-plan-preview">
-          <div><span>{t.firePlanNumber}</span><strong>{formatCurrency(planProjection.target, language)}</strong></div>
-          <div><span>{t.firePlanCovers}</span><strong>{formatCurrency(planProjection.spendingToCover, language)}</strong></div>
-          <div><span>{t.firePlanHorizon}</span><strong>{planProjection.years == null ? t.fireOffTrackShort : `${Math.ceil(planProjection.years)} ${t.yearsToFire}`}</strong></div>
-        </div>
-
-        <div className="fire-plan-actions">
-          <button className="primary-button" type="submit"><Check size={15} /> {t.saveChanges}</button>
-          {planSaved && <span className="settings-saved">{t.firePlanSaved}</span>}
-        </div>
-      </form>
-    </section>
 
     <section className="panel visibility-panel">
       <div className="panel-heading"><div><h2>{t.manageCategories}</h2><p>{t.manageCategoriesSubtitle}</p></div><span className="panel-icon"><Tag size={17} /></span></div>

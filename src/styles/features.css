@@ -214,7 +214,7 @@
 .fire-verdict { margin: 14px 0 0; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; line-height: 1.5; }
 .fire-verdict.verdict-ok { color: #3f7351; background: #edf5ef; }
 .fire-verdict.verdict-warn { color: #a2662f; background: #fbf0e4; }
-.fire-plan-panel { margin-top: 15px; padding: 18px 20px 16px; }
+.fire-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f0f2ef; }
 .fire-plan-strategies { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .fire-plan-hint { margin: 10px 0 16px; color: #8a958d; font-size: 13px; line-height: 1.5; }
 .fire-plan-preview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 6px 0 0; padding: 14px 16px; border-radius: 12px; background: #f7faf6; }
