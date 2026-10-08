@@ -1,86 +1,159 @@
 # Firepath
 
-A React app for tracking monthly finances and investments while working towards a personal FIRE goal.
+A personal finance tracker for monthly income, expenses and investments, with a
+FIRE tab that projects when you reach financial independence using the 4% rule.
 
-## Run locally
+Accounts are real and per-user. A single Cloudflare Worker serves the React app
+and the API, and each account's data lives in its own rows in a Cloudflare D1
+database. The app is bilingual (English and European Portuguese) and works in
+euros.
+
+## Features
+
+- **Transactions** — income and expenses with a category, platform, note and a
+  full timestamp, in a filterable and searchable history.
+- **Recurring transactions** — monthly rules for salary, rent and bills that
+  generate their own occurrences once their day comes around.
+- **Investments** — ETFs, crypto, P2P lending, bonds and savings accounts, each
+  with its own screen, cost basis and value history. Any type can be hidden
+  without deleting its data.
+- **Global position** — tracked cash plus every asset, charted over 3, 6, 12,
+  24 months or all recorded history.
+- **Statistics** — annual cash flow, spending by category and investment
+  allocation.
+- **FIRE tab** — projects the pot you need (25× your yearly spending), when you
+  reach the goal you set, and how your target compares with the number your
+  actual spending implies.
+- **Onboarding** — a five-step first run that seeds your categories, platforms,
+  investment types and a first FIRE goal.
+- **Profile** — display name, avatar, language, FIRE goal, per-type visibility
+  and account deletion.
+
+## Stack
+
+- React 19 with the React Compiler, built by Vite.
+- A Hono Worker on Cloudflare serving the built SPA and the `/api/*` routes.
+- Cloudflare D1 for storage.
+- Better Auth for email and password accounts.
+- Vitest for the unit tests.
+
+## Running locally
+
+Requires Node 22 (`nvm use`) and a Cloudflare account for `wrangler`.
 
 ```sh
 npm install
-npm run dev
 ```
+
+Create a `.dev.vars` file in the project root (it is gitignored):
+
+```sh
+BETTER_AUTH_SECRET=any-long-random-string
+
+# Optional. Without it, password-reset links are written to the Worker log
+# instead of being emailed.
+RESEND_API_KEY=
+```
+
+Apply the migrations to the local D1, then run both servers:
+
+```sh
+npm run db:migrate:local
+
+npm run dev:worker            # the API, on http://127.0.0.1:8787
+npm run dev -- --port 5199    # the app, on http://127.0.0.1:5199
+```
+
+Open <http://127.0.0.1:5199>. Vite proxies `/api` to the Worker, so the two are
+same-origin in development exactly as they are in production. Port 5199 is the
+one listed in `TRUSTED_ORIGINS`, so auth rejects the Vite default of 5173.
+
+Sign in to the shared demo account, or create your own. New accounts start empty
+and walk through onboarding; the demo account is filled with a 36-month starter
+scenario.
+
+| Email | Password |
+| --- | --- |
+| `demo@email.com` | `1234` |
 
 ## Project structure
 
 ```
 src/
-  main.jsx                 app entry — mounts <App/> inside an error boundary
-  App.jsx                  <App/> wraps <AppShell/> in the providers
-  app/AppProviders.jsx     composes the language, settings and finance providers
+  main.jsx, App.jsx          entry point, app shell and page routing
+  app/AppProviders.jsx       composes the provider chain (order matters)
   components/
-    ErrorBoundary.jsx      keeps a crash from blanking the page
-    auth/                  LoginPage (non-functional sign-in gate)
-    ui/                    Avatar, IconBadge, PlatformSelector
-    layout-facing pages/   overview, position, transactions, statistics, profile
-    transactions/          TransactionModal, AllTransactionsPage
-    investments/           ETF, crypto, P2P, bond and savings screens + modals
-    charts/                cash-flow, spending and evolution charts
-    fire/                  FireMeterCompact, FireGoalModal
-  context/
-    SettingsProvider.jsx   profile, FIRE goal, visibility, platforms, categories
-    FinanceProvider.jsx    transactions + assets, and every mutation
-  hooks/usePortfolioSummary.js  derived dashboard totals
-  i18n/
-    messages.jsx           EN / PT-PT copy
-    LanguageProvider.jsx   active language + useI18n()
-  data/categories.js       built-in categories with icons and colours
-  lib/
-    constants.js           storage keys, defaults, asset types
-    dates.js               month keys, timestamps, date formatting
-    format.js              currency, percent and number formatting
-    image.js               avatar initials and image downscaling
-    portfolio.js           cost basis, market value, asset classification
-    simulation.js          the 36-month starter scenario
-    storage.js             localStorage load/save and first-run seeding
-    timeline.js            cash + per-asset history reconstruction
-  styles/
-    index.css              imports the others, in cascade order
-    base.css               design tokens, reset, error boundary
-    layout.css             app shell, sidebar, top bar, page frame
-    components.css         cards, panels, tables, modals, forms
-    features.css           overview, position, investments, profile
-    responsive.css         every media query, loaded last
+    auth/                    sign in, sign up, password reset
+    onboarding/              the five-step first-run setup
+    overview, position, statistics, transactions, recurring,
+    investments, fire, charts, profile, ui
+                             the screens, modals, charts and shared bits
+  context/                   auth, sync, data, settings and finance providers
+  hooks/                     usePortfolioSummary
+  i18n/                      EN and PT copy, plus the language provider
+  lib/                       pure helpers: money, dates, format, portfolio,
+                             fire, recurring, simulation, timeline, api
+  data/                      built-in categories and investment types
+  styles/                    base, layout, components, features, auth,
+                             responsive (loaded last)
+worker/
+  index.js                   the Hono app
+  auth.js                    Better Auth configuration
+  routes.js, tables.js       the API routes and the D1 column mappings
+  email.js                   password-reset email via Resend
+  db/auth-schema.sql         generated Better Auth tables
+migrations/                  numbered, append-only D1 migrations
+scripts/                     schema generation and password-hash helpers
 ```
 
-Built on React 19 with `@vitejs/plugin-react` and the **React Compiler** enabled (see `vite.config.js`) for automatic memoization. Imports use explicit file extensions.
-
-## Deploy to Cloudflare Pages
-
-The app is a static single-page build, so Cloudflare can host it directly. Navigation is handled in-app rather than by URL routes, so no SPA fallback redirect is needed. `public/_headers` sets asset caching and basic security headers. All data is stored in the visitor's browser, so no backend or database is required.
-
-### Option A — Git integration (continuous deployment)
-
-1. Push this repository to GitHub.
-2. In the Cloudflare dashboard open **Workers & Pages → Create → Pages → Connect to Git**.
-3. Authorize GitHub and select the repository.
-4. Use these build settings:
-   - **Production branch:** `main`
-   - **Build command:** `npm run build`
-   - **Build output directory:** `dist`
-5. Save and deploy. Every push to `main` redeploys automatically.
-
-### Option B — Direct upload with Wrangler
+## Testing
 
 ```sh
-npx wrangler login          # sign in to (or create) your Cloudflare account
-npm run deploy              # builds dist/ and uploads it to the "firepath" project
+npm test        # Vitest, once
+npm run build   # production build
 ```
 
-The first deploy creates the Pages project if it does not exist. Afterwards the site is available at `https://<project-name>.pages.dev`.
+The unit tests cover the pure helpers in `src/lib` and `src/data`. There is no
+component-test setup — the tests run in a plain Node environment.
 
-Transactions and each account/investment type are stored separately in this browser's local storage and displayed in euros. Each transaction stores a full date and time (shown as date plus hours and minutes in tables), includes an optional platform field, and can use custom platforms and categories. The starter scenario simulates 36 months for someone earning €2,000 a month: a €750 quarterly bonus (March, June, September, December), seasonal utility bills, everyday spending and a summer holiday, monthly ETF (€150) and P2P (€50) contributions, quarterly bond (€200) and crypto (€150 BTC, bought when the bonus lands) purchases, and an emergency fund built towards six months of regular expenses. A one-time data version replaces earlier demo records with this scenario; later edits persist normally. New portfolio purchases create monthly expenses in the Investment category, and savings contributions are tracked as Savings transfers. The saving rate counts cash saved plus invested capital. The FIRE meter starts with an editable €300,000 goal. The Global Position section charts cash and each asset over 3, 6, 12, 24, or all recorded months. Record monthly investment values to follow their evolution; editing a holding also updates the current month's snapshot. Investment prices are illustrative, manually entered values—not live market quotes.
+## Deploying
 
-The app opens on a non-functional sign-in screen: any username and password are accepted, and **Log in** reveals the overview. A **Log out** button in the top bar returns to it. No credentials are checked or stored, and the session is not persisted, so a reload returns to the sign-in screen.
+The Worker and the SPA deploy together. Create the D1 database, point the
+`d1_databases` binding in `wrangler.jsonc` at it, then set the secrets:
 
-The Profile & settings page stores a display name, account creation date, an optional profile photo, per-type investment visibility, and the FIRE meter settings (goal amount and whether the meter appears in the sidebar). Clicking the sidebar FIRE meter plays a short fire animation rather than opening an editor. Uploaded photos are resized in the browser and kept in local storage; they are never sent to a server. Hiding an investment type removes it from navigation, the overview and the global position while keeping its data.
+```sh
+npx wrangler secret put BETTER_AUTH_SECRET
+npx wrangler secret put RESEND_API_KEY    # optional
+```
 
-The overview summarizes all investment types and estimates tracked cash plus portfolio value from recorded income, non-investment expenses, and investment cost basis. It excludes opening balances and debts, so it is not a complete net-worth figure unless you have logged your full history.
+Apply the migrations to the remote database and deploy:
+
+```sh
+npm run db:migrate:remote
+git push origin main
+```
+
+Pushing to `main` **is** the deploy — the Cloudflare Git integration runs the
+build and publishes the Worker. `npm run deploy` does the same thing from your
+own machine if you prefer.
+
+Apply migrations **before** deploying. The Worker's SQL names the columns the
+migrations add, so a Worker running against an unmigrated database returns 500s
+on the affected routes. The reverse order is safe, because an additive migration
+is harmless to the Worker already running.
+
+## Data and privacy
+
+Each account's transactions, assets and settings are stored as its own rows in
+D1 and are only readable with that account's session. Uploaded profile photos
+are resized in the browser before being stored. Passwords are hashed by Better
+Auth and are never visible to the app.
+
+Password reset sends mail through Resend, so `MAIL_FROM` in `wrangler.jsonc`
+must be an address on a domain verified with Resend. Until then only the Resend
+account's own address can receive mail.
+
+## For coding agents
+
+See [AGENTS.md](./AGENTS.md) for the commands, architecture and constraints that
+matter when working in this repository.
