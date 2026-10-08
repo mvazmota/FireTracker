@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { monthKey } from './dates.js'
-import { DEFAULT_FIRE_PLAN, WITHDRAWAL_RATE, annualAverages, estimateProjection, fireCalculator, fireProjection, fireTarget, normalizePlan, planForStrategy, projectSeries, yearsToTarget } from './fire.js'
+import { DEFAULT_FIRE_PLAN, WITHDRAWAL_RATE, annualAverages, estimateProjection, fireCalculator, fireProjection, fireTarget, normalizePlan, planForStrategy, projectionRange, projectSeries, yearsToTarget } from './fire.js'
 
 const TODAY = new Date(2026, 5, 15)
 
@@ -322,5 +322,73 @@ describe('fireProjection with a plan', () => {
     const projection = fireProjection({ transactions: fullYear(), currentPosition: 0, today: TODAY, plan: { postFireIncome: 1000000 } })
     expect(projection.spendingToCover).toBe(0)
     expect(projection.target).toBe(0)
+  })
+})
+
+describe('projectionRange', () => {
+  const base = { current: 0, annualSavings: 12000, target: 300000, years: 40 }
+
+  it('is reproducible for a given seed', () => {
+    const first = projectionRange({ ...base, seed: 7 })
+    const second = projectionRange({ ...base, seed: 7 })
+    expect(first.p50).toBe(second.p50)
+    expect(first.successRate).toBe(second.successRate)
+  })
+
+  it('explores different futures for different seeds', () => {
+    const first = projectionRange({ ...base, seed: 1 })
+    const second = projectionRange({ ...base, seed: 2 })
+    expect(first.p50 === second.p50 && first.successRate === second.successRate).toBe(false)
+  })
+
+  it('orders the percentiles', () => {
+    const range = projectionRange(base)
+    expect(range.p10).toBeLessThanOrEqual(range.p50)
+    expect(range.p50).toBeLessThanOrEqual(range.p90)
+  })
+
+  it('collapses to the deterministic horizon when there is no volatility', () => {
+    const exact = yearsToTarget({ current: 0, annualSavings: 12000, target: 300000 })
+    const range = projectionRange({ ...base, volatility: 0 })
+    expect(range.p10).toBe(Math.ceil(exact))
+    expect(range.p50).toBe(Math.ceil(exact))
+    expect(range.p90).toBe(Math.ceil(exact))
+    expect(range.successRate).toBe(1)
+  })
+
+  it('is more likely to succeed the more it saves', () => {
+    const lean = projectionRange({ ...base, years: 20, annualSavings: 8000 })
+    const heavy = projectionRange({ ...base, years: 20, annualSavings: 20000 })
+    expect(heavy.successRate).toBeGreaterThan(lean.successRate)
+  })
+
+  it('reaches a trivial target on every path', () => {
+    const range = projectionRange({ current: 0, annualSavings: 12000, target: 1000, years: 10 })
+    expect(range.successRate).toBe(1)
+    expect(range.p90).toBeLessThanOrEqual(1)
+  })
+
+  it('bands the pot year by year', () => {
+    const range = projectionRange(base)
+    expect(range.band).toHaveLength(base.years + 1)
+    const middle = range.band[20]
+    expect(middle.p10).toBeLessThanOrEqual(middle.p50)
+    expect(middle.p50).toBeLessThanOrEqual(middle.p90)
+  })
+
+  it('asks the odds against a deadline without shortening the paths', () => {
+    const early = projectionRange({ ...base, years: 40, within: 5 })
+    const patient = projectionRange({ ...base, years: 40, within: 40 })
+    expect(early.years).toBe(40)
+    expect(early.within).toBe(5)
+    expect(early.band).toHaveLength(41)
+    expect(early.successRate).toBeLessThan(patient.successRate)
+  })
+
+  it('reports nothing to simulate without a target', () => {
+    const range = projectionRange({ current: 0, annualSavings: 1000, target: 0 })
+    expect(range.successRate).toBe(0)
+    expect(range.p50).toBeNull()
+    expect(range.band).toBeUndefined()
   })
 })

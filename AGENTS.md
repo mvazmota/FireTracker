@@ -63,6 +63,12 @@ In development run the two servers together, and run Vite on **port 5199**
   computed, so the FIRE tab and the sidebar meter cannot disagree about it. The
   `user_settings.fireGoal` column still exists in the database but nothing reads
   or writes it — do not reintroduce it.
+- **The FIRE horizon is a simulation, not a single date.** `projectionRange` runs
+  the plan many times with the returns shuffled and reports the spread and the
+  odds of making the plan's own date. The generator is seeded, so a given plan
+  always produces the same range — do not swap in `Math.random`, or the numbers
+  will jitter on every render. `projectSeries` is the deterministic expected case
+  and both are shown on purpose: the line is the plan, the band is reality.
 - **FIRE maths** (`src/lib/fire.js`): the annual average divides by the number of
   months that **contain transactions**, not months elapsed — elapsed months
   understate spending and flatter the FIRE date. Transfers into investments or

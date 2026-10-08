@@ -5,7 +5,7 @@ import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
 import { usePortfolioSummary } from '../../hooks/usePortfolioSummary.js'
 import { useFireProjection } from '../../hooks/useFireProjection.js'
-import { projectSeries } from '../../lib/fire.js'
+import { projectSeries, projectionRange } from '../../lib/fire.js'
 import { formatCurrency } from '../../lib/format.js'
 
 /** Where the user's FIRE plan puts financial independence, and when. */
@@ -22,18 +22,26 @@ export default function FirePage() {
   const multiple = projection.withdrawalRate > 0 ? Math.round(1 / projection.withdrawalRate) : 0
   const hasData = goalValue > 0
 
-  const horizon = projection.years == null ? 30 : Math.min(50, Math.ceil(projection.years) + 2)
+  // Room for the spread: the plan's date plus half again, so the slow half of
+  // the simulated futures is visible rather than clipped at the target date.
+  const horizon = projection.years == null ? 30 : Math.min(50, Math.max(10, Math.ceil(projection.years * 1.5)))
   const series = useMemo(
     () => projectSeries({ current: projection.current, annualSavings: projection.savings, years: horizon }),
     [projection.current, projection.savings, horizon],
   )
 
+  // The same plan, run many times with the returns shuffled. The seed is fixed
+  // so the range does not jitter on every render. The band runs to the end of
+  // the chart, but the odds are asked against the date the plan predicts.
+  const range = useMemo(
+    () => projectionRange({ current: projection.current, annualSavings: projection.savings, target: goalValue, realReturn: projection.realReturn, years: horizon, within: projection.years == null ? null : Math.ceil(projection.years) }),
+    [projection.current, projection.savings, goalValue, projection.realReturn, horizon, projection.years],
+  )
+
   const progress = goalValue > 0 ? Math.min(100, (projection.current / goalValue) * 100) : 0
   const savingsRate = projection.income > 0 ? (projection.savings / projection.income) * 100 : 0
   const years = projection.years == null ? null : Math.ceil(projection.years)
-  const targetDateLabel = projection.targetDate
-    ? new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(projection.targetDate)
-    : null
+  const spread = range.p10 != null && range.p90 != null && range.p10 !== range.p90
 
   const stats = [
     { key: 'position', icon: <Wallet size={16} />, tint: 'savings-tint', label: t.currentPosition, value: formatCurrency(projection.current, language), note: `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(progress)}% ${t.ofGoal}` },
@@ -60,7 +68,14 @@ export default function FirePage() {
               ? <strong className="fire-hero-number">{t.fireOffTrackShort}</strong>
               : <strong className="fire-hero-number">{years}<span>{years === 1 ? t.yearToFire : t.yearsToFire}</span></strong>}
           <p className="fire-hero-note">
-            {projection.reached ? t.fireReachedNote : years == null ? t.fireOffTrackNote : `${t.fireAround} ${targetDateLabel}`}
+            {projection.reached
+              ? t.fireReachedNote
+              : years == null
+                ? t.fireOffTrackNote
+                : <>
+                  <span>{t.fireRangeOdds.replace('{rate}', Math.round(range.successRate * 100)).replace('{years}', range.within)}</span>
+                  {spread && <> <span className="fire-hero-odds">{t.fireRange.replace('{low}', range.p10).replace('{high}', range.p90)}</span></>}
+                </>}
           </p>
         </div>
         <div className="fire-hero-meter">
@@ -100,7 +115,7 @@ export default function FirePage() {
 
       <section className="panel fire-chart-panel">
         <div className="panel-heading"><div><h2>{t.fireProjection}</h2><p>{t.fireProjectionSubtitle}</p></div><span className="panel-icon"><CalendarClock size={17} /></span></div>
-        <FireProjectionChart series={series} target={goalValue} startYear={today.getFullYear()} language={language} />
+        <FireProjectionChart series={series} band={range.band} target={goalValue} startYear={today.getFullYear()} language={language} />
       </section>
 
       <section className="panel fire-assumptions">

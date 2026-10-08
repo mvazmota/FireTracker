@@ -152,6 +152,117 @@ export function projectSeries({ current, annualSavings, realReturn = REAL_RETURN
   return points
 }
 
+/**
+ * The year-to-year spread of a balanced portfolio's real return. The 4% rule is
+ * built on roughly this much volatility, which is exactly what a single-number
+ * projection hides.
+ */
+export const RETURN_VOLATILITY = 0.15
+
+/** A small seeded generator (mulberry32), so a projection is reproducible. */
+function mulberry32(seed) {
+  let a = seed >>> 0
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0
+    let t = a
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+/** One standard normal sample, by Box–Muller. */
+function gaussian(random) {
+  let u = 0
+  while (u === 0) u = random()
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * random())
+}
+
+/** The value at a percentile of an unsorted list. */
+function percentile(values, share) {
+  if (!values.length) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const index = Math.min(sorted.length - 1, Math.max(0, Math.round((sorted.length - 1) * share)))
+  return sorted[index]
+}
+
+/**
+ * Simulates many possible futures instead of assuming one average return.
+ *
+ * Returns the spread of the horizon rather than a single date, because the
+ * order returns arrive in matters as much as their average. `p10`/`p90` bracket
+ * the middle 80% of outcomes, and `successRate` is the share of runs that reach
+ * the target within the simulated window.
+ *
+ * `within` narrows the deadline for those two without shortening the paths, so
+ * the band can still run to the end of the chart while the odds answer "by the
+ * date my plan predicts?".
+ */
+export function projectionRange({
+  current = 0,
+  annualSavings = 0,
+  target = 0,
+  realReturn = REAL_RETURN,
+  volatility = RETURN_VOLATILITY,
+  years = 40,
+  within = null,
+  samples = 800,
+  seed = 1,
+} = {}) {
+  if (!(target > 0) || !(years > 0) || !(samples > 0)) {
+    return { samples: 0, years, within: years, successRate: 0, p10: null, p50: null, p90: null, fastest: null, slowest: null }
+  }
+
+  const random = mulberry32(seed)
+  const paths = []
+  const reachedAt = []
+
+  for (let sample = 0; sample < samples; sample += 1) {
+    let value = current
+    let reached = value >= target ? 0 : null
+    const path = [value]
+
+    for (let year = 1; year <= years; year += 1) {
+      // The return is drawn fresh each year; the order of the draws is the point.
+      value = value * (1 + realReturn + volatility * gaussian(random)) + annualSavings
+      if (value < 0) value = 0
+      path.push(value)
+      if (reached == null && value >= target) reached = year
+    }
+
+    paths.push(path)
+    reachedAt.push(reached)
+  }
+
+  const deadline = Number.isFinite(within) && within > 0 ? Math.min(within, years) : years
+  // The spread covers every run that gets there inside the simulated window;
+  // the odds only count the ones that make the deadline.
+  const reached = reachedAt.filter((year) => year != null)
+  const inTime = reached.filter((year) => year <= deadline)
+  const band = []
+  for (let year = 0; year <= years; year += 1) {
+    band.push({
+      year,
+      p10: roundMoney(percentile(paths.map((path) => path[year]), 0.1)),
+      p50: roundMoney(percentile(paths.map((path) => path[year]), 0.5)),
+      p90: roundMoney(percentile(paths.map((path) => path[year]), 0.9)),
+    })
+  }
+
+  return {
+    samples,
+    years,
+    within: deadline,
+    successRate: inTime.length / samples,
+    fastest: reached.length ? Math.min(...reached) : null,
+    slowest: reached.length ? Math.max(...reached) : null,
+    p10: percentile(reached, 0.1),
+    p50: percentile(reached, 0.5),
+    p90: percentile(reached, 0.9),
+    band,
+  }
+}
+
 /** Shared tail: turns a set of annual figures and a plan into a projection. */
 function buildProjection({ income, expenses, savings, saved = 0, months, currentPosition, plan, today, estimated = false }) {
   const { strategy, withdrawalRate, retirementSpending, postFireIncome, realReturn } = normalizePlan(plan)

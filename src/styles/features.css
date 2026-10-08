@@ -201,6 +201,7 @@
 .fire-hero-number { display: flex; align-items: baseline; gap: 10px; color: #2d3c33; font: 700 40px 'Manrope', sans-serif; letter-spacing: -1.4px; }
 .fire-hero-number span { color: #6f7d73; font: 600 14px 'Manrope', sans-serif; letter-spacing: 0; }
 .fire-hero-note { margin: 10px 0 0; max-width: 48ch; color: #89938d; font-size: 13px; line-height: 1.55; }
+.fire-hero-odds { color: #a3aca6; }
 .fire-progress-track { height: 12px; overflow: hidden; border-radius: 8px; background: #eef1ec; }
 .fire-progress-track > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #8fc39a, #4f8a63); transition: width .4s ease; }
 .fire-progress-legend { display: flex; justify-content: space-between; margin-top: 9px; color: #8a958d; font-size: 12px; font-weight: 600; }
@@ -223,6 +224,7 @@
 .fire-chart-scroll { margin-top: 12px; overflow-x: auto; }
 .fire-chart { display: block; width: 100%; min-width: 520px; height: 240px; }
 .fire-chart-area { fill: url(#fireArea); }
+.fire-chart-band { fill: #7fb08a; opacity: 0.16; }
 .fire-chart-line { fill: none; stroke: #4f8a63; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .fire-target-line { stroke: #c9a06a; stroke-width: 1.5; stroke-dasharray: 5 5; }
 .fire-target-label { fill: #b08a5e; font-size: 12px; font-weight: 600; }

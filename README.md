@@ -25,8 +25,8 @@ euros.
   custom) and tune the withdrawal rate, retirement spending, post-FIRE income
   and assumed real return. Each strategy is a starting point; every value stays
   editable, and the plan is the single source of the FIRE number.
-- **FIRE tab** — the pot your plan works out to, when you get there, and what it
-  covers.
+- **FIRE tab** — the pot your plan works out to, when you get there, what it
+  covers, and how much the answer depends on the market.
 - **Onboarding** — a five-step first run that opens with a FIRE calculator and
   sets your starting number, then seeds your categories, platforms and
   investment types.

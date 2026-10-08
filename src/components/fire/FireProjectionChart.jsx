@@ -5,9 +5,9 @@ const HEIGHT = 240
 const PAD = { top: 18, right: 18, bottom: 30, left: 18 }
 
 /** Projected net worth against the FIRE target, year by year. */
-export default function FireProjectionChart({ series, target, startYear, language }) {
+export default function FireProjectionChart({ series, band, target, startYear, language }) {
   const lastYear = series.at(-1)?.year ?? 0
-  const peak = Math.max(target, ...series.map((point) => point.value), 1)
+  const peak = Math.max(target, ...series.map((point) => point.value), ...(band || []).map((point) => point.p90), 1)
   const maxValue = peak * 1.1
 
   const x = (year) => PAD.left + (lastYear ? (year / lastYear) * (WIDTH - PAD.left - PAD.right) : 0)
@@ -16,6 +16,12 @@ export default function FireProjectionChart({ series, target, startYear, languag
   const line = series.map((point, index) => `${index ? 'L' : 'M'}${x(point.year).toFixed(1)} ${y(point.value).toFixed(1)}`).join(' ')
   const area = `${line} L${x(lastYear).toFixed(1)} ${HEIGHT - PAD.bottom} L${x(0).toFixed(1)} ${HEIGHT - PAD.bottom} Z`
   const targetY = y(target)
+
+  // The middle 80% of simulated futures: out along the good case, back along the
+  // bad one, and closed. Drawn under the line so the plan stays the focus.
+  const bandPath = band && band.length > 1
+    ? `${band.map((point, index) => `${index ? 'L' : 'M'}${x(point.year).toFixed(1)} ${y(point.p90).toFixed(1)}`).join(' ')} ${[...band].reverse().map((point) => `L${x(point.year).toFixed(1)} ${y(point.p10).toFixed(1)}`).join(' ')} Z`
+    : null
 
   // Where the projection overtakes the target, if it does.
   const crossing = series.find((point) => point.value >= target)
@@ -37,6 +43,7 @@ export default function FireProjectionChart({ series, target, startYear, languag
       <line className="fire-target-line" x1={PAD.left} y1={targetY} x2={WIDTH - PAD.right} y2={targetY} />
       <text className="fire-target-label" x={PAD.left} y={targetY - 8}>{formatCurrency(target, language)}</text>
 
+      <path className="fire-chart-band" d={bandPath} />
       <path className="fire-chart-area" d={area} />
       <path className="fire-chart-line" d={line} />
 
