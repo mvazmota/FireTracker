@@ -214,12 +214,6 @@
 .fire-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f0f2ef; }
 .fire-plan-strategies { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .fire-plan-hint { margin: 10px 0 16px; color: #8a958d; font-size: 13px; line-height: 1.5; }
-.fire-plan-preview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 6px 0 0; padding: 14px 16px; border-radius: 12px; background: #f7faf6; }
-.fire-plan-preview div { display: flex; flex-direction: column; gap: 3px; }
-.fire-plan-preview span { color: #8a958d; font-size: 12px; font-weight: 600; }
-.fire-plan-preview strong { color: #2d3c33; font: 700 17px 'Manrope', sans-serif; letter-spacing: -0.4px; }
-.fire-plan-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
-.fire-plan-tag { margin: 10px 0 0; color: #7d8982; font-size: 12px; font-weight: 600; }
 .fire-chart-panel { margin-top: 15px; padding: 18px 20px 14px; }
 .fire-chart-scroll { margin-top: 12px; overflow-x: auto; }
 .fire-chart { display: block; width: 100%; min-width: 520px; height: 240px; }

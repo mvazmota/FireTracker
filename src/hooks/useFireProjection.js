@@ -11,18 +11,21 @@ import { estimateProjection, fireProjection } from '../lib/fire.js'
  * answers until then. The caller supplies the position, because the app shell
  * tracks the month the user has selected while the FIRE tab always means today.
  */
-export function useFireProjection(currentPosition) {
+export function useFireProjection(currentPosition, plan) {
   const { transactions } = useFinance()
   const { fireEstimate, firePlan } = useSettings()
   const today = useMemo(() => new Date(), [])
+  // A draft plan being edited wins over the saved one, so the FIRE tab can show
+  // the effect of a change before it is written.
+  const effectivePlan = plan ?? firePlan
 
   const fromData = useMemo(
-    () => fireProjection({ transactions, currentPosition, plan: firePlan, today }),
-    [transactions, currentPosition, firePlan, today],
+    () => fireProjection({ transactions, currentPosition, plan: effectivePlan, today }),
+    [transactions, currentPosition, effectivePlan, today],
   )
   const fromEstimate = useMemo(
-    () => estimateProjection({ estimate: fireEstimate, currentPosition, plan: firePlan, today }),
-    [fireEstimate, currentPosition, firePlan, today],
+    () => estimateProjection({ estimate: fireEstimate, currentPosition, plan: effectivePlan, today }),
+    [fireEstimate, currentPosition, effectivePlan, today],
   )
 
   return fromData.target > 0 ? fromData : fromEstimate

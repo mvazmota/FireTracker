@@ -21,12 +21,10 @@ euros.
   24 months or all recorded history.
 - **Statistics** — annual cash flow, spending by category and investment
   allocation.
-- **FIRE plan** — pick a strategy (traditional, lean, fat, semi-retired or
-  custom) and tune the withdrawal rate, retirement spending, post-FIRE income
-  and assumed real return. Each strategy is a starting point; every value stays
-  editable, and the plan is the single source of the FIRE number.
-- **FIRE tab** — the pot your plan works out to, when you get there, what it
-  covers, and how much the answer depends on the market.
+- **FIRE tab** — your plan and its projections in one place. Pick a strategy
+  (traditional, lean, fat, semi-retired or custom) and tune the withdrawal rate,
+  retirement spending, post-FIRE income and assumed real return; the number,
+  horizon and chart follow as you type.
 - **Onboarding** — a five-step first run that opens with a FIRE calculator and
   sets your starting number, then seeds your categories, platforms and
   investment types.

@@ -1,22 +1,40 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { CalendarClock, Flame, PiggyBank, SlidersHorizontal, TrendingUp, Wallet } from 'lucide-react'
 import FireProjectionChart from './FireProjectionChart.jsx'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
 import { usePortfolioSummary } from '../../hooks/usePortfolioSummary.js'
 import { useFireProjection } from '../../hooks/useFireProjection.js'
-import { projectSeries, projectionRange } from '../../lib/fire.js'
+import { FIRE_STRATEGIES, normalizePlan, planForStrategy, projectSeries, projectionRange } from '../../lib/fire.js'
 import { formatCurrency } from '../../lib/format.js'
 
-/** Where the user's FIRE plan puts financial independence, and when. */
+/** The FIRE plan, the projections it produces, and the two together. */
 export default function FirePage() {
   const { t, locale, language } = useI18n()
-  const { fireEstimate } = useSettings()
+  const { fireEstimate, firePlan, saveFirePlan } = useSettings()
   const today = useMemo(() => new Date(), [])
   const { globalPosition } = usePortfolioSummary(today)
-  const projection = useFireProjection(globalPosition)
 
-  // The plan owns the goal, so there is nothing to compare it against.
+  // The plan is edited on this page, so it lives here as a draft: everything
+  // below follows each keystroke, and the draft is written when a field is left
+  // rather than on a Save button.
+  const stored = useMemo(() => normalizePlan(firePlan), [firePlan])
+  const [strategy, setStrategy] = useState(stored.strategy)
+  const [rateInput, setRateInput] = useState(String(Math.round(stored.withdrawalRate * 1000) / 10))
+  const [returnInput, setReturnInput] = useState(String(Math.round(stored.realReturn * 1000) / 10))
+  const [spendingInput, setSpendingInput] = useState(stored.retirementSpending == null ? '' : String(stored.retirementSpending))
+  const [incomeInput, setIncomeInput] = useState(stored.postFireIncome > 0 ? String(stored.postFireIncome) : '')
+
+  const draftPlan = useMemo(() => normalizePlan({
+    strategy,
+    withdrawalRate: Number(rateInput) / 100,
+    realReturn: Number(returnInput) / 100,
+    retirementSpending: spendingInput.trim() === '' ? null : Number(spendingInput),
+    postFireIncome: Number(incomeInput) || 0,
+  }), [strategy, rateInput, returnInput, spendingInput, incomeInput])
+
+  const projection = useFireProjection(globalPosition, draftPlan)
+
   const goalValue = projection.target
   const ratePercent = Number((projection.withdrawalRate * 100).toFixed(2))
   const multiple = projection.withdrawalRate > 0 ? Math.round(1 / projection.withdrawalRate) : 0
@@ -50,8 +68,71 @@ export default function FirePage() {
     { key: 'monthly', icon: <Flame size={16} />, tint: 'fire-tint', label: t.fireMonthlySavings, value: formatCurrency(projection.savings / 12, language), note: t.fireMonthlySavingsNote },
   ]
 
+  /** Writes what is on screen, so leaving a field keeps the change. */
+  function commit() {
+    saveFirePlan(draftPlan)
+  }
+
+  /** A strategy fills the fields in; every value stays editable afterwards. */
+  function chooseStrategy(key) {
+    if (key === 'custom') {
+      setStrategy('custom')
+      saveFirePlan({ ...draftPlan, strategy: 'custom' })
+      return
+    }
+    const preset = normalizePlan(planForStrategy(key, { annualSpending: projection.expenses, annualIncome: projection.income }))
+    setStrategy(preset.strategy)
+    setRateInput(String(Math.round(preset.withdrawalRate * 1000) / 10))
+    setReturnInput(String(Math.round(preset.realReturn * 1000) / 10))
+    setSpendingInput(preset.retirementSpending == null ? '' : String(preset.retirementSpending))
+    setIncomeInput(preset.postFireIncome > 0 ? String(preset.postFireIncome) : '')
+    saveFirePlan(preset)
+  }
+
   return <div className="page-content">
     <section className="welcome-row"><div><p className="eyebrow">{t.fireEyebrow}</p><h1>{t.fireHeading}<span>.</span></h1><p className="welcome-sub">{t.fireSubtitle}</p></div></section>
+
+    <section className="panel fire-plan-summary">
+      <div className="panel-heading"><div><h2>{t.firePlanSummary}</h2><p>{t.firePlanSummarySubtitle}</p></div><span className="panel-icon"><SlidersHorizontal size={17} /></span></div>
+
+      <div className="fire-plan-strategies">
+        {FIRE_STRATEGIES.map((key) => <button type="button" key={key} className={strategy === key ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={strategy === key} onClick={() => chooseStrategy(key)}>{t.fireStrategies[key]}</button>)}
+      </div>
+      <p className="fire-plan-hint">{t.fireStrategyHints[strategy]}</p>
+
+      <div className="form-row">
+        <div>
+          <label className="field-label" htmlFor="fire-plan-rate">{t.firePlanRate}</label>
+          <div className="amount-input"><input id="fire-plan-rate" type="number" min="1" max="10" step="any" value={rateInput} onChange={(event) => setRateInput(event.target.value)} onBlur={commit} /><span>%</span></div>
+        </div>
+        <div>
+          <label className="field-label" htmlFor="fire-plan-return">{t.firePlanReturn}</label>
+          <div className="amount-input"><input id="fire-plan-return" type="number" min="0" max="10" step="any" value={returnInput} onChange={(event) => setReturnInput(event.target.value)} onBlur={commit} /><span>%</span></div>
+        </div>
+      </div>
+      <div className="form-row">
+        <div>
+          <label className="field-label" htmlFor="fire-plan-spending">{t.firePlanSpending}</label>
+          <div className="amount-input"><span>€</span><input id="fire-plan-spending" type="number" min="0" step="any" placeholder={String(Math.round(projection.expenses))} value={spendingInput} onChange={(event) => setSpendingInput(event.target.value)} onBlur={commit} /></div>
+        </div>
+        <div>
+          <label className="field-label" htmlFor="fire-plan-income">{t.firePlanIncome}</label>
+          <div className="amount-input"><span>€</span><input id="fire-plan-income" type="number" min="0" step="any" placeholder="0" value={incomeInput} onChange={(event) => setIncomeInput(event.target.value)} onBlur={commit} /></div>
+        </div>
+      </div>
+      <p className="fire-plan-hint">{t.firePlanSpendingHint}</p>
+
+      <div className="fire-plan-figure">
+        <span>{t.firePlanNumber}</span>
+        <strong>{formatCurrency(goalValue, language)}</strong>
+        <small>{t.fireNumberNote.replace('{amount}', formatCurrency(projection.spendingToCover, language)).replace('{rate}', ratePercent)}</small>
+      </div>
+      {projection.estimated
+        ? <p className="visibility-note">{t.fireFromEstimate}</p>
+        : fireEstimate?.spending > 0 && projection.months > 0
+          ? <p className="visibility-note">{t.fireEstimateCompare.replace('{estimate}', formatCurrency(fireEstimate.spending, language)).replace('{actual}', formatCurrency(projection.expenses, language))}</p>
+          : null}
+    </section>
 
     {!hasData ? <section className="panel fire-empty">
       <span className="empty-icon"><Flame size={21} /></span>
@@ -87,22 +168,6 @@ export default function FirePage() {
             <span>{formatCurrency(goalValue, language)}</span>
           </div>
         </div>
-      </section>
-
-      <section className="panel fire-plan-summary">
-        <div className="panel-heading"><div><h2>{t.firePlanSummary}</h2><p>{t.firePlanSummarySubtitle}</p></div><span className="panel-icon"><SlidersHorizontal size={17} /></span></div>
-        <p className="fire-plan-tag">{t.firePlanTag.replace('{strategy}', t.fireStrategies[projection.strategy]).replace('{rate}', ratePercent)}</p>
-        <div className="fire-plan-figure">
-          <span>{t.firePlanNumber}</span>
-          <strong>{formatCurrency(goalValue, language)}</strong>
-          <small>{t.fireNumberNote.replace('{amount}', formatCurrency(projection.spendingToCover, language)).replace('{rate}', ratePercent)}</small>
-        </div>
-        <p className="fire-plan-hint">{t.firePlanEditHint}</p>
-        {projection.estimated
-          ? <p className="visibility-note">{t.fireFromEstimate}</p>
-          : fireEstimate?.spending > 0 && projection.months > 0
-            ? <p className="visibility-note">{t.fireEstimateCompare.replace('{estimate}', formatCurrency(fireEstimate.spending, language)).replace('{actual}', formatCurrency(projection.expenses, language))}</p>
-            : null}
       </section>
 
       <section className="summary-grid fire-stats" aria-label={t.fireStatsLabel}>

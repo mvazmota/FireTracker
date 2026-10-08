@@ -63,6 +63,10 @@ In development run the two servers together, and run Vite on **port 5199**
   computed, so the FIRE tab and the sidebar meter cannot disagree about it. The
   `user_settings.fireGoal` column still exists in the database but nothing reads
   or writes it — do not reintroduce it.
+- **The FIRE plan is edited on the FIRE tab**, not in settings. The draft feeds
+  `useFireProjection(currentPosition, plan)` so every figure follows each
+  keystroke, and it is written on blur rather than by a Save button. Profile &
+  settings keeps only the sidebar-meter toggle.
 - **The FIRE horizon is a simulation, not a single date.** `projectionRange` runs
   the plan many times with the returns shuffled and reports the spread and the
   odds of making the plan's own date. The generator is seeded, so a given plan
