@@ -55,12 +55,13 @@ In development run the two servers together, and run Vite on **port 5199**
   **contain transactions**, not months elapsed — elapsed months understate
   spending and flatter the FIRE date. Transfers into investments or savings
   count as saving, not spending, because the 4% rule only covers living costs.
-- **The FIRE projection starts from `projection.current`**, never from the
-  tracked position directly. While there is no history the projection is built
-  from the onboarding answers, and `current` is then the starting capital the
-  user stated. Once transactions exist it is the tracked global position. Any
-  screen showing FIRE progress — the FIRE tab and the sidebar meter — has to
-  agree on which one it means.
+- **The FIRE projection reports the position it started from** as
+  `projection.current`. Screens that show FIRE progress should read that rather
+  than reaching for the tracked position directly.
+- **The net worth asked for during onboarding is never stored.** It exists only
+  to sketch the projected timeline in the calculator. The FIRE tab projects from
+  tracked data alone, so a brand-new account's tab is deliberately more
+  conservative than the preview it saw during onboarding.
 - **Recurring transactions are generated on the client, lazily, on app load** —
   there is no cron. Occurrence ids are deterministic
   (`recurring-<ruleId>-<month>`) so generation is idempotent, and

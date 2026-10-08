@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { monthKey } from './dates.js'
-import { WITHDRAWAL_RATE, annualAverages, compareGoal, estimateProjection, fireProjection, fireTarget, projectSeries, yearsToTarget } from './fire.js'
+import { WITHDRAWAL_RATE, annualAverages, compareGoal, estimateProjection, fireCalculator, fireProjection, fireTarget, projectSeries, yearsToTarget } from './fire.js'
 
 const TODAY = new Date(2026, 5, 15)
 
@@ -187,28 +187,15 @@ describe('estimateProjection', () => {
     expect(projection.years).toBeNull()
   })
 
-  it('starts from the capital the user says they already have', () => {
-    const without = estimateProjection({ estimate, currentPosition: 0, today: TODAY })
-    const withCapital = estimateProjection({ estimate: { ...estimate, startingCapital: 100000 }, currentPosition: 0, today: TODAY })
-    expect(withCapital.years).toBeLessThan(without.years)
-    expect(withCapital.current).toBe(100000)
-  })
-
-  it('falls back to the tracked position when no capital was stated', () => {
-    const tracked = estimateProjection({ estimate, currentPosition: 100000, today: TODAY })
+  it('starts from the position it is given', () => {
     const fromZero = estimateProjection({ estimate, currentPosition: 0, today: TODAY })
+    const tracked = estimateProjection({ estimate, currentPosition: 100000, today: TODAY })
     expect(tracked.years).toBeLessThan(fromZero.years)
     expect(tracked.current).toBe(100000)
   })
 
-  it('treats a stated capital of zero as no capital', () => {
-    const stated = estimateProjection({ estimate: { ...estimate, startingCapital: 0 }, currentPosition: 50000, today: TODAY })
-    const tracked = estimateProjection({ estimate, currentPosition: 50000, today: TODAY })
-    expect(stated.years).toBe(tracked.years)
-  })
-
-  it('reports the goal as already reached when the capital covers it', () => {
-    const projection = estimateProjection({ estimate: { ...estimate, startingCapital: 600000 }, currentPosition: 0, today: TODAY })
+  it('reports the goal as already reached when the position covers it', () => {
+    const projection = estimateProjection({ estimate, currentPosition: 600000, today: TODAY })
     expect(projection.reached).toBe(true)
     expect(projection.years).toBe(0)
   })
@@ -232,5 +219,49 @@ describe('compareGoal', () => {
 
   it('never claims to be enough without a projection to compare against', () => {
     expect(compareGoal({ goal: 300000, projected: 0 }).enough).toBe(false)
+  })
+})
+
+describe('fireCalculator', () => {
+  it('annualises monthly spending', () => {
+    const result = fireCalculator({ income: 40000, monthlySpending: 1500 })
+    expect(result.annualSpending).toBe(18000)
+    expect(result.target).toBe(450000)
+  })
+
+  it('derives the savings rate from income and spending', () => {
+    const result = fireCalculator({ income: 40000, monthlySpending: 1500 })
+    expect(result.savings).toBe(22000)
+    expect(result.savingsRate).toBeCloseTo(55, 5)
+  })
+
+  it('projects from the net worth it is given', () => {
+    const without = fireCalculator({ income: 40000, monthlySpending: 1500, netWorth: 0 })
+    const withNetWorth = fireCalculator({ income: 40000, monthlySpending: 1500, netWorth: 100000 })
+    expect(withNetWorth.years).toBeLessThan(without.years)
+    expect(withNetWorth.covered).toBeGreaterThan(0)
+  })
+
+  it('reports how much of the target the net worth covers, capped at 100%', () => {
+    expect(fireCalculator({ income: 40000, monthlySpending: 1500, netWorth: 225000 }).covered).toBe(50)
+    expect(fireCalculator({ income: 40000, monthlySpending: 1500, netWorth: 900000 }).covered).toBe(100)
+  })
+
+  it('needs both income and spending before it projects', () => {
+    const noIncome = fireCalculator({ monthlySpending: 1500 })
+    expect(noIncome.canProject).toBe(false)
+    expect(noIncome.years).toBeNull()
+    expect(noIncome.target).toBe(450000)
+
+    const noSpending = fireCalculator({ income: 40000 })
+    expect(noSpending.canProject).toBe(false)
+    expect(noSpending.target).toBe(0)
+  })
+
+  it('flags a pace that never reaches the target', () => {
+    const result = fireCalculator({ income: 10000, monthlySpending: 1500 })
+    expect(result.canProject).toBe(true)
+    expect(result.savings).toBe(-8000)
+    expect(result.years).toBeNull()
   })
 })

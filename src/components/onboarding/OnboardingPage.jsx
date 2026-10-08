@@ -6,7 +6,7 @@ import { categorySuggestions } from '../../data/categories.js'
 import { INVESTMENT_TYPES } from '../../data/investmentTypes.js'
 import { PLATFORM_SUGGESTIONS } from '../../lib/constants.js'
 import { resizeImageFile } from '../../lib/image.js'
-import { fireTarget, yearsToTarget } from '../../lib/fire.js'
+import { fireCalculator } from '../../lib/fire.js'
 import { formatCurrency } from '../../lib/format.js'
 import Avatar from '../ui/Avatar.jsx'
 import AnimalAvatar, { ANIMAL_LABEL_KEYS, ANIMAL_PRESETS, animalAvatarValue, animalId } from '../ui/AnimalAvatar.jsx'
@@ -42,7 +42,7 @@ export default function OnboardingPage() {
   const [goalInput, setGoalInput] = useState(String(fireGoal))
   const [incomeInput, setIncomeInput] = useState('')
   const [spendingInput, setSpendingInput] = useState('')
-  const [capitalInput, setCapitalInput] = useState('')
+  const [netWorthInput, setNetWorthInput] = useState('')
   const [goalTouched, setGoalTouched] = useState(false)
   const [avatar, setAvatar] = useState(profile.avatar || '')
   const [photoError, setPhotoError] = useState('')
@@ -111,17 +111,18 @@ export default function OnboardingPage() {
 
   function finish() {
     if (avatar !== (profile.avatar || '')) saveProfile({ ...profile, avatar })
-    const hasEstimate = incomeInput.trim() !== '' || spendingInput.trim() !== '' || capitalInput.trim() !== ''
+    const hasEstimate = incomeInput.trim() !== '' || spendingInput.trim() !== ''
     saveOnboarding({
       categories,
       platforms,
       investmentVisibility: visibility,
       fireGoal: Number(goalInput) > 0 ? Number(goalInput) : fireGoal,
+      // The net worth is left out on purpose: it is a sketch of the journey, not
+      // something the app tracks, so it must not follow the user into the FIRE tab.
       fireEstimate: hasEstimate ? {
         income,
-        spending,
+        spending: annualSpending,
         savingsRate: canProject ? Math.round(savingsRate) : 0,
-        startingCapital: capital,
       } : undefined,
     })
   }
@@ -131,18 +132,19 @@ export default function OnboardingPage() {
   const investmentsReady = Object.values(visibility).some(Boolean)
   const goalValid = goalInput.trim() === '' || (Number.isFinite(Number(goalInput)) && Number(goalInput) > 0)
 
-  const income = Number(incomeInput) || 0
-  const spending = Number(spendingInput) || 0
-  const capital = Number(capitalInput) || 0
-  const hasSpending = spending > 0
-  // Both are needed before the pace of saving means anything.
-  const canProject = hasSpending && income > 0
-
-  // 25× what they spend a year is the number the 4% rule points at.
-  const suggestedGoal = fireTarget(spending)
-  const annualSavings = canProject ? income - spending : 0
-  const savingsRate = canProject ? (annualSavings / income) * 100 : 0
-  const years = canProject ? yearsToTarget({ current: capital, annualSavings, target: suggestedGoal }) : null
+  // Everything the calculator shows, including the 25× rule behind the goal.
+  const {
+    annualIncome: income,
+    annualSpending,
+    netWorth,
+    target: suggestedGoal,
+    savings: annualSavings,
+    savingsRate,
+    years,
+    covered,
+    canProject,
+  } = fireCalculator({ income: incomeInput, monthlySpending: spendingInput, netWorth: netWorthInput })
+  const hasSpending = annualSpending > 0
   const wholeYears = years == null ? null : Math.ceil(years)
   const verdict = !canProject
     ? t.fireCalculatorNeedIncome
@@ -177,22 +179,23 @@ export default function OnboardingPage() {
         <div className="onboarding-fire">
           <div className="form-row">
             <div><label className="field-label" htmlFor="onboarding-fire-income">{t.fireIncomeLabel}</label><div className="amount-input"><span>€</span><input id="onboarding-fire-income" type="number" min="0" step="1000" placeholder="30000" value={incomeInput} onChange={(event) => setIncomeInput(event.target.value)} /></div></div>
-            <div><label className="field-label" htmlFor="onboarding-fire-spend">{t.fireSpendLabel}</label><div className="amount-input"><span>€</span><input id="onboarding-fire-spend" type="number" min="0" step="1000" placeholder="20000" value={spendingInput} onChange={(event) => setSpendingInput(event.target.value)} /></div></div>
+            <div><label className="field-label" htmlFor="onboarding-fire-spend">{t.fireSpendLabel}</label><div className="amount-input"><span>€</span><input id="onboarding-fire-spend" type="number" min="0" step="50" placeholder="1500" value={spendingInput} onChange={(event) => setSpendingInput(event.target.value)} /></div></div>
           </div>
-          <label className="field-label" htmlFor="onboarding-fire-capital">{t.fireCapitalLabel}</label>
-          <div className="amount-input"><span>€</span><input id="onboarding-fire-capital" type="number" min="0" step="1000" placeholder="0" value={capitalInput} onChange={(event) => setCapitalInput(event.target.value)} /></div>
-          <p className="onboarding-hint">{t.fireCapitalHint}</p>
+          <label className="field-label" htmlFor="onboarding-fire-networth">{t.fireNetWorthLabel}</label>
+          <div className="amount-input"><span>€</span><input id="onboarding-fire-networth" type="number" min="0" step="1000" placeholder="0" value={netWorthInput} onChange={(event) => setNetWorthInput(event.target.value)} /></div>
+          <p className="onboarding-hint">{t.fireNetWorthHint}</p>
 
           <div className="fire-calculator">
             {!hasSpending ? <p className="fire-calculator-empty">{t.fireCalculatorEmpty}</p> : <>
               <div className="fire-calculator-head">
                 <span>{t.fireCalculatorNumber}</span>
                 <strong>{formatCurrency(suggestedGoal, language)}</strong>
-                <small>{t.fireTargetNote.replace('{amount}', formatCurrency(spending, language))}</small>
+                <small>{t.fireTargetNote.replace('{amount}', formatCurrency(annualSpending, language))}</small>
               </div>
               {canProject && <div className="fire-calculator-rows">
                 <div className="fire-calculator-row"><span>{t.fireCalculatorSaving}</span><strong>{formatCurrency(annualSavings, language)}</strong></div>
                 <div className="fire-calculator-row"><span>{t.fireCalculatorRate}</span><strong>{savingsRate.toFixed(0)}%</strong></div>
+                {netWorth > 0 && <div className="fire-calculator-row"><span>{t.fireCalculatorCovered}</span><strong>{covered.toFixed(0)}%</strong></div>}
               </div>}
               <p className={canProject && years == null ? 'fire-calculator-verdict verdict-alert' : 'fire-calculator-verdict'}>{verdict}</p>
             </>}

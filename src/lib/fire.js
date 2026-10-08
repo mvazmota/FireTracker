@@ -112,9 +112,8 @@ function buildProjection({ income, expenses, savings, saved = 0, months, current
     saved,
     months,
     estimated,
-    // The position the projection starts from. It is the tracked position once
-    // there is history, and the stated starting capital while the projection is
-    // still built from the onboarding answers.
+    // The position the projection starts from, so screens can show progress
+    // against the same figure the horizon was worked out from.
     current: currentPosition,
     target,
     years,
@@ -141,11 +140,28 @@ export function estimateProjection({ estimate, currentPosition = 0, today = new 
   const rate = Number(estimate?.savingsRate)
   // A stated savings rate wins; otherwise it is whatever income minus spending leaves.
   const savings = Number.isFinite(rate) && rate >= 0 ? roundMoney(income * (rate / 100)) : roundMoney(income - expenses)
-  // What the user says they already have invested leads while there is no history
-  // to go on; without it we fall back to whatever the app has tracked.
-  const stated = Number(estimate?.startingCapital)
-  const current = Number.isFinite(stated) && stated > 0 ? stated : currentPosition
-  return buildProjection({ income, expenses, savings, saved: savings, months: 0, currentPosition: current, today, realReturn, withdrawalRate, estimated: true })
+  return buildProjection({ income, expenses, savings, saved: savings, months: 0, currentPosition, today, realReturn, withdrawalRate, estimated: true })
+}
+
+/**
+ * The onboarding FIRE calculator: turns what the user types into the figures
+ * that step shows. Spending is entered per month and annualised here, and the
+ * net worth is only a starting point for the projected timeline — it is never
+ * stored, because the FIRE tab projects from tracked data instead.
+ */
+export function fireCalculator({ income = 0, monthlySpending = 0, netWorth = 0, realReturn = REAL_RETURN, withdrawalRate = WITHDRAWAL_RATE }) {
+  const annualIncome = Number(income) || 0
+  const annualSpending = (Number(monthlySpending) || 0) * 12
+  const startingNetWorth = Number(netWorth) || 0
+  const target = fireTarget(annualSpending, withdrawalRate)
+  // Income and spending are both needed before the pace of saving means anything.
+  const canProject = target > 0 && annualIncome > 0
+  const savings = canProject ? roundMoney(annualIncome - annualSpending) : 0
+  const savingsRate = canProject ? (savings / annualIncome) * 100 : 0
+  const years = canProject ? yearsToTarget({ current: startingNetWorth, annualSavings: savings, target, realReturn }) : null
+  const covered = target > 0 ? Math.min(100, (startingNetWorth / target) * 100) : 0
+
+  return { annualIncome, annualSpending, netWorth: startingNetWorth, target, savings, savingsRate, years, covered, canProject }
 }
 
 /**
