@@ -103,6 +103,10 @@ In development run the two servers together, and run Vite on **port 5199**
 - Vite intermittently serves **stale modules** after an edit: a change looks
   broken while the file on disk and `npm run build` are both correct. Restart
   the dev server and reload before debugging further.
+- **A coarse `step` on a number input silently blocks form submission.** HTML
+  constraint validation rejects the whole form when a value is not a multiple of
+  `step`, so `onSubmit` never runs and nothing is saved — with no error shown.
+  Use `step="any"` (or 0.01 for money) on any input inside a form.
 - Stale `wrangler`/`workerd` processes keep port 8787 alive and make the next
   `wrangler dev` fail to bind. Kill them before restarting the Worker.
 - `npm run db:migrate:remote` occasionally fails with a transient

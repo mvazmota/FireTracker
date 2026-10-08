@@ -209,21 +209,21 @@ export default function ProfilePage() {
           <div className="form-row">
             <div>
               <label className="field-label" htmlFor="fire-plan-rate">{t.firePlanRate}</label>
-              <div className="amount-input"><input id="fire-plan-rate" type="number" min="1" max="10" step="0.1" value={rateInput} onChange={(event) => { setRateInput(event.target.value); setPlanSaved(false) }} /><span>%</span></div>
+              <div className="amount-input"><input id="fire-plan-rate" type="number" min="1" max="10" step="any" value={rateInput} onChange={(event) => { setRateInput(event.target.value); setPlanSaved(false) }} /><span>%</span></div>
             </div>
             <div>
               <label className="field-label" htmlFor="fire-plan-return">{t.firePlanReturn}</label>
-              <div className="amount-input"><input id="fire-plan-return" type="number" min="0" max="10" step="0.1" value={returnInput} onChange={(event) => { setReturnInput(event.target.value); setPlanSaved(false) }} /><span>%</span></div>
+              <div className="amount-input"><input id="fire-plan-return" type="number" min="0" max="10" step="any" value={returnInput} onChange={(event) => { setReturnInput(event.target.value); setPlanSaved(false) }} /><span>%</span></div>
             </div>
           </div>
           <div className="form-row">
             <div>
               <label className="field-label" htmlFor="fire-plan-spending">{t.firePlanSpending}</label>
-              <div className="amount-input"><span>€</span><input id="fire-plan-spending" type="number" min="0" step="1000" placeholder={String(Math.round(tracked.expenses))} value={spendingInput} onChange={(event) => { setSpendingInput(event.target.value); setPlanSaved(false) }} /></div>
+              <div className="amount-input"><span>€</span><input id="fire-plan-spending" type="number" min="0" step="any" placeholder={String(Math.round(tracked.expenses))} value={spendingInput} onChange={(event) => { setSpendingInput(event.target.value); setPlanSaved(false) }} /></div>
             </div>
             <div>
               <label className="field-label" htmlFor="fire-plan-income">{t.firePlanIncome}</label>
-              <div className="amount-input"><span>€</span><input id="fire-plan-income" type="number" min="0" step="1000" placeholder="0" value={incomeInput} onChange={(event) => { setIncomeInput(event.target.value); setPlanSaved(false) }} /></div>
+              <div className="amount-input"><span>€</span><input id="fire-plan-income" type="number" min="0" step="any" placeholder="0" value={incomeInput} onChange={(event) => { setIncomeInput(event.target.value); setPlanSaved(false) }} /></div>
             </div>
           </div>
           <p className="fire-plan-hint">{t.firePlanSpendingHint}</p>
