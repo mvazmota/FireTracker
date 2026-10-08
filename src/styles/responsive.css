@@ -131,3 +131,11 @@
   .recurring-row { grid-template-columns: 30px minmax(0, 1fr) auto auto auto; gap: 9px; }
   .recurring-next { display: none; }
 }
+
+/* Bulk entry modal */
+@media (max-width: 760px) {
+  .bulk-entry-modal { padding: 18px; }
+  .bulk-entry-toolbar { padding: 10px; }
+  .bulk-entry-footer { align-items: flex-start; flex-direction: column; }
+  .bulk-entry-footer .bulk-save { width: 100%; }
+}
