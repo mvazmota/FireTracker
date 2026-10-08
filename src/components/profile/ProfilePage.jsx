@@ -11,6 +11,8 @@ import { useAuth } from '../../context/AuthProvider.jsx'
 import { api } from '../../lib/api.js'
 import { REMEMBERED_EMAIL_KEY } from '../../lib/constants.js'
 import { usePortfolioSummary } from '../../hooks/usePortfolioSummary.js'
+import { formatCurrency } from '../../lib/format.js'
+import { FIRE_STRATEGIES, annualAverages, fireProjection, normalizePlan, planForStrategy } from '../../lib/fire.js'
 import { INVESTMENT_TYPES } from '../../data/investmentTypes.js'
 import FireMeterCompact from '../fire/FireMeterCompact.jsx'
 
@@ -23,6 +25,8 @@ export default function ProfilePage() {
     toggleInvestmentVisibility,
     fireGoal,
     saveFireGoal,
+    firePlan,
+    saveFirePlan,
     fireMeterVisible,
     toggleFireMeter,
     categories,
@@ -55,6 +59,48 @@ export default function ProfilePage() {
   const [deleteError, setDeleteError] = useState('')
 
   const createdAt = new Intl.DateTimeFormat(locale, { dateStyle: 'long' }).format(new Date(`${profile.createdAt}T12:00:00`))
+
+  // The stored FIRE plan, and the draft the panel edits before saving it.
+  const storedPlan = useMemo(() => normalizePlan(firePlan), [firePlan])
+  const [strategy, setStrategy] = useState(storedPlan.strategy)
+  const [rateInput, setRateInput] = useState(String(Math.round(storedPlan.withdrawalRate * 1000) / 10))
+  const [returnInput, setReturnInput] = useState(String(Math.round(storedPlan.realReturn * 1000) / 10))
+  const [spendingInput, setSpendingInput] = useState(storedPlan.retirementSpending == null ? '' : String(storedPlan.retirementSpending))
+  const [incomeInput, setIncomeInput] = useState(storedPlan.postFireIncome > 0 ? String(storedPlan.postFireIncome) : '')
+  const [planSaved, setPlanSaved] = useState(false)
+
+  const draftPlan = useMemo(() => normalizePlan({
+    strategy,
+    withdrawalRate: Number(rateInput) / 100,
+    realReturn: Number(returnInput) / 100,
+    retirementSpending: spendingInput.trim() === '' ? null : Number(spendingInput),
+    postFireIncome: Number(incomeInput) || 0,
+  }), [strategy, rateInput, returnInput, spendingInput, incomeInput])
+
+  // What the plan would mean, so a change can be judged before it is saved.
+  const planProjection = useMemo(
+    () => fireProjection({ transactions, currentPosition: globalPosition, plan: draftPlan, today }),
+    [transactions, globalPosition, draftPlan, today],
+  )
+  const tracked = useMemo(() => annualAverages(transactions, today), [transactions, today])
+
+  /** A strategy fills the fields in; every value stays editable afterwards. */
+  function chooseStrategy(key) {
+    setStrategy(key)
+    setPlanSaved(false)
+    if (key === 'custom') return
+    const preset = planForStrategy(key, { annualSpending: tracked.expenses, annualIncome: tracked.income })
+    setRateInput(String(Math.round(preset.withdrawalRate * 1000) / 10))
+    setReturnInput(String(Math.round(preset.realReturn * 1000) / 10))
+    setSpendingInput(preset.retirementSpending == null ? '' : String(preset.retirementSpending))
+    setIncomeInput(preset.postFireIncome > 0 ? String(preset.postFireIncome) : '')
+  }
+
+  function submitPlan(event) {
+    event.preventDefault()
+    saveFirePlan(draftPlan)
+    setPlanSaved(true)
+  }
 
   // How many transactions use each category, so in-use ones can be protected.
   const categoryUsage = useMemo(() => {
@@ -189,6 +235,51 @@ export default function ProfilePage() {
 
       <section className="panel visibility-panel"><div className="panel-heading"><div><h2>{t.investmentSettings}</h2><p>{t.investmentSettingsSubtitle}</p></div><span className="panel-icon"><SlidersHorizontal size={17} /></span></div><div className="visibility-list">{INVESTMENT_TYPES.map(({ key, icon: Icon, tint }) => <div className="visibility-row" key={key}><span className={`portfolio-mini-icon ${tint}`}><Icon size={17} /></span><div className="visibility-label"><strong>{t[key]}</strong><span>{t.visibleSetting}</span></div><button type="button" className={investmentVisibility[key] ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={investmentVisibility[key]} aria-label={`${t.visibleSetting}: ${t[key]}`} onClick={() => toggleInvestmentVisibility(key)}><span /></button></div>)}</div><p className="visibility-note">{t.hiddenAssetsNote}</p></section>
     </div>
+
+    <section className="panel fire-plan-panel">
+      <div className="panel-heading"><div><h2>{t.firePlan}</h2><p>{t.firePlanSubtitle}</p></div><span className="panel-icon"><Flame size={17} /></span></div>
+
+      <div className="fire-plan-strategies">
+        {FIRE_STRATEGIES.map((key) => <button type="button" key={key} className={strategy === key ? 'onboarding-chip chip-on' : 'onboarding-chip'} aria-pressed={strategy === key} onClick={() => chooseStrategy(key)}>{t.fireStrategies[key]}</button>)}
+      </div>
+      <p className="fire-plan-hint">{t.fireStrategyHints[strategy]}</p>
+
+      <form className="fire-plan-form" onSubmit={submitPlan}>
+        <div className="form-row">
+          <div>
+            <label className="field-label" htmlFor="fire-plan-rate">{t.firePlanRate}</label>
+            <div className="amount-input"><input id="fire-plan-rate" type="number" min="1" max="10" step="0.1" value={rateInput} onChange={(event) => { setRateInput(event.target.value); setPlanSaved(false) }} /><span>%</span></div>
+          </div>
+          <div>
+            <label className="field-label" htmlFor="fire-plan-return">{t.firePlanReturn}</label>
+            <div className="amount-input"><input id="fire-plan-return" type="number" min="0" max="10" step="0.1" value={returnInput} onChange={(event) => { setReturnInput(event.target.value); setPlanSaved(false) }} /><span>%</span></div>
+          </div>
+        </div>
+        <div className="form-row">
+          <div>
+            <label className="field-label" htmlFor="fire-plan-spending">{t.firePlanSpending}</label>
+            <div className="amount-input"><span>€</span><input id="fire-plan-spending" type="number" min="0" step="1000" placeholder={String(Math.round(tracked.expenses))} value={spendingInput} onChange={(event) => { setSpendingInput(event.target.value); setPlanSaved(false) }} /></div>
+          </div>
+          <div>
+            <label className="field-label" htmlFor="fire-plan-income">{t.firePlanIncome}</label>
+            <div className="amount-input"><span>€</span><input id="fire-plan-income" type="number" min="0" step="1000" placeholder="0" value={incomeInput} onChange={(event) => { setIncomeInput(event.target.value); setPlanSaved(false) }} /></div>
+          </div>
+        </div>
+        <p className="fire-plan-hint">{t.firePlanSpendingHint}</p>
+
+        <div className="fire-plan-preview">
+          <div><span>{t.firePlanNumber}</span><strong>{formatCurrency(planProjection.target, language)}</strong></div>
+          <div><span>{t.firePlanCovers}</span><strong>{formatCurrency(planProjection.spendingToCover, language)}</strong></div>
+          <div><span>{t.firePlanHorizon}</span><strong>{planProjection.years == null ? t.fireOffTrackShort : `${Math.ceil(planProjection.years)} ${t.yearsToFire}`}</strong></div>
+        </div>
+
+        <div className="fire-plan-actions">
+          <button className="primary-button" type="submit"><Check size={15} /> {t.saveChanges}</button>
+          {planSaved && <span className="settings-saved">{t.firePlanSaved}</span>}
+        </div>
+      </form>
+    </section>
+
     <section className="panel visibility-panel">
       <div className="panel-heading"><div><h2>{t.manageCategories}</h2><p>{t.manageCategoriesSubtitle}</p></div><span className="panel-icon"><Tag size={17} /></span></div>
       <div className="manage-columns">

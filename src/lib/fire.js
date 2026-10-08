@@ -11,6 +11,59 @@ export const REAL_RETURN = 0.05
 /** At most this many months of history feed the averages. */
 const MAX_WINDOW_MONTHS = 12
 
+/** The strategies a FIRE plan can follow. */
+export const FIRE_STRATEGIES = ['traditional', 'lean', 'fat', 'barista', 'custom']
+
+/** A plan that reproduces the plain 4% rule. */
+export const DEFAULT_FIRE_PLAN = {
+  strategy: 'traditional',
+  withdrawalRate: WITHDRAWAL_RATE,
+  // null means "use whatever the user's spending works out to".
+  retirementSpending: null,
+  postFireIncome: 0,
+  realReturn: REAL_RETURN,
+}
+
+/** How far lean and fat FIRE move the retirement spending target. */
+const LEAN_SPENDING_FACTOR = 0.75
+const FAT_SPENDING_FACTOR = 1.5
+
+/** Semi-retired assumes this share of today's income keeps coming in. */
+const BARISTA_INCOME_FACTOR = 0.25
+
+/**
+ * The plan a strategy starts from. Each strategy moves a single lever, so it
+ * stays clear which number changed and why: lean and fat move the retirement
+ * spending target, semi-retired assumes some income after FIRE, and traditional
+ * is the plain 4% rule.
+ */
+export function planForStrategy(strategy, { annualSpending = 0, annualIncome = 0 } = {}) {
+  const base = { ...DEFAULT_FIRE_PLAN, strategy }
+  const spending = Number(annualSpending) > 0 ? Number(annualSpending) : 0
+  const income = Number(annualIncome) > 0 ? Number(annualIncome) : 0
+
+  if (strategy === 'lean' && spending > 0) return { ...base, retirementSpending: roundMoney(spending * LEAN_SPENDING_FACTOR) }
+  if (strategy === 'fat' && spending > 0) return { ...base, retirementSpending: roundMoney(spending * FAT_SPENDING_FACTOR) }
+  if (strategy === 'barista' && income > 0) return { ...base, postFireIncome: roundMoney(income * BARISTA_INCOME_FACTOR) }
+  return base
+}
+
+/** Clamps a stored plan into something the maths can trust. */
+export function normalizePlan(plan) {
+  const rate = Number(plan?.withdrawalRate)
+  const growth = Number(plan?.realReturn)
+  const spending = Number(plan?.retirementSpending)
+  const income = Number(plan?.postFireIncome)
+
+  return {
+    strategy: FIRE_STRATEGIES.includes(plan?.strategy) ? plan.strategy : DEFAULT_FIRE_PLAN.strategy,
+    withdrawalRate: rate > 0 && rate < 1 ? rate : WITHDRAWAL_RATE,
+    retirementSpending: Number.isFinite(spending) && spending > 0 ? spending : null,
+    postFireIncome: Number.isFinite(income) && income > 0 ? income : 0,
+    realReturn: growth >= 0 && growth < 1 ? growth : REAL_RETURN,
+  }
+}
+
 /** Money moved into an asset is saving, not spending. */
 function isTransfer(item) {
   return isInvestmentTransaction(item) || isSavingsTransaction(item)
@@ -99,9 +152,13 @@ export function projectSeries({ current, annualSavings, realReturn = REAL_RETURN
   return points
 }
 
-/** Shared tail: turns a set of annual figures into a full projection. */
-function buildProjection({ income, expenses, savings, saved = 0, months, currentPosition, today, realReturn, withdrawalRate, estimated = false }) {
-  const target = fireTarget(expenses, withdrawalRate)
+/** Shared tail: turns a set of annual figures and a plan into a projection. */
+function buildProjection({ income, expenses, savings, saved = 0, months, currentPosition, plan, today, estimated = false }) {
+  const { strategy, withdrawalRate, retirementSpending, postFireIncome, realReturn } = normalizePlan(plan)
+  // The pot only has to cover what the retirement spending leaves uncovered.
+  const spendingTarget = retirementSpending ?? expenses
+  const spendingToCover = Math.max(0, roundMoney(spendingTarget - postFireIncome))
+  const target = fireTarget(spendingToCover, withdrawalRate)
   const reached = target > 0 && currentPosition >= target
   const years = yearsToTarget({ current: currentPosition, annualSavings: savings, target, realReturn })
 
@@ -115,32 +172,36 @@ function buildProjection({ income, expenses, savings, saved = 0, months, current
     // The position the projection starts from, so screens can show progress
     // against the same figure the horizon was worked out from.
     current: currentPosition,
+    strategy,
+    withdrawalRate,
+    realReturn,
+    retirementSpending: spendingTarget,
+    postFireIncome,
+    spendingToCover,
     target,
     years,
     reached,
-    realReturn,
-    withdrawalRate,
     // A rough calendar date for the crossover, good to the month.
     targetDate: years == null ? null : new Date(today.getFullYear(), today.getMonth() + Math.ceil(years * 12), 1),
   }
 }
 
 /** Everything the FIRE page needs, derived from the transaction history. */
-export function fireProjection({ transactions, currentPosition, today = new Date(), realReturn = REAL_RETURN, withdrawalRate = WITHDRAWAL_RATE }) {
-  return buildProjection({ ...annualAverages(transactions, today), currentPosition, today, realReturn, withdrawalRate })
+export function fireProjection({ transactions, currentPosition, plan, today = new Date() }) {
+  return buildProjection({ ...annualAverages(transactions, today), currentPosition, plan, today })
 }
 
 /**
  * A projection built from the answers given during onboarding, for use before
  * there is any transaction history worth averaging.
  */
-export function estimateProjection({ estimate, currentPosition = 0, today = new Date(), realReturn = REAL_RETURN, withdrawalRate = WITHDRAWAL_RATE }) {
+export function estimateProjection({ estimate, currentPosition = 0, plan, today = new Date() }) {
   const income = Number(estimate?.income) || 0
   const expenses = Number(estimate?.spending) || 0
   const rate = Number(estimate?.savingsRate)
   // A stated savings rate wins; otherwise it is whatever income minus spending leaves.
   const savings = Number.isFinite(rate) && rate >= 0 ? roundMoney(income * (rate / 100)) : roundMoney(income - expenses)
-  return buildProjection({ income, expenses, savings, saved: savings, months: 0, currentPosition, today, realReturn, withdrawalRate, estimated: true })
+  return buildProjection({ income, expenses, savings, saved: savings, months: 0, currentPosition, plan, today, estimated: true })
 }
 
 /**

@@ -50,11 +50,19 @@ In development run the two servers together, and run Vite on **port 5199**
   `MONEY_COLUMNS` in `worker/tables.js` lists which columns are totals.
   Per-unit prices (`averageCost`, `currentPrice`) and quantities (`units`) are
   excluded deliberately: they need more than two decimals.
-- **FIRE maths** (`src/lib/fire.js`): `WITHDRAWAL_RATE = 0.04`,
-  `REAL_RETURN = 0.05`. The annual average divides by the number of months that
-  **contain transactions**, not months elapsed — elapsed months understate
-  spending and flatter the FIRE date. Transfers into investments or savings
-  count as saving, not spending, because the 4% rule only covers living costs.
+- **The FIRE number comes from the user's plan, not from a fixed 4%.**
+  `user_settings.firePlan` holds the strategy, withdrawal rate, retirement
+  spending target, expected post-FIRE income and assumed real return. The pot
+  only has to cover what the post-FIRE income leaves uncovered, so
+  `spendingToCover` — not `expenses` — is what feeds `fireTarget`. `normalizePlan`
+  guards every stored value, so the maths never sees a nonsense rate. The
+  defaults (`WITHDRAWAL_RATE = 0.04`, `REAL_RETURN = 0.05`) reproduce the plain
+  4% rule.
+- **FIRE maths** (`src/lib/fire.js`): the annual average divides by the number of
+  months that **contain transactions**, not months elapsed — elapsed months
+  understate spending and flatter the FIRE date. Transfers into investments or
+  savings count as saving, not spending, because the rule only has to cover
+  living costs.
 - **The FIRE projection reports the position it started from** as
   `projection.current`. Screens that show FIRE progress should read that rather
   than reaching for the tracked position directly.

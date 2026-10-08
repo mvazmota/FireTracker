@@ -21,9 +21,13 @@ euros.
   24 months or all recorded history.
 - **Statistics** — annual cash flow, spending by category and investment
   allocation.
-- **FIRE tab** — projects the pot you need (25× your yearly spending), when you
-  reach the goal you set, and how your target compares with the number your
-  actual spending implies.
+- **FIRE tab** — projects the pot you need under your own FIRE plan, when you
+  reach the goal you set, and how your target compares with the number your plan
+  implies.
+- **FIRE plan** — pick a strategy (traditional, lean, fat, semi-retired or
+  custom) and tune the withdrawal rate, retirement spending, post-FIRE income
+  and assumed real return. Each strategy is a starting point; every value stays
+  editable.
 - **Onboarding** — a five-step first run that opens with a FIRE calculator and
   seeds your categories, platforms, investment types and first FIRE goal.
 - **Profile** — display name, avatar, language, FIRE goal, per-type visibility

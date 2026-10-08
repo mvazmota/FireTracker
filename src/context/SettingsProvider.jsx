@@ -18,6 +18,7 @@ const emptySettings = () => ({
   categories: { expense: [], income: [] },
   onboarded: false,
   fireEstimate: null,
+  firePlan: null,
 })
 
 /**
@@ -65,6 +66,7 @@ export function SettingsProvider({ children }) {
       },
       onboarded: stored.onboarded ?? false,
       fireEstimate: stored.fireEstimate ?? null,
+      firePlan: stored.firePlan ?? null,
     })
     setHydrated(true)
   }, [data, user?.name, applySettings])
@@ -82,6 +84,8 @@ export function SettingsProvider({ children }) {
   }, [run])
 
   const saveFireGoal = useCallback((next) => persist({ fireGoal: next }), [persist])
+
+  const saveFirePlan = useCallback((next) => persist({ firePlan: next }), [persist])
 
   const toggleFireMeter = useCallback(() => persist({ fireMeterVisible: !settingsRef.current.fireMeterVisible }), [persist])
 
@@ -137,9 +141,11 @@ export function SettingsProvider({ children }) {
     categories: settings.categories,
     onboarded: settings.onboarded,
     fireEstimate: settings.fireEstimate,
+    firePlan: settings.firePlan,
     hydrated,
     saveProfile,
     saveFireGoal,
+    saveFirePlan,
     toggleFireMeter,
     toggleInvestmentVisibility,
     rememberPlatform,
@@ -149,7 +155,7 @@ export function SettingsProvider({ children }) {
     saveOnboarding,
   }), [
     profile, settings, hydrated,
-    saveProfile, saveFireGoal, toggleFireMeter, toggleInvestmentVisibility,
+    saveProfile, saveFireGoal, saveFirePlan, toggleFireMeter, toggleInvestmentVisibility,
     rememberPlatform, rememberCategory, removeCategory, removePlatform, saveOnboarding,
   ])
 

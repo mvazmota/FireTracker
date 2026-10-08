@@ -12,26 +12,25 @@ import { formatCurrency } from '../../lib/format.js'
 export default function FirePage() {
   const { t, locale, language } = useI18n()
   const { transactions } = useFinance()
-  const { fireGoal, fireEstimate } = useSettings()
+  const { fireGoal, fireEstimate, firePlan, saveFireGoal } = useSettings()
   const today = useMemo(() => new Date(), [])
   const { globalPosition } = usePortfolioSummary(today)
 
   // Real numbers once there is history to average; the onboarding answers until then.
   const fromData = useMemo(
-    () => fireProjection({ transactions, currentPosition: globalPosition, today }),
-    [transactions, globalPosition, today],
+    () => fireProjection({ transactions, currentPosition: globalPosition, plan: firePlan, today }),
+    [transactions, globalPosition, firePlan, today],
   )
   const fromEstimate = useMemo(
-    () => estimateProjection({ estimate: fireEstimate, currentPosition: globalPosition, today }),
-    [fireEstimate, globalPosition, today],
+    () => estimateProjection({ estimate: fireEstimate, currentPosition: globalPosition, plan: firePlan, today }),
+    [fireEstimate, globalPosition, firePlan, today],
   )
   const projection = fromData.target > 0 ? fromData : fromEstimate
 
-  // The goal the user set, measured against the number their spending implies.
-  const comparison = compareGoal({ goal: fireGoal, projected: projection.target })
+  // The goal the user set, measured against the number their plan implies.
+  const comparison = compareGoal({ goal: fireGoal, projected: projection.target, withdrawalRate: projection.withdrawalRate })
   const goalValue = comparison.goal > 0 ? comparison.goal : comparison.projected
-  // `projection.current` is the tracked position once there is history, and the
-  // stated starting capital while the projection is still an estimate.
+  const ratePercent = Number((projection.withdrawalRate * 100).toFixed(2))
   const goalYears = yearsToTarget({ current: projection.current, annualSavings: projection.savings, target: goalValue, realReturn: projection.realReturn })
   const goalReached = goalValue > 0 && projection.current >= goalValue
 
@@ -93,21 +92,23 @@ export default function FirePage() {
 
       <section className="panel fire-compare">
         <div className="panel-heading"><div><h2>{t.fireCompare}</h2><p>{t.fireCompareSubtitle}</p></div><span className="panel-icon"><Scale size={17} /></span></div>
+        <p className="fire-plan-tag">{t.firePlanTag.replace('{strategy}', t.fireStrategies[projection.strategy]).replace('{rate}', ratePercent)}</p>
         <div className="fire-compare-grid">
           <div className="fire-compare-item">
             <span className="fire-compare-label">{t.fireYourTarget}</span>
             <strong>{formatCurrency(comparison.goal, language)}</strong>
-            <small>{t.fireCovers.replace('{amount}', formatCurrency(comparison.cover, language))}</small>
+            <small>{t.fireCovers.replace('{amount}', formatCurrency(comparison.cover, language)).replace('{rate}', ratePercent)}</small>
           </div>
           <div className="fire-compare-item">
             <span className="fire-compare-label">{t.fireYourNumber}</span>
             <strong>{formatCurrency(comparison.projected, language)}</strong>
-            <small>{t.fireImplies.replace('{amount}', formatCurrency(projection.expenses, language))}</small>
+            <small>{t.fireNumberNote.replace('{amount}', formatCurrency(projection.spendingToCover, language)).replace('{rate}', ratePercent)}</small>
           </div>
         </div>
         <p className={comparison.enough ? 'fire-verdict verdict-ok' : 'fire-verdict verdict-warn'}>
           {comparison.enough ? t.fireGoalEnough : t.fireGoalShort.replace('{amount}', formatCurrency(comparison.projected, language))}
         </p>
+        {comparison.gap !== 0 && comparison.projected > 0 && <button type="button" className="text-button fire-align-goal" onClick={() => saveFireGoal(comparison.projected)}>{t.fireUseAsGoal}</button>}
         {projection.estimated
           ? <p className="visibility-note">{t.fireFromEstimate}</p>
           : fireEstimate?.spending > 0 && projection.months > 0

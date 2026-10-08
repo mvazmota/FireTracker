@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { monthKey } from './dates.js'
-import { WITHDRAWAL_RATE, annualAverages, compareGoal, estimateProjection, fireCalculator, fireProjection, fireTarget, projectSeries, yearsToTarget } from './fire.js'
+import { DEFAULT_FIRE_PLAN, WITHDRAWAL_RATE, annualAverages, compareGoal, estimateProjection, fireCalculator, fireProjection, fireTarget, normalizePlan, planForStrategy, projectSeries, yearsToTarget } from './fire.js'
 
 const TODAY = new Date(2026, 5, 15)
 
@@ -263,5 +263,85 @@ describe('fireCalculator', () => {
     expect(result.canProject).toBe(true)
     expect(result.savings).toBe(-8000)
     expect(result.years).toBeNull()
+  })
+})
+
+describe('planForStrategy', () => {
+  const figures = { annualSpending: 20000, annualIncome: 40000 }
+
+  it('leaves the 4% rule alone for a traditional plan', () => {
+    const plan = planForStrategy('traditional', figures)
+    expect(plan.withdrawalRate).toBe(WITHDRAWAL_RATE)
+    expect(plan.retirementSpending).toBeNull()
+    expect(plan.postFireIncome).toBe(0)
+  })
+
+  it('cuts the retirement spending target for lean FIRE', () => {
+    expect(planForStrategy('lean', figures).retirementSpending).toBe(15000)
+  })
+
+  it('raises the retirement spending target for fat FIRE', () => {
+    expect(planForStrategy('fat', figures).retirementSpending).toBe(30000)
+  })
+
+  it('assumes some income keeps coming in for a semi-retired plan', () => {
+    expect(planForStrategy('barista', figures).postFireIncome).toBe(10000)
+  })
+
+  it('falls back to the plain plan before the figures are known', () => {
+    const plan = planForStrategy('lean', { annualSpending: 0, annualIncome: 0 })
+    expect(plan.retirementSpending).toBeNull()
+    expect(plan.postFireIncome).toBe(0)
+  })
+})
+
+describe('normalizePlan', () => {
+  it('falls back to the defaults for a missing plan', () => {
+    expect(normalizePlan(undefined)).toEqual(DEFAULT_FIRE_PLAN)
+  })
+
+  it('rejects a withdrawal rate that is not a sane fraction', () => {
+    expect(normalizePlan({ withdrawalRate: 4 }).withdrawalRate).toBe(WITHDRAWAL_RATE)
+    expect(normalizePlan({ withdrawalRate: 0 }).withdrawalRate).toBe(WITHDRAWAL_RATE)
+    expect(normalizePlan({ withdrawalRate: 0.05 }).withdrawalRate).toBe(0.05)
+  })
+
+  it('treats a zero spending target as "use my own spending"', () => {
+    expect(normalizePlan({ retirementSpending: 0 }).retirementSpending).toBeNull()
+  })
+
+  it('ignores a strategy it does not recognise', () => {
+    expect(normalizePlan({ strategy: 'nonsense' }).strategy).toBe('traditional')
+  })
+})
+
+describe('fireProjection with a plan', () => {
+  it('sizes the pot from the plan rather than the tracked spending', () => {
+    const projection = fireProjection({ transactions: fullYear(), currentPosition: 0, today: TODAY, plan: { strategy: 'lean', retirementSpending: 12000 } })
+    expect(projection.spendingToCover).toBe(12000)
+    expect(projection.target).toBe(300000)
+  })
+
+  it('subtracts post-FIRE income from what the pot has to cover', () => {
+    const projection = fireProjection({ transactions: fullYear(), currentPosition: 0, today: TODAY, plan: { strategy: 'barista', postFireIncome: 1800 } })
+    expect(projection.spendingToCover).toBe(3000)
+    expect(projection.target).toBe(75000)
+  })
+
+  it('uses the plan withdrawal rate as the divisor', () => {
+    const projection = fireProjection({ transactions: fullYear(), currentPosition: 0, today: TODAY, plan: { withdrawalRate: 0.05 } })
+    expect(projection.target).toBe(96000)
+  })
+
+  it('uses the plan real return for the horizon', () => {
+    const cautious = fireProjection({ transactions: fullYear(), currentPosition: 0, today: TODAY, plan: { realReturn: 0.03 } })
+    const optimistic = fireProjection({ transactions: fullYear(), currentPosition: 0, today: TODAY, plan: { realReturn: 0.07 } })
+    expect(cautious.years).toBeGreaterThan(optimistic.years)
+  })
+
+  it('never asks for a negative pot', () => {
+    const projection = fireProjection({ transactions: fullYear(), currentPosition: 0, today: TODAY, plan: { postFireIncome: 1000000 } })
+    expect(projection.spendingToCover).toBe(0)
+    expect(projection.target).toBe(0)
   })
 })
