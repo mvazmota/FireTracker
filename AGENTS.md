@@ -145,11 +145,15 @@ git push origin main
 ## Boundaries
 
 - Do not push or deploy unless explicitly asked.
-- Do not delete the demo account (`demo@email.com`). Migration
-  `0002_demo_account.sql` creates it and `DataProvider` fills it with the
-  simulation the first time it is opened empty, so wiping its data is
-  recoverable but deleting the account is not. Its password is `1234` and is
-  public by design.
+- **Demo accounts are described, not scripted.** `src/lib/demo/personas.js` holds
+  each one as plain data — income, expense lines, investments — and
+  `src/lib/demo/build.js` turns it into transactions and holdings. Adding a demo
+  account means describing a person, not writing another generator. The account
+  rows come from a migration; the data is generated the first time the account
+  is opened. Everything varying is seeded rather than random, so a persona always
+  produces the same history.
+- Do not delete a demo account (`demo@email.com`, `tiago@email.com`). Migrations
+  create them and `DataProvider` fills them; the live demo depends on them.
 - Do not hand-edit `worker/db/auth-schema.sql`; regenerate it.
 - Do not remove the guard that blocks deleting a category in use.
 - Do not convert money to integer cents.

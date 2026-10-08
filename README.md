@@ -70,13 +70,14 @@ Open <http://127.0.0.1:5199>. Vite proxies `/api` to the Worker, so the two are
 same-origin in development exactly as they are in production. Port 5199 is the
 one listed in `TRUSTED_ORIGINS`, so auth rejects the Vite default of 5173.
 
-Sign in to the shared demo account, or create your own. New accounts start empty
-and walk through onboarding; the demo account is filled with a 36-month starter
-scenario.
+Sign in to one of the demo accounts, or create your own. New accounts start
+empty and walk through onboarding; a demo account is filled with its persona's
+history the first time it is opened.
 
-| Email | Password |
-| --- | --- |
-| `demo@email.com` | `1234` |
+| Email | Password | Who |
+| --- | --- | --- |
+| `demo@email.com` | `1234` | Three years of history with every asset type in play |
+| `tiago@email.com` | `1234` | 22 and one year into adult life in Portugal: €2,000 a month, €200 of it into an S&P 500 ETF |
 
 ## Project structure
 

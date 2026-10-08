@@ -1,15 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from './AuthProvider.jsx'
 import { api } from '../lib/api.js'
-import { dateKey } from '../lib/dates.js'
-import { threeYearSimulation } from '../lib/simulation.js'
-import { DEFAULT_VISIBILITY, PLATFORM_SUGGESTIONS } from '../lib/constants.js'
-import { categorySuggestions } from '../data/categories.js'
+import { buildDemoPayload } from '../lib/demo/build.js'
+import { demoPersonaFor } from '../lib/demo/personas.js'
 
 const DataContext = createContext(null)
-
-/** The shared sandbox account. It gets the starter scenario; nobody else does. */
-const DEMO_EMAIL = 'demo@email.com'
 
 /** True when the account has never stored anything. */
 function isEmptyState(data) {
@@ -22,32 +17,10 @@ function isEmptyState(data) {
     && data.savings.length === 0
 }
 
-/** The starter scenario, shaped like a POST /api/import body. */
-function simulationPayload() {
-  const simulation = threeYearSimulation()
-  return {
-    transactions: simulation.transactions,
-    etfs: simulation.etfs,
-    crypto: simulation.crypto,
-    p2p: simulation.p2p,
-    bonds: simulation.bonds,
-    savings: simulation.savings,
-    profile: { name: 'Demo', avatar: '', createdAt: dateKey(new Date()) },
-    settings: {
-      language: 'en',
-      fireMeterVisible: true,
-      investmentVisibility: DEFAULT_VISIBILITY,
-      platforms: PLATFORM_SUGGESTIONS,
-      categories: { expense: categorySuggestions('expense'), income: categorySuggestions('income') },
-      onboarded: true,
-    },
-  }
-}
-
 /**
  * Loads the signed-in user's data from the API and shares it with the settings
- * and finance layers below. New accounts start empty; the demo account is
- * populated with the 36-month simulation the first time it is opened.
+ * and finance layers below. New accounts start empty; a demo account is filled
+ * with its persona's history the first time it is opened.
  */
 export function DataProvider({ children }) {
   const { user, isPending } = useAuth()
@@ -58,11 +31,12 @@ export function DataProvider({ children }) {
   const startedFor = useRef(null)
 
   const load = useCallback(async () => {
+    const persona = demoPersonaFor(user?.email)
     setReady(false)
     try {
       let next = await api.getState()
-      if (user?.email === DEMO_EMAIL && isEmptyState(next)) {
-        await api.importAll(simulationPayload())
+      if (persona && isEmptyState(next)) {
+        await api.importAll(buildDemoPayload(persona))
         next = await api.getState()
       }
       setData(next)
@@ -89,13 +63,15 @@ export function DataProvider({ children }) {
     load()
   }, [isPending, user, load])
 
-  const isDemo = user?.email === DEMO_EMAIL
+  const isDemo = Boolean(demoPersonaFor(user?.email))
 
-  /** Wipes the demo account and restores the starter scenario. */
+  /** Wipes a demo account and restores its persona. */
   const resetDemo = useCallback(async () => {
-    await api.importAll(simulationPayload())
+    const persona = demoPersonaFor(user?.email)
+    if (!persona) return
+    await api.importAll(buildDemoPayload(persona))
     await load()
-  }, [load])
+  }, [load, user?.email])
 
   const value = useMemo(() => ({ data, ready, error, reload: load, isDemo, resetDemo }), [data, ready, error, load, isDemo, resetDemo])
   return <DataContext value={value}>{children}</DataContext>
