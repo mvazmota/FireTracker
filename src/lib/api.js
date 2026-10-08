@@ -19,6 +19,7 @@ export const api = {
 
   putTransaction: (transaction) => request(`/api/transactions/${encodeURIComponent(transaction.id)}`, { method: 'PUT', body: JSON.stringify(transaction) }),
   deleteTransaction: (id) => request(`/api/transactions/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  putTransactionsBatch: (transactions) => request('/api/transactions/batch', { method: 'POST', body: JSON.stringify({ transactions }) }),
 
   putAsset: (type, record) => request(`/api/assets/${type}/${encodeURIComponent(record.id)}`, { method: 'PUT', body: JSON.stringify(record) }),
   deleteAsset: (type, id) => request(`/api/assets/${type}/${encodeURIComponent(id)}`, { method: 'DELETE' }),

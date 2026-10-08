@@ -116,6 +116,20 @@ export function FinanceProvider({ children }) {
     run(() => api.putTransaction(transaction))
   }, [transactions, rememberPlatform, rememberCategory, run])
 
+  const saveTransactions = useCallback((rows) => {
+    if (!rows.length) return
+    setTransactions((current) => {
+      const byId = new Map(rows.map((row) => [row.id, row]))
+      const known = new Set(current.map((item) => item.id))
+      return [...current.map((item) => byId.get(item.id) || item), ...rows.filter((row) => !known.has(row.id))]
+    })
+    rows.forEach((row) => {
+      rememberPlatform(row.platform)
+      rememberCategory(row.type, row.category)
+    })
+    run(() => api.putTransactionsBatch(rows))
+  }, [rememberPlatform, rememberCategory, run])
+
   const removeTransaction = useCallback((id) => {
     setTransactions((current) => current.filter((item) => item.id !== id))
     run(() => api.deleteTransaction(id))
@@ -288,6 +302,7 @@ export function FinanceProvider({ children }) {
     saveRecurringRule,
     removeRecurringRule,
     saveTransaction,
+    saveTransactions,
     removeTransaction,
     savePortfolioRecord,
     removePortfolioRecord,
@@ -298,7 +313,7 @@ export function FinanceProvider({ children }) {
   }), [
     transactions, holdings, cryptoHoldings, p2pRecords, bondHoldings, savingsAccounts, recurringRules, hydrated,
     saveRecurringRule, removeRecurringRule,
-    saveTransaction, removeTransaction, savePortfolioRecord, removePortfolioRecord,
+    saveTransaction, saveTransactions, removeTransaction, savePortfolioRecord, removePortfolioRecord,
     saveSavingsAccount, saveSavingsAccounts, fillSampleHistory,
   ])
 

@@ -115,6 +115,22 @@ api.delete('/transactions/:id', async (c) => {
   return c.json({ ok: true })
 })
 
+/**
+ * Monthly entry saves a whole month at once, so one request per row would be
+ * forty round trips for forty rows. Statements are batched like the import.
+ */
+api.post('/transactions/batch', async (c) => {
+  const body = await c.req.json().catch(() => ({}))
+  const rows = Array.isArray(body?.transactions) ? body.transactions : []
+  if (!rows.length) return c.json({ error: 'no transactions' }, 400)
+  if (rows.some((row) => !row?.id || !row?.title || !row?.category || !row?.type || !row?.date)) {
+    return c.json({ error: 'invalid transaction' }, 400)
+  }
+  const statements = rows.map((row) => upsertStatement(c.env.DB, c.get('userId'), TRANSACTIONS, row))
+  await runBatched(c.env.DB, statements)
+  return c.json({ ok: true, count: rows.length })
+})
+
 api.put('/assets/:type/:id', async (c) => {
   const config = ASSET_TABLES[c.req.param('type')]
   if (!config) return c.json({ error: 'unknown asset type' }, 400)
