@@ -127,7 +127,7 @@
   .manage-columns { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .fire-spending-list li { grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; }
   .fire-spending-months { display: none; }
-  .fund-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fund-facts-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .recurring-row { grid-template-columns: 30px minmax(0, 1fr) auto auto auto; gap: 9px; }
   .recurring-next { display: none; }
 }

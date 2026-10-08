@@ -33,4 +33,7 @@ export const api = {
   // Public fund data, looked up from an ISIN and cached by the Worker.
   lookupEtf: (isin) => request(`/api/etf/lookup?isin=${encodeURIComponent(isin)}`),
   etfPrices: (symbol, from) => request(`/api/etf/prices?symbol=${encodeURIComponent(symbol)}&from=${encodeURIComponent(from)}`),
+
+  // The annual cost, which no free feed publishes — typed once per fund.
+  saveEtfTer: (isin, ter) => request('/api/etf/ter', { method: 'PUT', body: JSON.stringify({ isin, ter }) }),
 }

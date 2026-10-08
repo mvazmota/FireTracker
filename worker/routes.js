@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { fetchFundFacts, fetchPrices, isIsin, readCatalog, readPrices, resolveIsin, writeCatalog, writePrices } from './etf.js'
+import { fetchFundFacts, fetchPrices, isIsin, readCatalog, readPrices, resolveIsin, saveTer, writeCatalog, writePrices } from './etf.js'
 import { ASSET_TABLES, RECURRING, TRANSACTIONS, clearUserRows, listForUser, removeById, roundCents, runBatched, upsert, upsertStatement } from './tables.js'
 
 const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'categories', 'onboarded', 'fireEstimate', 'firePlan', 'birthYear', 'country']
@@ -173,8 +173,10 @@ api.get('/etf/lookup', async (c) => {
   const isin = (c.req.query('isin') || '').trim().toUpperCase()
   if (!isIsin(isin)) return c.json({ error: 'invalid_isin' }, 400)
 
+  // A row with no symbol behind it is one that only holds a typed-in fact, so
+  // it is treated as a miss: the listing is resolved and filled in around it.
   const cached = await readCatalog(c.env.DB, isin)
-  if (cached) return c.json(cached)
+  if (cached?.symbol) return c.json(cached)
 
   try {
     const found = await resolveIsin(isin)
@@ -214,6 +216,22 @@ api.get('/etf/prices', async (c) => {
   } catch {
     return c.json({ error: 'prices_failed' }, 502)
   }
+})
+
+/**
+ * The annual cost, which no free feed publishes. Typed once per fund and cached
+ * in the catalog, so the next holding of the same fund already knows it.
+ */
+api.put('/etf/ter', async (c) => {
+  const body = await c.req.json().catch(() => ({}))
+  const isin = String(body?.isin || '').trim().toUpperCase()
+  if (!isIsin(isin)) return c.json({ error: 'invalid_isin' }, 400)
+
+  const ter = Number(body?.ter)
+  if (!Number.isFinite(ter) || ter < 0 || ter > 1) return c.json({ error: 'invalid_ter' }, 400)
+
+  await saveTer(c.env.DB, isin, ter)
+  return c.json({ ok: true })
 })
 
 /**

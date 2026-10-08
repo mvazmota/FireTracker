@@ -1,17 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Search, X } from 'lucide-react'
 import { api } from '../../lib/api.js'
 import { buildEtfHolding } from '../../lib/etf.js'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
+import FundFacts from './FundFacts.jsx'
 import PlatformSelector from '../ui/PlatformSelector.jsx'
+
+const ISIN_PATTERN = /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/
 
 /**
  * Adds an ETF from its ISIN.
  *
  * The user supplies the four things nobody can look up — which fund, which
- * broker, how much and when — and the app fetches the name, the price on the
- * day, the units that implies and the whole monthly history.
+ * broker, how much and when. The fund itself is looked up as the ISIN is
+ * typed, so what is about to be added is on screen before anything is saved.
  */
 export default function EtfLookupModal({ onClose, onSave }) {
   const { t } = useI18n()
@@ -22,15 +25,38 @@ export default function EtfLookupModal({ onClose, onSave }) {
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [lookup, setLookup] = useState(null)
+  const [searching, setSearching] = useState(false)
+
+  const isinValue = isin.trim().toUpperCase()
+
+  // Looking the fund up as it is typed, rather than only on submit, is what
+  // lets the user see what they are adding. The catalog caches the answer, so
+  // this costs a database read once per fund rather than a call to the feed.
+  useEffect(() => {
+    if (!ISIN_PATTERN.test(isinValue)) {
+      setLookup(null)
+      setSearching(false)
+      return undefined
+    }
+    setSearching(true)
+    const handle = setTimeout(() => {
+      api.lookupEtf(isinValue)
+        .then(setLookup)
+        .catch(() => setLookup({ unavailable: true }))
+        .finally(() => setSearching(false))
+    }, 350)
+    return () => clearTimeout(handle)
+  }, [isinValue])
 
   async function submit(event) {
     event.preventDefault()
     setError('')
     setBusy(true)
     try {
-      const lookup = await api.lookupEtf(isin.trim())
-      const prices = await api.etfPrices(lookup.symbol, date)
-      const holding = buildEtfHolding({ lookup, prices: prices.rows, amount: Number(amount), date, platform })
+      const found = await api.lookupEtf(isinValue)
+      const prices = await api.etfPrices(found.symbol, date)
+      const holding = buildEtfHolding({ lookup: found, prices: prices.rows, amount: Number(amount), date, platform })
       if (!holding) {
         setError(t.etfIncomplete)
         return
@@ -38,7 +64,7 @@ export default function EtfLookupModal({ onClose, onSave }) {
       if (platform) rememberPlatform(platform)
       onSave(holding)
     } catch (cause) {
-      // The feed is undocumented and can fail; manual entry is always there.
+      // The feed is undocumented and can fail; the form keeps what was typed.
       setError(cause.message === 'not_found' ? t.etfNotFound : t.etfLookupFailed)
     } finally {
       setBusy(false)
@@ -50,6 +76,11 @@ export default function EtfLookupModal({ onClose, onSave }) {
     <form onSubmit={submit}>
       <label className="field-label" htmlFor="etf-lookup-isin">{t.isin}</label>
       <div className="amount-input"><input id="etf-lookup-isin" autoFocus maxLength={12} placeholder="IE00BFMXXD54" value={isin} onChange={(event) => setIsin(event.target.value.toUpperCase())} /></div>
+
+      <div className="etf-lookup-facts">
+        {searching && <p className="fund-facts-empty">{t.loading}</p>}
+        {lookup && <FundFacts facts={lookup} isin={isinValue} />}
+      </div>
 
       <PlatformSelector id="etf-lookup-platform" label={t.platform} value={platform} onChange={setPlatform} />
 
@@ -65,7 +96,7 @@ export default function EtfLookupModal({ onClose, onSave }) {
       </div>
 
       {error && <p className="form-error">{error}</p>}
-      <button className="submit-button" type="submit" disabled={busy || !isin.trim() || !(Number(amount) > 0)}>{busy ? t.loading : <><Search size={17} /> {t.addEtfByIsin}</>}</button>
+      <button className="submit-button" type="submit" disabled={busy || !isinValue || !(Number(amount) > 0)}>{busy ? t.loading : <><Search size={17} /> {t.addEtfByIsin}</>}</button>
     </form>
   </section></div>
 }

@@ -17,11 +17,11 @@ euros.
 - **Investments** — ETFs, crypto, P2P lending, bonds and savings accounts, each
   with its own screen, cost basis and value history. Any type can be hidden
   without deleting its data.
-- **ETFs by ISIN** — add a holding with just its ISIN, broker, amount and date.
-  The app looks up the fund, the price on that day, the units that implies and
-  the monthly history since, so there is no price to type in and no monthly
-  value to record. Clicking a holding expands its fund details: issuer, fund
-  size, whether it accumulates or distributes, the dividend and when it launched.
+- **ETFs by ISIN** — the only way to add one. Type the ISIN and the fund appears
+  in the form — issuer, fund size, whether it accumulates or distributes, and when
+  it launched — before anything is saved. The annual cost is the one fact no free
+  feed publishes, so it is asked once per fund. Clicking a holding expands the
+  same details.
 - **Global position** — tracked cash plus every asset, charted over 3, 6, 12,
   24 months or all recorded history.
 - **Statistics** — annual cash flow, spending by category and investment

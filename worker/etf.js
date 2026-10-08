@@ -61,7 +61,7 @@ export async function fetchFundFacts(symbol, name = '') {
 
   const yieldValue = numberFrom(summary.dividendYield)
   const lower = String(name || '').toLowerCase()
-  const distribution = /accumulat/.test(lower) ? 'accumulating'
+  const distribution = /accumulat|\(acc\)/.test(lower) ? 'accumulating'
     : /distribut|\(dist\)/.test(lower) ? 'distributing'
       : yieldValue != null && yieldValue > 0 ? 'distributing'
         : null
@@ -201,7 +201,7 @@ export async function readCatalog(db, isin) {
 
 export async function writeCatalog(db, entry) {
   await db
-    .prepare('insert into "etf_catalog" ("isin", "symbol", "name", "currency", "exchange", "issuer", "fundSize", "dividendYield", "inception", "ter", "distribution", "fetchedAt") values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) on conflict("isin") do update set "symbol" = excluded."symbol", "name" = excluded."name", "currency" = excluded."currency", "exchange" = excluded."exchange", "issuer" = excluded."issuer", "fundSize" = excluded."fundSize", "dividendYield" = excluded."dividendYield", "inception" = excluded."inception", "ter" = excluded."ter", "distribution" = excluded."distribution", "fetchedAt" = excluded."fetchedAt"')
+    .prepare('insert into "etf_catalog" ("isin", "symbol", "name", "currency", "exchange", "issuer", "fundSize", "dividendYield", "inception", "ter", "distribution", "fetchedAt") values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) on conflict("isin") do update set "symbol" = excluded."symbol", "name" = excluded."name", "currency" = excluded."currency", "exchange" = excluded."exchange", "issuer" = excluded."issuer", "fundSize" = excluded."fundSize", "dividendYield" = excluded."dividendYield", "inception" = excluded."inception", "ter" = coalesce(excluded."ter", "ter"), "distribution" = excluded."distribution", "fetchedAt" = excluded."fetchedAt"')
     .bind(
       entry.isin,
       entry.symbol,
@@ -216,6 +216,17 @@ export async function writeCatalog(db, entry) {
       entry.distribution ?? null,
       new Date().toISOString(),
     )
+    .run()
+}
+
+/**
+ * The annual cost, typed by the user. No free feed publishes it, so it is the
+ * one fund fact the app asks for — once per fund, then cached like the rest.
+ */
+export async function saveTer(db, isin, ter) {
+  await db
+    .prepare('insert into "etf_catalog" ("isin", "ter", "fetchedAt") values (?, ?, ?) on conflict("isin") do update set "ter" = excluded."ter"')
+    .bind(isin, ter, new Date().toISOString())
     .run()
 }
 

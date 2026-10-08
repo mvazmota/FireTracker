@@ -89,11 +89,16 @@ In development run the two servers together, and run Vite on **port 5199**
   picks the euro one rather than converting at an invented rate.
 - **Fund facts come from Yahoo's fundamentals, which need a cookie and a crumb**
   (`yahooCrumb` in `worker/etf.js`): two extra requests, once per fund, for the
-  issuer, fund size, dividend and inception. Distribution policy is not a field
-  Yahoo exposes — it is read from the fund's name and cross-checked against the
-  yield. **The annual cost (TER) is not available from any free source tested**:
-  Yahoo returns it empty and justETF has it but only by scraping, which was not
-  done. `etf_catalog.ter` exists and the details row shows it when it is set.
+  issuer, fund size and inception. Distribution policy is not a field Yahoo
+  exposes — it is read from the fund's name (`Accumulation`, `(Acc)`, `Dist`,
+  `(Dist)`) and cross-checked against the yield. **The annual cost (TER) and the
+  dividend yield are both empty from Yahoo for ETFs**, so the TER is the one fact
+  the app asks for: typed once per fund (`PUT /api/etf/ter`) and cached like the
+  rest. A catalog row with no `symbol` holds only a typed fact, so the lookup
+  treats it as a miss and resolves the listing around it; `writeCatalog` uses
+  `coalesce` on `ter` so a lookup never wipes a typed one. A distributing fund's
+  payouts are not tracked, and the details row says so rather than letting the
+  return read as a loss.
 - **FIRE maths** (`src/lib/fire.js`): the annual average divides by the number of
   months that **contain transactions**, not months elapsed — elapsed months
   understate spending and flatter the FIRE date. Transfers into investments or
