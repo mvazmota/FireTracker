@@ -69,6 +69,7 @@
 .onboarding-chip:hover { border-color: #c3d6c5; background: #f4f8f3; }
 .onboarding-chip.chip-on { border-color: #8fb894; background: #eaf3ea; color: #3f6b4a; }
 .onboarding-hint { margin: 0 0 14px; color: #b08a6a; font-size: 13px; }
+.onboarding-units-hint { margin: -2px 0 14px; color: #8a958d; }
 .onboarding-wide { width: 100%; height: 44px; }
 .onboarding-actions { display: flex; gap: 10px; }
 .onboarding-actions .submit-button { flex: 1; height: 44px; margin-top: 0; }

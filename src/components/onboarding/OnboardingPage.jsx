@@ -181,6 +181,7 @@ export default function OnboardingPage() {
             <div><label className="field-label" htmlFor="onboarding-fire-income">{t.fireIncomeLabel}</label><div className="amount-input"><span>€</span><input id="onboarding-fire-income" type="number" min="0" step="1000" placeholder="30000" value={incomeInput} onChange={(event) => setIncomeInput(event.target.value)} /></div></div>
             <div><label className="field-label" htmlFor="onboarding-fire-spend">{t.fireSpendLabel}</label><div className="amount-input"><span>€</span><input id="onboarding-fire-spend" type="number" min="0" step="50" placeholder="1500" value={spendingInput} onChange={(event) => setSpendingInput(event.target.value)} /></div></div>
           </div>
+          <p className="onboarding-hint onboarding-units-hint">{t.fireUnitsHint}</p>
           <label className="field-label" htmlFor="onboarding-fire-networth">{t.fireNetWorthLabel}</label>
           <div className="amount-input"><span>€</span><input id="onboarding-fire-networth" type="number" min="0" step="1000" placeholder="0" value={netWorthInput} onChange={(event) => setNetWorthInput(event.target.value)} /></div>
           <p className="onboarding-hint">{t.fireNetWorthHint}</p>
