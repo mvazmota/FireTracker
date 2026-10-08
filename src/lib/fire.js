@@ -99,15 +99,19 @@ export function projectSeries({ current, annualSavings, realReturn = REAL_RETURN
   return points
 }
 
-/** Everything the FIRE page needs, derived from the transaction history. */
-export function fireProjection({ transactions, currentPosition, today = new Date(), realReturn = REAL_RETURN, withdrawalRate = WITHDRAWAL_RATE }) {
-  const averages = annualAverages(transactions, today)
-  const target = fireTarget(averages.expenses, withdrawalRate)
+/** Shared tail: turns a set of annual figures into a full projection. */
+function buildProjection({ income, expenses, savings, saved = 0, months, currentPosition, today, realReturn, withdrawalRate, estimated = false }) {
+  const target = fireTarget(expenses, withdrawalRate)
   const reached = target > 0 && currentPosition >= target
-  const years = yearsToTarget({ current: currentPosition, annualSavings: averages.savings, target, realReturn })
+  const years = yearsToTarget({ current: currentPosition, annualSavings: savings, target, realReturn })
 
   return {
-    ...averages,
+    income,
+    expenses,
+    savings,
+    saved,
+    months,
+    estimated,
     target,
     years,
     reached,
@@ -115,5 +119,38 @@ export function fireProjection({ transactions, currentPosition, today = new Date
     withdrawalRate,
     // A rough calendar date for the crossover, good to the month.
     targetDate: years == null ? null : new Date(today.getFullYear(), today.getMonth() + Math.ceil(years * 12), 1),
+  }
+}
+
+/** Everything the FIRE page needs, derived from the transaction history. */
+export function fireProjection({ transactions, currentPosition, today = new Date(), realReturn = REAL_RETURN, withdrawalRate = WITHDRAWAL_RATE }) {
+  return buildProjection({ ...annualAverages(transactions, today), currentPosition, today, realReturn, withdrawalRate })
+}
+
+/**
+ * A projection built from the answers given during onboarding, for use before
+ * there is any transaction history worth averaging.
+ */
+export function estimateProjection({ estimate, currentPosition, today = new Date(), realReturn = REAL_RETURN, withdrawalRate = WITHDRAWAL_RATE }) {
+  const income = Number(estimate?.income) || 0
+  const expenses = Number(estimate?.spending) || 0
+  const rate = Number(estimate?.savingsRate)
+  // A stated savings rate wins; otherwise it is whatever income minus spending leaves.
+  const savings = Number.isFinite(rate) && rate >= 0 ? roundMoney(income * (rate / 100)) : roundMoney(income - expenses)
+  return buildProjection({ income, expenses, savings, saved: savings, months: 0, currentPosition, today, realReturn, withdrawalRate, estimated: true })
+}
+
+/**
+ * How the goal the user set compares with the number their spending implies.
+ * `cover` is what that goal pays out each year at the withdrawal rate.
+ */
+export function compareGoal({ goal, projected, withdrawalRate = WITHDRAWAL_RATE }) {
+  const target = Number(goal) || 0
+  return {
+    goal: roundMoney(target),
+    projected: roundMoney(projected),
+    cover: roundMoney(target * withdrawalRate),
+    gap: roundMoney(projected - target),
+    enough: projected > 0 && target >= projected,
   }
 }

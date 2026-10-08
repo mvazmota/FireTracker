@@ -125,6 +125,7 @@
 }
 @media (max-width: 760px) {
   .manage-columns { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .fire-compare-grid { grid-template-columns: minmax(0, 1fr); }
   .recurring-row { grid-template-columns: 30px minmax(0, 1fr) auto auto auto; gap: 9px; }
   .recurring-next { display: none; }
 }

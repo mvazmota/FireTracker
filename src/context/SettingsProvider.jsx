@@ -17,6 +17,7 @@ const emptySettings = () => ({
   platforms: [],
   categories: { expense: [], income: [] },
   onboarded: false,
+  fireEstimate: null,
 })
 
 /**
@@ -63,6 +64,7 @@ export function SettingsProvider({ children }) {
         income: stored.categories?.income ?? [],
       },
       onboarded: stored.onboarded ?? false,
+      fireEstimate: stored.fireEstimate ?? null,
     })
     setHydrated(true)
   }, [data, user?.name, applySettings])
@@ -114,13 +116,14 @@ export function SettingsProvider({ children }) {
   }, [persist])
 
   /** Finishes onboarding with everything the user picked. */
-  const saveOnboarding = useCallback(({ categories, platforms, investmentVisibility, fireGoal, fireMeterVisible }) => {
+  const saveOnboarding = useCallback(({ categories, platforms, investmentVisibility, fireGoal, fireMeterVisible, fireEstimate }) => {
     persist({
       categories,
       platforms,
       ...(investmentVisibility ? { investmentVisibility } : {}),
       ...(Number.isFinite(fireGoal) && fireGoal > 0 ? { fireGoal } : {}),
       ...(typeof fireMeterVisible === 'boolean' ? { fireMeterVisible } : {}),
+      ...(fireEstimate ? { fireEstimate } : {}),
       onboarded: true,
     })
   }, [persist])
@@ -133,6 +136,7 @@ export function SettingsProvider({ children }) {
     platforms: settings.platforms,
     categories: settings.categories,
     onboarded: settings.onboarded,
+    fireEstimate: settings.fireEstimate,
     hydrated,
     saveProfile,
     saveFireGoal,

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, Camera, Check, ExternalLink, Flame, Plus, X } from 'lucide-react'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
@@ -6,6 +6,8 @@ import { categorySuggestions } from '../../data/categories.js'
 import { INVESTMENT_TYPES } from '../../data/investmentTypes.js'
 import { PLATFORM_SUGGESTIONS } from '../../lib/constants.js'
 import { resizeImageFile } from '../../lib/image.js'
+import { WITHDRAWAL_RATE } from '../../lib/fire.js'
+import { formatCurrency } from '../../lib/format.js'
 import Avatar from '../ui/Avatar.jsx'
 import AnimalAvatar, { ANIMAL_LABEL_KEYS, ANIMAL_PRESETS, animalAvatarValue, animalId } from '../ui/AnimalAvatar.jsx'
 
@@ -39,6 +41,10 @@ export default function OnboardingPage() {
   const [visibility, setVisibility] = useState(() => ({ ...DEFAULT_SELECTED_INVESTMENTS }))
   const [goalInput, setGoalInput] = useState(String(fireGoal))
   const [showFire, setShowFire] = useState(fireMeterVisible)
+  const [incomeInput, setIncomeInput] = useState('')
+  const [spendingInput, setSpendingInput] = useState('')
+  const [rateInput, setRateInput] = useState('')
+  const [goalTouched, setGoalTouched] = useState(false)
   const [avatar, setAvatar] = useState(profile.avatar || '')
   const [photoError, setPhotoError] = useState('')
   const fileInput = useRef(null)
@@ -106,12 +112,18 @@ export default function OnboardingPage() {
 
   function finish() {
     if (avatar !== (profile.avatar || '')) saveProfile({ ...profile, avatar })
+    const hasEstimate = incomeInput.trim() !== '' || spendingInput.trim() !== '' || rateInput.trim() !== ''
     saveOnboarding({
       categories,
       platforms,
       investmentVisibility: visibility,
       fireGoal: Number(goalInput) > 0 ? Number(goalInput) : fireGoal,
       fireMeterVisible: showFire,
+      fireEstimate: hasEstimate ? {
+        income: Number(incomeInput) || 0,
+        spending: Number(spendingInput) || 0,
+        savingsRate: rateInput.trim() === '' ? (impliedRate ?? 0) : Number(rateInput),
+      } : undefined,
     })
   }
 
@@ -119,6 +131,17 @@ export default function OnboardingPage() {
   const platformsReady = platforms.length > 0
   const investmentsReady = Object.values(visibility).some(Boolean)
   const goalValid = !showFire || goalInput.trim() === '' || (Number.isFinite(Number(goalInput)) && Number(goalInput) > 0)
+
+  // 25× what they spend a year is the number the 4% rule points at.
+  const suggestedGoal = Number(spendingInput) > 0 ? Math.round(Number(spendingInput) / WITHDRAWAL_RATE) : 0
+  const impliedRate = Number(incomeInput) > 0 && spendingInput.trim() !== ''
+    ? Math.max(0, Math.min(100, Math.round(((Number(incomeInput) - Number(spendingInput)) / Number(incomeInput)) * 100)))
+    : null
+
+  // The goal follows the suggestion until it is edited by hand.
+  useEffect(() => {
+    if (!goalTouched && suggestedGoal > 0) setGoalInput(String(suggestedGoal))
+  }, [suggestedGoal, goalTouched])
 
   return <div className="onboarding-page">
     <div className="login-language">
@@ -181,12 +204,21 @@ export default function OnboardingPage() {
         <p className="onboarding-sub">{t.onboardingFireSubtitle}</p>
         <a className="onboarding-learn-more" href="https://www.investopedia.com/terms/f/financial-independence-retire-early-fire.asp" target="_blank" rel="noopener noreferrer">{t.learnMore} <ExternalLink size={13} /></a>
         <div className="onboarding-fire">
+          <div className="form-row">
+            <div><label className="field-label" htmlFor="onboarding-fire-income">{t.fireIncomeLabel}</label><div className="amount-input"><span>€</span><input id="onboarding-fire-income" type="number" min="0" step="1000" placeholder="30000" value={incomeInput} onChange={(event) => setIncomeInput(event.target.value)} /></div></div>
+            <div><label className="field-label" htmlFor="onboarding-fire-spend">{t.fireSpendLabel}</label><div className="amount-input"><span>€</span><input id="onboarding-fire-spend" type="number" min="0" step="1000" placeholder="20000" value={spendingInput} onChange={(event) => setSpendingInput(event.target.value)} /></div></div>
+          </div>
+          <label className="field-label" htmlFor="onboarding-fire-rate">{t.fireRateLabel}</label>
+          <div className="amount-input"><input id="onboarding-fire-rate" type="number" min="0" max="100" step="1" placeholder="30" value={rateInput} onChange={(event) => setRateInput(event.target.value)} /><span>%</span></div>
+          {impliedRate != null && rateInput.trim() === '' && <p className="onboarding-hint">{t.fireRateHint.replace('{rate}', impliedRate)}</p>}
+          {suggestedGoal > 0 && <p className="onboarding-hint">{t.fireSuggested.replace('{amount}', formatCurrency(suggestedGoal, language))}</p>}
+
           <div className="onboarding-fire-toggle">
             <div className="visibility-label"><strong>{t.fireMeterSettings}</strong><span>{t.showFireMeter}</span></div>
             <button type="button" className={showFire ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={showFire} aria-label={t.showFireMeter} onClick={() => setShowFire((current) => !current)}><span /></button>
           </div>
           <label className="field-label" htmlFor="onboarding-fire-goal">{t.goalAmount}</label>
-          <div className={showFire ? 'amount-input' : 'amount-input amount-input-off'}><span>€</span><input id="onboarding-fire-goal" type="number" min="1" step="1000" value={goalInput} disabled={!showFire} onChange={(event) => setGoalInput(event.target.value)} /></div>
+          <div className={showFire ? 'amount-input' : 'amount-input amount-input-off'}><span>€</span><input id="onboarding-fire-goal" type="number" min="1" step="1000" value={goalInput} disabled={!showFire} onChange={(event) => { setGoalTouched(true); setGoalInput(event.target.value) }} /></div>
           {!goalValid && <p className="form-error">{t.goalError}</p>}
         </div>
         <div className="onboarding-actions">

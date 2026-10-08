@@ -205,6 +205,15 @@
 .fire-progress-track > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #8fc39a, #4f8a63); transition: width .4s ease; }
 .fire-progress-legend { display: flex; justify-content: space-between; margin-top: 9px; color: #8a958d; font-size: 12px; font-weight: 600; }
 .fire-stats { margin-top: 15px; }
+.fire-compare { margin-top: 15px; padding: 18px 20px 16px; }
+.fire-compare-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+.fire-compare-item { display: flex; flex-direction: column; gap: 3px; padding: 14px 16px; border-radius: 12px; background: #f7f9f6; }
+.fire-compare-label { color: #8a958d; font-size: 12px; font-weight: 600; }
+.fire-compare-item strong { color: #2d3c33; font: 700 22px 'Manrope', sans-serif; letter-spacing: -0.6px; }
+.fire-compare-item small { color: #98a29b; font-size: 12px; line-height: 1.45; }
+.fire-verdict { margin: 14px 0 0; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; line-height: 1.5; }
+.fire-verdict.verdict-ok { color: #3f7351; background: #edf5ef; }
+.fire-verdict.verdict-warn { color: #a2662f; background: #fbf0e4; }
 .fire-chart-panel { margin-top: 15px; padding: 18px 20px 14px; }
 .fire-chart-scroll { margin-top: 12px; overflow-x: auto; }
 .fire-chart { display: block; width: 100%; min-width: 520px; height: 240px; }
