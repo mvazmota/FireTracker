@@ -24,6 +24,25 @@ In development run the two servers together, and run Vite on **port 5199**
 `TRUSTED_ORIGINS`, so auth rejects the default 5173. The Worker must be on
 **8787**, because `vite.config.js` proxies `/api` to `http://127.0.0.1:8787`.
 
+## Working with a coding subagent
+
+The user talks to the assistant about the project; the code is written by a
+subagent (currently `opencode-go/longcat-2.5-preview-free`). Keep the loop short:
+
+1. Agree the change in conversation. Ask one question only if something is
+   genuinely unclear.
+2. Write one short brief: a single task, the exact files, what "done" means, and
+   the two commands that verify it (`npm test`, `npm run build`).
+3. The subagent makes the change, runs both commands, and reports the diff and
+   the results.
+4. Review with one `git diff` and the test summary line. Do not rebuild the live
+   environment just to review.
+5. Report what changed and what passed.
+
+**One verification pass, then stop.** If it fails, report the failure instead of
+retrying the same sequence. Never run a kill-restart-test cycle, and never stream
+a `wrangler dev` log into context: it is huge and it primes repetitive output.
+
 ## Architecture
 
 - `worker/index.js` — the Hono app. `/api/auth/*` goes to Better Auth,
