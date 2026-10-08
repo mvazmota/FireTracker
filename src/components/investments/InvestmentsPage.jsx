@@ -1,8 +1,9 @@
 import InvestmentAllocation from './InvestmentAllocation.jsx'
 import InvestmentHistoryModal from './InvestmentHistoryModal.jsx'
 import InvestmentModal from './InvestmentModal.jsx'
+import EtfLookupModal from './EtfLookupModal.jsx'
 import { useState } from 'react'
-import { Bitcoin, ChartLine, Pencil, Plus, TrendingUp, Wallet, X } from 'lucide-react'
+import { Bitcoin, ChartLine, Pencil, Plus, Search, TrendingUp, Wallet, X } from 'lucide-react'
 import { formatCurrency, formatPercent } from '../../lib/format.js'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
@@ -19,6 +20,7 @@ export default function InvestmentsPage({ holdings, onSave, onDelete, assetType 
   const [editingHolding, setEditingHolding] = useState(null)
   const [historyRecord, setHistoryRecord] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [showLookup, setShowLookup] = useState(false)
   const totalInvested = holdings.reduce((sum, holding) => sum + holding.units * holding.averageCost, 0)
   const marketValue = holdings.reduce((sum, holding) => sum + holding.units * holding.currentPrice, 0)
   const unrealised = marketValue - totalInvested
@@ -42,7 +44,7 @@ export default function InvestmentsPage({ holdings, onSave, onDelete, assetType 
 
   return (
     <div className="page-content investments-page">
-      <section className="welcome-row"><div><p className="eyebrow">{t.portfolioEyebrow}</p><h1>{pageHeading}<span>.</span></h1><p className="welcome-sub">{pageSubtitle}</p></div><button className="primary-button" onClick={() => setShowModal(true)}><Plus size={18} strokeWidth={2.4} /> {addLabel}</button></section>
+      <section className="welcome-row"><div><p className="eyebrow">{t.portfolioEyebrow}</p><h1>{pageHeading}<span>.</span></h1><p className="welcome-sub">{pageSubtitle}</p></div><div className="welcome-actions">{!isCrypto && <button className="ghost-button" onClick={() => setShowLookup(true)}><Search size={17} /> {t.addEtfByIsin}</button>}<button className="primary-button" onClick={() => setShowModal(true)}><Plus size={18} strokeWidth={2.4} /> {addLabel}</button></div></section>
       <section className="summary-grid investment-summary" aria-label={t.investments}>
         <article className="summary-card balance-card"><div className="summary-label">{t.marketValue}<span className="summary-symbol"><ChartLine size={16} /></span></div><div className="summary-amount">{formatCurrency(marketValue, language)}</div><div className="summary-foot">{t.currentPortfolio}</div><div className="balance-art"><span /><span /><span /></div></article>
         <article className="summary-card"><div className="summary-label">{t.totalInvested}<span className="summary-symbol income-symbol"><Wallet size={16} /></span></div><div className="summary-amount">{formatCurrency(totalInvested, language)}</div><div className="summary-foot">{t.investedSoFar}</div></article>
@@ -55,6 +57,7 @@ export default function InvestmentsPage({ holdings, onSave, onDelete, assetType 
       </section>
       <footer className="page-footer"><span>{t.manualPrices}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
       {(showModal || editingHolding) && <InvestmentModal holding={editingHolding} onClose={closeModal} onSave={saveHolding} assetType={assetType} />}
+      {showLookup && <EtfLookupModal onClose={() => setShowLookup(false)} onSave={(holding) => { onSave(holding); setShowLookup(false) }} />}
       {historyRecord && <InvestmentHistoryModal kind={assetType === 'crypto' ? 'crypto' : 'etfs'} record={historyRecord} onClose={() => setHistoryRecord(null)} onSave={saveHistory} />}
     </div>
   )

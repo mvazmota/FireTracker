@@ -29,4 +29,8 @@ export const api = {
   putSettings: (payload) => request('/api/settings', { method: 'PUT', body: JSON.stringify(payload) }),
   importAll: (payload) => request('/api/import', { method: 'POST', body: JSON.stringify(payload) }),
   deleteAccount: () => request('/api/account', { method: 'DELETE' }),
+
+  // Public fund data, looked up from an ISIN and cached by the Worker.
+  lookupEtf: (isin) => request(`/api/etf/lookup?isin=${encodeURIComponent(isin)}`),
+  etfPrices: (symbol, from) => request(`/api/etf/prices?symbol=${encodeURIComponent(symbol)}&from=${encodeURIComponent(from)}`),
 }

@@ -78,6 +78,15 @@ In development run the two servers together, and run Vite on **port 5199**
   habit is worth in months, what a category costs in pot terms, which spending
   recurs. Nothing here recommends an investment, a category to cut or a target
   to aim for, and that is deliberate: the app is a mirror. Keep it that way.
+- **ETF prices come from an undocumented public feed** (`worker/etf.js`, Yahoo's
+  search and chart endpoints). It can change without notice, so nothing may
+  depend on it: `GET /api/etf/lookup` and `GET /api/etf/prices` are cached in D1
+  (`etf_catalog`, `etf_prices`) and every caller must cope with failure and fall
+  back to manual entry. Resolving an ISIN takes two steps because Yahoo's ISIN
+  search often knows the fund but not a listing worth pricing — the fund's *name*
+  finds the rest — and a listing is only usable if it is quoted in EUR **and**
+  actually has closes behind it. One ISIN maps to dozens of listings; the app
+  picks the euro one rather than converting at an invented rate.
 - **FIRE maths** (`src/lib/fire.js`): the annual average divides by the number of
   months that **contain transactions**, not months elapsed — elapsed months
   understate spending and flatter the FIRE date. Transfers into investments or

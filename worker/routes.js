@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { fetchPrices, isIsin, readCatalog, readPrices, resolveIsin, writeCatalog, writePrices } from './etf.js'
 import { ASSET_TABLES, RECURRING, TRANSACTIONS, clearUserRows, listForUser, removeById, roundCents, runBatched, upsert, upsertStatement } from './tables.js'
 
 const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'categories', 'onboarded', 'fireEstimate', 'firePlan', 'birthYear', 'country']
@@ -162,6 +163,46 @@ api.delete('/account', async (c) => {
     db.prepare('delete from "user" where "id" = ?').bind(userId),
   ])
   return c.json({ ok: true })
+})
+
+/**
+ * Resolves an ISIN to the fund behind it, so a holding can be added with just
+ * the ISIN rather than its name, ticker and currency.
+ */
+api.get('/etf/lookup', async (c) => {
+  const isin = (c.req.query('isin') || '').trim().toUpperCase()
+  if (!isIsin(isin)) return c.json({ error: 'invalid_isin' }, 400)
+
+  const cached = await readCatalog(c.env.DB, isin)
+  if (cached) return c.json(cached)
+
+  try {
+    const found = await resolveIsin(isin)
+    if (!found) return c.json({ error: 'not_found' }, 404)
+    await writeCatalog(c.env.DB, found)
+    return c.json(found)
+  } catch {
+    // The feed is undocumented and can fail; the client falls back to manual entry.
+    return c.json({ error: 'lookup_failed' }, 502)
+  }
+})
+
+/** Daily closes for a fund from a date onwards, cached for a day. */
+api.get('/etf/prices', async (c) => {
+  const symbol = (c.req.query('symbol') || '').trim()
+  const from = (c.req.query('from') || '').trim()
+  if (!symbol || !/^\d{4}-\d{2}-\d{2}$/.test(from)) return c.json({ error: 'invalid_request' }, 400)
+
+  const cached = await readPrices(c.env.DB, symbol)
+  if (cached) return c.json(cached)
+
+  try {
+    const series = await fetchPrices(symbol, from)
+    await writePrices(c.env.DB, symbol, series.rows)
+    return c.json(series)
+  } catch {
+    return c.json({ error: 'prices_failed' }, 502)
+  }
 })
 
 /**

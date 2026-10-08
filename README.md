@@ -17,6 +17,10 @@ euros.
 - **Investments** — ETFs, crypto, P2P lending, bonds and savings accounts, each
   with its own screen, cost basis and value history. Any type can be hidden
   without deleting its data.
+- **ETFs by ISIN** — add a holding with just its ISIN, broker, amount and date.
+  The app looks up the fund, the price on that day, the units that implies and
+  the monthly history since, so there is no price to type in and no monthly
+  value to record.
 - **Global position** — tracked cash plus every asset, charted over 3, 6, 12,
   24 months or all recorded history.
 - **Statistics** — annual cash flow, spending by category and investment
@@ -158,6 +162,10 @@ Auth and are never visible to the app.
 Password reset sends mail through Resend, so `MAIL_FROM` in `wrangler.jsonc`
 must be an address on a domain verified with Resend. Until then only the Resend
 account's own address can receive mail.
+
+ETFs added by ISIN are priced from a public market feed, which means the ISIN
+is sent to it. Nothing else about the account leaves: no transactions, no
+balances, no identifiers. Everything else in the app is entered by hand.
 
 ## For coding agents
 
