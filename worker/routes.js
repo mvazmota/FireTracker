@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { ASSET_TABLES, RECURRING, TRANSACTIONS, clearUserRows, listForUser, removeById, roundCents, runBatched, upsert, upsertStatement } from './tables.js'
 
-const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'categories', 'onboarded', 'fireEstimate', 'firePlan']
+const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'categories', 'onboarded', 'fireEstimate', 'firePlan', 'birthYear', 'country']
 
 const jsonOrNull = (value) => (value == null ? null : JSON.stringify(value))
 const parseOrNull = (value) => {
@@ -27,6 +27,8 @@ async function loadSettings(db, userId) {
       onboarded: row.onboarded == null ? undefined : Boolean(row.onboarded),
       fireEstimate: parseOrNull(row.fireEstimate) ?? undefined,
       firePlan: parseOrNull(row.firePlan) ?? undefined,
+      birthYear: row.birthYear ?? undefined,
+      country: row.country ?? undefined,
     },
   }
 }
@@ -45,6 +47,8 @@ async function saveSettings(db, userId, body) {
     onboarded: body?.settings?.onboarded ?? (existing?.onboarded == null ? null : Boolean(existing.onboarded)),
     fireEstimate: body?.settings?.fireEstimate ?? parseOrNull(existing?.fireEstimate) ?? null,
     firePlan: body?.settings?.firePlan ?? parseOrNull(existing?.firePlan) ?? null,
+    birthYear: body?.settings?.birthYear ?? existing?.birthYear ?? null,
+    country: body?.settings?.country ?? existing?.country ?? null,
   }
   const values = [
     userId,
@@ -59,6 +63,8 @@ async function saveSettings(db, userId, body) {
     merged.onboarded ? 1 : 0,
     jsonOrNull(merged.fireEstimate),
     jsonOrNull(merged.firePlan),
+    merged.birthYear,
+    merged.country,
   ]
   const columns = ['userId', ...SETTINGS_COLUMNS]
   const assignments = SETTINGS_COLUMNS.map((column) => `"${column}" = excluded."${column}"`).join(', ')

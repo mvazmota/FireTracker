@@ -7,6 +7,7 @@ import { INVESTMENT_TYPES } from '../../data/investmentTypes.js'
 import { PLATFORM_SUGGESTIONS } from '../../lib/constants.js'
 import { resizeImageFile } from '../../lib/image.js'
 import { fireCalculator } from '../../lib/fire.js'
+import { ageFromBirthYear, countryOptions } from '../../lib/personal.js'
 import { formatCurrency } from '../../lib/format.js'
 import Avatar from '../ui/Avatar.jsx'
 import AnimalAvatar, { ANIMAL_LABEL_KEYS, ANIMAL_PRESETS, animalAvatarValue, animalId } from '../ui/AnimalAvatar.jsx'
@@ -42,6 +43,8 @@ export default function OnboardingPage() {
   const [incomeInput, setIncomeInput] = useState('')
   const [spendingInput, setSpendingInput] = useState('')
   const [netWorthInput, setNetWorthInput] = useState('')
+  const [birthYearInput, setBirthYearInput] = useState('')
+  const [countryInput, setCountryInput] = useState('')
   const [avatar, setAvatar] = useState(profile.avatar || '')
   const [photoError, setPhotoError] = useState('')
   const fileInput = useRef(null)
@@ -121,6 +124,8 @@ export default function OnboardingPage() {
         spending: annualSpending,
         savingsRate: canProject ? Math.round(savingsRate) : 0,
       } : undefined,
+      birthYear: Number(birthYearInput) || null,
+      country: countryInput || null,
     })
   }
 
@@ -148,6 +153,9 @@ export default function OnboardingPage() {
       ? t.fireCalculatorNever
       : wholeYears === 1 ? t.fireCalculatorYear : t.fireCalculatorYears.replace('{years}', wholeYears)
 
+  // Only the year is asked for, so the age shown is the difference in years.
+  const age = ageFromBirthYear(birthYearInput)
+
   return <div className="onboarding-page">
     <div className="login-language">
       <div className="language-switch" role="group" aria-label={t.language}>
@@ -159,9 +167,9 @@ export default function OnboardingPage() {
     <section className="onboarding-card" aria-labelledby="onboarding-title">
       <span className="login-brand-mark"><Flame size={22} fill="currentColor" /></span>
       <div className="onboarding-progress" aria-hidden="true">
-        {[0, 1, 2, 3, 4].map((index) => <span key={index} className={step >= index ? 'onboarding-dot active-dot' : 'onboarding-dot'} />)}
+        {[0, 1, 2, 3, 4, 5].map((index) => <span key={index} className={step >= index ? 'onboarding-dot active-dot' : 'onboarding-dot'} />)}
       </div>
-      <p className="onboarding-step">{t.stepLabel} {step + 1}/5</p>
+      <p className="onboarding-step">{t.stepLabel} {step + 1}/6</p>
 
       {step === 0 ? <>
         <h1 id="onboarding-title">{t.onboardingFireTitle}<span>.</span></h1>
@@ -239,6 +247,24 @@ export default function OnboardingPage() {
           <button type="button" className="ghost-button" onClick={() => setStep(2)}><ArrowLeft size={16} /> {t.back}</button>
           <button type="button" className="submit-button" disabled={!investmentsReady} onClick={() => setStep(4)}>{t.continue} <ArrowRight size={16} /></button>
         </div>
+      </> : step === 4 ? <>
+        <h1 id="onboarding-title">{t.onboardingAboutTitle}<span>.</span></h1>
+        <p className="onboarding-sub">{t.onboardingAboutSubtitle}</p>
+        <div className="onboarding-fire">
+          <label className="field-label" htmlFor="onboarding-birth-year">{t.birthYearLabel}</label>
+          <div className="amount-input"><input id="onboarding-birth-year" type="number" min="1900" max="2100" step="1" placeholder="1990" value={birthYearInput} onChange={(event) => setBirthYearInput(event.target.value)} /></div>
+          {age != null && <p className="onboarding-hint onboarding-units-hint">{t.birthYearHint.replace('{age}', age)}</p>}
+          <label className="field-label" htmlFor="onboarding-country">{t.countryLabel}</label>
+          <select className="select-input" id="onboarding-country" value={countryInput} onChange={(event) => setCountryInput(event.target.value)}>
+            <option value="">{t.countryNone}</option>
+            {countryOptions(locale).map(({ code, name }) => <option key={code} value={code}>{name}</option>)}
+          </select>
+          <p className="onboarding-hint onboarding-units-hint">{t.onboardingAboutHint}</p>
+        </div>
+        <div className="onboarding-actions">
+          <button type="button" className="ghost-button" onClick={() => setStep(3)}><ArrowLeft size={16} /> {t.back}</button>
+          <button type="button" className="submit-button" onClick={() => setStep(5)}>{t.continue} <ArrowRight size={16} /></button>
+        </div>
       </> : <>
         <h1 id="onboarding-title">{t.onboardingAvatarTitle}<span>.</span></h1>
         <p className="onboarding-sub">{t.onboardingAvatarSubtitle}</p>
@@ -260,7 +286,7 @@ export default function OnboardingPage() {
         <input ref={fileInput} className="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={uploadPhoto} />
         {photoError && <p className="form-error">{photoError}</p>}
         <div className="onboarding-actions">
-          <button type="button" className="ghost-button" onClick={() => setStep(3)}><ArrowLeft size={16} /> {t.back}</button>
+          <button type="button" className="ghost-button" onClick={() => setStep(4)}><ArrowLeft size={16} /> {t.back}</button>
           <button type="button" className="submit-button" onClick={finish}><Check size={16} /> {t.finishSetup}</button>
         </div>
       </>}

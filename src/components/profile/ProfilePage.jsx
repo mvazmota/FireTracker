@@ -13,6 +13,7 @@ import { REMEMBERED_EMAIL_KEY } from '../../lib/constants.js'
 import { usePortfolioSummary } from '../../hooks/usePortfolioSummary.js'
 import { formatCurrency } from '../../lib/format.js'
 import { FIRE_STRATEGIES, annualAverages, fireProjection, normalizePlan, planForStrategy } from '../../lib/fire.js'
+import { ageFromBirthYear, countryOptions } from '../../lib/personal.js'
 import { INVESTMENT_TYPES } from '../../data/investmentTypes.js'
 import FireMeterCompact from '../fire/FireMeterCompact.jsx'
 
@@ -25,6 +26,9 @@ export default function ProfilePage() {
     toggleInvestmentVisibility,
     firePlan,
     saveFirePlan,
+    birthYear,
+    country,
+    savePersonal,
     fireMeterVisible,
     toggleFireMeter,
     categories,
@@ -43,6 +47,8 @@ export default function ProfilePage() {
   const [name, setName] = useState(profile.name || '')
   const [photoError, setPhotoError] = useState('')
   const [planSaved, setPlanSaved] = useState(false)
+  const [birthYearInput, setBirthYearInput] = useState(birthYear == null ? '' : String(birthYear))
+  const [countryInput, setCountryInput] = useState(country || '')
   const fileInput = useRef(null)
   const { isDemo, resetDemo } = useData()
   const [confirmingReset, setConfirmingReset] = useState(false)
@@ -110,6 +116,7 @@ export default function ProfilePage() {
   function submitProfile(event) {
     event.preventDefault()
     saveProfile({ ...profile, name: name.trim() })
+    savePersonal({ birthYear: Number(birthYearInput) || null, country: countryInput || null })
   }
 
   async function uploadPhoto(event) {
@@ -187,7 +194,7 @@ export default function ProfilePage() {
 
     <section className="panel profile-card"><div className="profile-avatar-block"><button type="button" className="profile-avatar-button" onClick={() => fileInput.current?.click()} aria-label={profile.avatar ? t.changePhoto : t.uploadPhoto}><Avatar profile={profile} className="profile-avatar-large" /><span className="profile-avatar-overlay"><Camera size={18} /></span></button><input ref={fileInput} className="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={uploadPhoto} />{profile.avatar ? <button type="button" className="profile-photo-remove" onClick={removePhoto}>{t.removePhoto}</button> : <span className="profile-photo-hint">{t.uploadPhoto}</span>}{photoError && <p className="profile-photo-error">{photoError}</p>}<span className="profile-avatar-caption">{t.avatarOrAnimal}</span><div className="profile-avatar-choices">{ANIMAL_PRESETS.map((id) => { const selected = profile.avatar === animalAvatarValue(id); const label = t[ANIMAL_LABEL_KEYS[id]]; return <button type="button" key={id} className={selected ? 'avatar-choice avatar-choice-on' : 'avatar-choice'} aria-pressed={selected} aria-label={label} title={label} onClick={() => chooseAnimal(id)}><AnimalAvatar id={id} /></button> })}</div></div>
       <div className="profile-details">
-        <form className="profile-form" onSubmit={submitProfile}><label className="field-label" htmlFor="profile-name">{t.yourName}</label><div className="profile-name-edit"><input id="profile-name" value={name} placeholder={t.namePlaceholder} maxLength={60} onChange={(event) => setName(event.target.value)} /><button className="primary-button" type="submit"><Check size={15} /> {t.saveProfile}</button></div></form>
+        <form className="profile-form" onSubmit={submitProfile}><label className="field-label" htmlFor="profile-name">{t.yourName}</label><div className="profile-name-edit"><input id="profile-name" value={name} placeholder={t.namePlaceholder} maxLength={60} onChange={(event) => setName(event.target.value)} /><button className="primary-button" type="submit"><Check size={15} /> {t.saveProfile}</button></div><div className="form-row"><div><label className="field-label" htmlFor="profile-birth-year">{t.birthYearLabel}</label><div className="amount-input"><input id="profile-birth-year" type="number" min="1900" max="2100" step="1" placeholder="1990" value={birthYearInput} onChange={(event) => setBirthYearInput(event.target.value)} /></div></div><div><label className="field-label" htmlFor="profile-country">{t.countryLabel}</label><select className="select-input" id="profile-country" value={countryInput} onChange={(event) => setCountryInput(event.target.value)}><option value="">{t.countryNone}</option>{countryOptions(locale).map(({ code, name: countryLabel }) => <option key={code} value={code}>{countryLabel}</option>)}</select></div></div><p className="onboarding-hint onboarding-units-hint">{ageFromBirthYear(birthYearInput) == null ? t.personalHint : t.birthYearHint.replace('{age}', ageFromBirthYear(birthYearInput))}</p></form>
         <dl className="profile-facts">
           <div><dt>{t.email}</dt><dd title={user?.email || ''}>{user?.email || '—'}</dd></div>
           <div><dt>{t.language}</dt><dd>{language === 'pt' ? 'Português (Portugal)' : 'English'}</dd></div>

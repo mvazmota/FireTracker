@@ -18,6 +18,8 @@ const emptySettings = () => ({
   onboarded: false,
   fireEstimate: null,
   firePlan: null,
+  birthYear: null,
+  country: null,
 })
 
 /**
@@ -65,6 +67,8 @@ export function SettingsProvider({ children }) {
       onboarded: stored.onboarded ?? false,
       fireEstimate: stored.fireEstimate ?? null,
       firePlan: stored.firePlan ?? null,
+      birthYear: stored.birthYear ?? null,
+      country: stored.country ?? null,
     })
     setHydrated(true)
   }, [data, user?.name, applySettings])
@@ -82,6 +86,14 @@ export function SettingsProvider({ children }) {
   }, [run])
 
   const saveFirePlan = useCallback((next) => persist({ firePlan: next }), [persist])
+
+  /** The optional personal details: year of birth and country. */
+  const savePersonal = useCallback(({ birthYear, country }) => {
+    persist({
+      birthYear: Number.isFinite(Number(birthYear)) && birthYear !== null ? Number(birthYear) : null,
+      country: country || null,
+    })
+  }, [persist])
 
   const toggleFireMeter = useCallback(() => persist({ fireMeterVisible: !settingsRef.current.fireMeterVisible }), [persist])
 
@@ -116,13 +128,15 @@ export function SettingsProvider({ children }) {
   }, [persist])
 
   /** Finishes onboarding with everything the user picked. */
-  const saveOnboarding = useCallback(({ categories, platforms, investmentVisibility, fireMeterVisible, fireEstimate }) => {
+  const saveOnboarding = useCallback(({ categories, platforms, investmentVisibility, fireMeterVisible, fireEstimate, birthYear, country }) => {
     persist({
       categories,
       platforms,
       ...(investmentVisibility ? { investmentVisibility } : {}),
       ...(typeof fireMeterVisible === 'boolean' ? { fireMeterVisible } : {}),
       ...(fireEstimate ? { fireEstimate } : {}),
+      birthYear: Number.isFinite(Number(birthYear)) && birthYear ? Number(birthYear) : null,
+      country: country || null,
       onboarded: true,
     })
   }, [persist])
@@ -136,9 +150,12 @@ export function SettingsProvider({ children }) {
     onboarded: settings.onboarded,
     fireEstimate: settings.fireEstimate,
     firePlan: settings.firePlan,
+    birthYear: settings.birthYear,
+    country: settings.country,
     hydrated,
     saveProfile,
     saveFirePlan,
+    savePersonal,
     toggleFireMeter,
     toggleInvestmentVisibility,
     rememberPlatform,
@@ -148,7 +165,7 @@ export function SettingsProvider({ children }) {
     saveOnboarding,
   }), [
     profile, settings, hydrated,
-    saveProfile, saveFirePlan, toggleFireMeter, toggleInvestmentVisibility,
+    saveProfile, saveFirePlan, savePersonal, toggleFireMeter, toggleInvestmentVisibility,
     rememberPlatform, rememberCategory, removeCategory, removePlatform, saveOnboarding,
   ])
 
