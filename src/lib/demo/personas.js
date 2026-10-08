@@ -121,7 +121,9 @@ export const DEMO_PERSONAS = [
       { type: 'etf', id: 'diogo-vuaa', isin: 'IE00BFMXXD54', symbol: 'VUAA', name: 'Vanguard S&P 500 UCITS ETF', platform: 'Trade Republic', monthly: 400, day: 5, price: 92, drift: 0.85, wobble: 3.4 },
       // Half of every allowance, priced on the volatile curve rather than a
       // straight line, because that is what holding bitcoin actually looks like.
-      { type: 'crypto', id: 'diogo-btc', symbol: 'BTC', name: 'Bitcoin', platform: 'Coinbase', curve: 'crypto', onBonus: 0.5, day: 16 },
+      // The symbol is the euro listing the app resolves BTC to, as it would be
+      // if the holding had been added by symbol.
+      { type: 'crypto', id: 'diogo-btc', symbol: 'BTC-EUR', name: 'Bitcoin', platform: 'Coinbase', curve: 'crypto', onBonus: 0.5, day: 16 },
     ],
   },
 ]

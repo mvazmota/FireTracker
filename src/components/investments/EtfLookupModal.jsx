@@ -77,7 +77,7 @@ export default function EtfLookupModal({ onClose, onSave }) {
       <label className="field-label" htmlFor="etf-lookup-isin">{t.isin}</label>
       <div className="amount-input"><input id="etf-lookup-isin" autoFocus maxLength={12} placeholder="IE00BFMXXD54" value={isin} onChange={(event) => setIsin(event.target.value.toUpperCase())} /></div>
 
-      <div className="etf-lookup-facts">
+      <div className="lookup-facts">
         {searching && <p className="fund-facts-empty">{t.loading}</p>}
         {lookup && <FundFacts facts={lookup} isin={isinValue} />}
       </div>

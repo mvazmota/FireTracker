@@ -126,7 +126,7 @@
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .welcome-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .holding-details > td { padding: 0; border-top: 0; }
-.etf-lookup-facts { margin: 2px 0 18px; }
+.lookup-facts { margin: 2px 0 18px; }
 .fund-facts-panel { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; padding: 16px 18px 18px; background: #f7faf6; }
 .fund-facts { display: contents; }
 .fund-facts > div { display: flex; flex-direction: column; gap: 2px; }

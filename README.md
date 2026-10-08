@@ -22,6 +22,9 @@ euros.
   it launched — before anything is saved. The annual cost is the one fact no free
   feed publishes, so it is asked once per fund. Clicking a holding expands the
   same details.
+- **Crypto by symbol** — the only way to add a coin. Type the symbol and the coin
+  appears in the form with its live price, 24h change and 52-week range before
+  anything is saved. Clicking a holding expands the same details.
 - **Global position** — tracked cash plus every asset, charted over 3, 6, 12,
   24 months or all recorded history.
 - **Statistics** — annual cash flow, spending by category and investment

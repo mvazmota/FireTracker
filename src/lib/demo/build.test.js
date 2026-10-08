@@ -130,7 +130,7 @@ describe('buildDemoPayload for a seasonal persona', () => {
   })
 
   it('buys bitcoin with half of every allowance', () => {
-    const buys = payload.transactions.filter((item) => item.title === 'Crypto purchase · BTC')
+    const buys = payload.transactions.filter((item) => item.title === 'Crypto purchase · BTC-EUR')
     expect(buys).toHaveLength(6)
     expect(buys.every((item) => item.amount === 1100)).toBe(true)
   })

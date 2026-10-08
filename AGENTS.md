@@ -99,6 +99,15 @@ In development run the two servers together, and run Vite on **port 5199**
   `coalesce` on `ter` so a lookup never wipes a typed one. A distributing fund's
   payouts are not tracked, and the details row says so rather than letting the
   return read as a loss.
+- **Crypto prices come from the same feed** (`worker/crypto.js`): a symbol is
+  resolved to its euro listing (`BTC` -> `BTC-EUR`) and priced in euros, never
+  converted at an invented rate. The search does not always turn up the euro
+  listing, so the euro pair is tried directly before giving up. The closes and
+  the current quote are cached apart (`crypto_prices`, `crypto_market`): the
+  closes are historical and immutable, the quote moves, so a stale price can
+  never be served as a fresh one. A holding saved before symbols carried their
+  market has a bare ticker, which the prices route normalises to the euro
+  listing — a bare `BTC` on Yahoo is an ETF, not the coin.
 - **FIRE maths** (`src/lib/fire.js`): the annual average divides by the number of
   months that **contain transactions**, not months elapsed — elapsed months
   understate spending and flatter the FIRE date. Transfers into investments or

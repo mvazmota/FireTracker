@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { fetchFundFacts, fetchPrices, isIsin, readCatalog, readPrices, resolveIsin, saveTer, writeCatalog, writePrices } from './etf.js'
+import { fetchPrices as fetchCryptoPrices, isCoinSymbol, readPrices as readCryptoPrices, readCryptoMarket, resolveSymbol, writePrices as writeCryptoPrices, writeCryptoMarket } from './crypto.js'
 import { ASSET_TABLES, RECURRING, TRANSACTIONS, clearUserRows, listForUser, removeById, roundCents, runBatched, upsert, upsertStatement } from './tables.js'
 
 const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'categories', 'onboarded', 'fireEstimate', 'firePlan', 'birthYear', 'country']
@@ -232,6 +233,52 @@ api.put('/etf/ter', async (c) => {
 
   await saveTer(c.env.DB, isin, ter)
   return c.json({ ok: true })
+})
+
+/**
+ * Resolves a coin symbol to the euro listing we price it from, so a holding can
+ * be added with just the symbol rather than its name, ticker and currency.
+ */
+api.get('/crypto/lookup', async (c) => {
+  const symbol = (c.req.query('symbol') || '').trim().toUpperCase()
+  if (!isCoinSymbol(symbol)) return c.json({ error: 'invalid_symbol' }, 400)
+
+  try {
+    const found = await resolveSymbol(symbol)
+    if (!found) return c.json({ error: 'not_found' }, 404)
+    return c.json(found)
+  } catch {
+    // The feed is undocumented and can fail; the client falls back to manual entry.
+    return c.json({ error: 'lookup_failed' }, 502)
+  }
+})
+
+/** Daily closes and market facts for a coin from a date onwards, cached. */
+api.get('/crypto/prices', async (c) => {
+  let symbol = (c.req.query('symbol') || '').trim().toUpperCase()
+  const from = (c.req.query('from') || '').trim()
+  if (!isCoinSymbol(symbol) || !/^\d{4}-\d{2}-\d{2}$/.test(from)) return c.json({ error: 'invalid_request' }, 400)
+
+  // A holding saved before symbols carried their market has a bare ticker;
+  // the euro listing is the only one we price.
+  if (!symbol.includes('-')) symbol = `${symbol}-EUR`
+
+  // The closes are historical and the quote is current, so they are cached
+  // apart: a fresh pair is served when either has run out.
+  const cached = await readCryptoPrices(c.env.DB, symbol)
+  const cachedMarket = await readCryptoMarket(c.env.DB, symbol)
+  if (cached && cachedMarket) {
+    return c.json({ symbol, currency: 'EUR', rows: cached.rows, market: cachedMarket })
+  }
+
+  try {
+    const series = await fetchCryptoPrices(symbol, from)
+    await writeCryptoPrices(c.env.DB, symbol, series.rows)
+    await writeCryptoMarket(c.env.DB, symbol, series.market)
+    return c.json(series)
+  } catch {
+    return c.json({ error: 'prices_failed' }, 502)
+  }
 })
 
 /**

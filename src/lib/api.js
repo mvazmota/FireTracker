@@ -34,6 +34,10 @@ export const api = {
   lookupEtf: (isin) => request(`/api/etf/lookup?isin=${encodeURIComponent(isin)}`),
   etfPrices: (symbol, from) => request(`/api/etf/prices?symbol=${encodeURIComponent(symbol)}&from=${encodeURIComponent(from)}`),
 
+  // Public coin data, looked up from a symbol and cached by the Worker.
+  lookupCoin: (symbol) => request(`/api/crypto/lookup?symbol=${encodeURIComponent(symbol)}`),
+  coinPrices: (symbol, from) => request(`/api/crypto/prices?symbol=${encodeURIComponent(symbol)}&from=${encodeURIComponent(from)}`),
+
   // The annual cost, which no free feed publishes — typed once per fund.
   saveEtfTer: (isin, ter) => request('/api/etf/ter', { method: 'PUT', body: JSON.stringify({ isin, ter }) }),
 }
