@@ -32,12 +32,21 @@ export const DEMO_PERSONAS = [
     platforms: ['Bank account', 'Trade Republic'],
     categories: {
       expense: ['Housing', 'Food & dining', 'Transport', 'Entertainment', 'Shopping', 'Health', 'Investment'],
-      income: ['Salary'],
+      income: ['Salary', 'Other'],
     },
     // The plain 4% rule applied to whatever he actually spends.
     plan: { strategy: 'traditional', withdrawalRate: 0.04, retirementSpending: null, postFireIncome: 0, realReturn: 0.05 },
 
-    income: { title: 'Monthly salary', category: 'Salary', amount: 2000, day: 1 },
+    // What he already had in the bank when he started. Dated before the tracked
+    // year on purpose: it is money he had, not money he earned, so it must not
+    // touch the averages behind the FIRE number.
+    openingBalance: { amount: 10000, title: 'Opening balance', category: 'Other', platform: 'Bank account' },
+
+    // His salary is a recurring rule rather than twelve rows, so the app's own
+    // generator keeps producing it once the seeded months run out.
+    recurring: [
+      { key: 'salary', title: 'Monthly salary', category: 'Salary', type: 'income', amount: 2000, dayOfMonth: 1, platform: 'Bank account' },
+    ],
 
     // Roughly €1,440 a month, which leaves about €560 to save — €200 of it
     // invested, the rest sitting in cash because he has no savings account yet.

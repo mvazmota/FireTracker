@@ -178,6 +178,7 @@ api.post('/import', async (c) => {
     for (const record of body[type] || []) statements.push(upsertStatement(db, userId, ASSET_TABLES[type], record))
   }
   for (const record of body.transactions || []) statements.push(upsertStatement(db, userId, TRANSACTIONS, record))
+  for (const record of body.recurring || []) statements.push(upsertStatement(db, userId, RECURRING, record))
   await runBatched(db, statements)
   await saveSettings(db, userId, { profile: body.profile, settings: body.settings })
   return c.json({ ok: true })

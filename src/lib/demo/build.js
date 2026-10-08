@@ -1,4 +1,5 @@
 import { dateKey, monthKey } from '../dates.js'
+import { occurrenceFor, pendingMonths } from '../recurring.js'
 import { threeYearSimulation } from '../simulation.js'
 
 /** A deterministic wobble in [-spread, spread], stable for a given seed. */
@@ -82,8 +83,6 @@ function personaPayload(persona, today) {
       return true
     }
 
-    add({ ...persona.income, key: 'salary', type: 'income' }, persona.income.day, persona.income.amount)
-
     for (const line of persona.expenses || []) {
       if (line.months && !line.months.includes(date.getMonth())) continue
       const days = line.days || [line.day]
@@ -109,6 +108,47 @@ function personaPayload(persona, today) {
     }
   }
 
+  // The salary comes from a rule rather than rows written here. Seeding the rule
+  // and the months it has already produced means the app's own generator picks
+  // up from the last one and keeps paying it in the months that follow, so the
+  // demo exercises the recurring feature instead of faking it.
+  const recurring = []
+  for (const line of persona.recurring || []) {
+    const rule = {
+      id: `demo-${persona.id}-${line.key}`,
+      title: line.title,
+      category: line.category,
+      type: line.type,
+      amount: line.amount,
+      platform: line.platform || defaultPlatform,
+      dayOfMonth: line.dayOfMonth,
+      startMonth: monthKey(first),
+      lastGeneratedMonth: null,
+      active: true,
+    }
+    const months = pendingMonths(rule, today)
+    for (const month of months) transactions.push({ ...occurrenceFor(rule, month), isDemo: true })
+    rule.lastGeneratedMonth = months.length ? months[months.length - 1] : null
+    recurring.push(rule)
+  }
+
+  // What he already had. Dated a month before the tracked year so it counts as
+  // cash without being read as income by the FIRE averages.
+  if (persona.openingBalance) {
+    const line = persona.openingBalance
+    const before = monthKey(new Date(first.getFullYear(), first.getMonth() - 1, 1))
+    transactions.push({
+      id: `demo-${persona.id}-opening-balance`,
+      title: line.title,
+      category: line.category,
+      type: 'income',
+      amount: line.amount,
+      date: `${before}-01T09:00:00`,
+      platform: line.platform || defaultPlatform,
+      isDemo: true,
+    })
+  }
+
   const etfs = positions
     .filter((position) => position.line.type === 'etf' && position.units > 0)
     .map((position) => ({
@@ -130,6 +170,7 @@ function personaPayload(persona, today) {
     p2p: [],
     bonds: [],
     savings: [],
+    recurring,
     profile: { name: persona.name, avatar: '', createdAt: dateKey(first) },
     settings: {
       language: 'en',

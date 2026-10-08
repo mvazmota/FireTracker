@@ -19,10 +19,31 @@ describe('demoPersonaFor', () => {
 describe('buildDemoPayload for a described persona', () => {
   const payload = buildDemoPayload(tiago, TODAY)
 
-  it('pays a salary every month', () => {
+  it('pays a salary every month, produced by the recurring rule', () => {
     const salaries = payload.transactions.filter((item) => item.category === 'Salary')
     expect(salaries).toHaveLength(12)
     expect(salaries.every((item) => item.amount === 2000)).toBe(true)
+    expect(salaries.every((item) => item.sourceType === 'recurring')).toBe(true)
+    expect(salaries.every((item) => item.id.startsWith('recurring-demo-just-started-salary-'))).toBe(true)
+  })
+
+  it('seeds the rule so the app keeps paying it from here', () => {
+    expect(payload.recurring).toHaveLength(1)
+    const [rule] = payload.recurring
+    expect(rule.type).toBe('income')
+    expect(rule.amount).toBe(2000)
+    expect(rule.dayOfMonth).toBe(1)
+    expect(rule.startMonth).toBe('2025-11')
+    expect(rule.lastGeneratedMonth).toBe('2026-10')
+  })
+
+  it('starts him with the balance he already had', () => {
+    const opening = payload.transactions.filter((item) => item.title === 'Opening balance')
+    expect(opening).toHaveLength(1)
+    expect(opening[0].amount).toBe(10000)
+    expect(opening[0].type).toBe('income')
+    // A month before the tracked year, so it reads as cash rather than income.
+    expect(opening[0].date.slice(0, 7)).toBe('2025-10')
   })
 
   it('pays the rent every month, unchanged', () => {
@@ -73,8 +94,9 @@ describe('buildDemoPayload for a described persona', () => {
     expect(payload.transactions.every((item) => item.date.slice(0, 10) <= '2026-10-08')).toBe(true)
   })
 
-  it('starts exactly a year ago', () => {
-    expect(payload.transactions[0].date.slice(0, 7)).toBe('2025-11')
+  it('starts the tracked year exactly a year ago', () => {
+    const salaries = payload.transactions.filter((item) => item.category === 'Salary')
+    expect(salaries[0].date.slice(0, 7)).toBe('2025-11')
   })
 })
 
