@@ -17,7 +17,6 @@ export const VISIBILITY_STORAGE_KEY = 'firepath-investment-visibility-v1'
 export const SIMULATION_VERSION_KEY = 'firepath-simulation-version-v1'
 
 export const SIMULATION_VERSION = 'three-year-fire-simulation-v3'
-export const DEFAULT_FIRE_GOAL = 300000
 
 /** Platforms offered as suggestions during onboarding. */
 export const PLATFORM_SUGGESTIONS = [

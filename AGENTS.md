@@ -58,6 +58,11 @@ In development run the two servers together, and run Vite on **port 5199**
   guards every stored value, so the maths never sees a nonsense rate. The
   defaults (`WITHDRAWAL_RATE = 0.04`, `REAL_RETURN = 0.05`) reproduce the plain
   4% rule.
+- **The plan owns the goal.** There is no separate goal to set: `projection.target`
+  *is* the goal. `useFireProjection(currentPosition)` is the single place it is
+  computed, so the FIRE tab and the sidebar meter cannot disagree about it. The
+  `user_settings.fireGoal` column still exists in the database but nothing reads
+  or writes it — do not reintroduce it.
 - **FIRE maths** (`src/lib/fire.js`): the annual average divides by the number of
   months that **contain transactions**, not months elapsed — elapsed months
   understate spending and flatter the FIRE date. Transfers into investments or

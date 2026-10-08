@@ -12,7 +12,7 @@ export function usePortfolioSummary(selectedMonth) {
   const {
     transactions, holdings, cryptoHoldings, p2pRecords, bondHoldings, savingsAccounts,
   } = useFinance()
-  const { investmentVisibility, fireGoal } = useSettings()
+  const { investmentVisibility } = useSettings()
 
   return useMemo(() => {
     const visible = investmentVisibility
@@ -63,10 +63,6 @@ export function usePortfolioSummary(selectedMonth) {
       .sort((a, b) => b.date.localeCompare(a.date))
       .slice(0, 5)
 
-    const fireProgress = fireGoal > 0 ? (globalPosition / fireGoal) * 100 : 0
-    const fireBarWidth = Math.max(0, Math.min(100, fireProgress))
-    const fireAmountRemaining = Math.max(0, fireGoal - globalPosition)
-
     return {
       monthlyTransactions,
       recentTransactions,
@@ -81,9 +77,6 @@ export function usePortfolioSummary(selectedMonth) {
       trackedCash,
       globalPosition,
       savingsRate,
-      fireProgress,
-      fireBarWidth,
-      fireAmountRemaining,
       values: {
         etfs: { invested: etfsInvested, value: etfsValue, count: holdings.length },
         crypto: { invested: cryptoInvested, value: cryptoValue, count: cryptoHoldings.length },
@@ -96,6 +89,6 @@ export function usePortfolioSummary(selectedMonth) {
     }
   }, [
     transactions, holdings, cryptoHoldings, p2pRecords, bondHoldings, savingsAccounts,
-    investmentVisibility, fireGoal, selectedMonth,
+    investmentVisibility, selectedMonth,
   ])
 }

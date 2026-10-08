@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { DEFAULT_FIRE_GOAL, DEFAULT_VISIBILITY } from '../lib/constants.js'
+import { DEFAULT_VISIBILITY } from '../lib/constants.js'
 import { dateKey } from '../lib/dates.js'
 import { api } from '../lib/api.js'
 import { useAuth } from './AuthProvider.jsx'
@@ -11,7 +11,6 @@ const SettingsContext = createContext(null)
 /** Every account starts with nothing chosen; onboarding fills these in. */
 const emptySettings = () => ({
   language: 'en',
-  fireGoal: DEFAULT_FIRE_GOAL,
   fireMeterVisible: true,
   investmentVisibility: { ...DEFAULT_VISIBILITY },
   platforms: [],
@@ -56,7 +55,6 @@ export function SettingsProvider({ children }) {
     })
     applySettings({
       language: stored.language ?? 'en',
-      fireGoal: stored.fireGoal ?? DEFAULT_FIRE_GOAL,
       fireMeterVisible: stored.fireMeterVisible ?? true,
       investmentVisibility: { ...DEFAULT_VISIBILITY, ...(stored.investmentVisibility || {}) },
       platforms: stored.platforms ?? [],
@@ -83,15 +81,7 @@ export function SettingsProvider({ children }) {
     run(() => api.putSettings({ profile: next }))
   }, [run])
 
-  const saveFireGoal = useCallback((next) => persist({ fireGoal: next }), [persist])
-
-  /** Saves the whole FIRE setup — plan and goal — in one write. */
-  const saveFireSettings = useCallback(({ plan, goal }) => {
-    persist({
-      ...(plan ? { firePlan: plan } : {}),
-      ...(Number.isFinite(goal) && goal > 0 ? { fireGoal: goal } : {}),
-    })
-  }, [persist])
+  const saveFirePlan = useCallback((next) => persist({ firePlan: next }), [persist])
 
   const toggleFireMeter = useCallback(() => persist({ fireMeterVisible: !settingsRef.current.fireMeterVisible }), [persist])
 
@@ -126,12 +116,11 @@ export function SettingsProvider({ children }) {
   }, [persist])
 
   /** Finishes onboarding with everything the user picked. */
-  const saveOnboarding = useCallback(({ categories, platforms, investmentVisibility, fireGoal, fireMeterVisible, fireEstimate }) => {
+  const saveOnboarding = useCallback(({ categories, platforms, investmentVisibility, fireMeterVisible, fireEstimate }) => {
     persist({
       categories,
       platforms,
       ...(investmentVisibility ? { investmentVisibility } : {}),
-      ...(Number.isFinite(fireGoal) && fireGoal > 0 ? { fireGoal } : {}),
       ...(typeof fireMeterVisible === 'boolean' ? { fireMeterVisible } : {}),
       ...(fireEstimate ? { fireEstimate } : {}),
       onboarded: true,
@@ -140,7 +129,6 @@ export function SettingsProvider({ children }) {
 
   const value = useMemo(() => ({
     profile,
-    fireGoal: settings.fireGoal,
     fireMeterVisible: settings.fireMeterVisible,
     investmentVisibility: settings.investmentVisibility,
     platforms: settings.platforms,
@@ -150,8 +138,7 @@ export function SettingsProvider({ children }) {
     firePlan: settings.firePlan,
     hydrated,
     saveProfile,
-    saveFireGoal,
-    saveFireSettings,
+    saveFirePlan,
     toggleFireMeter,
     toggleInvestmentVisibility,
     rememberPlatform,
@@ -161,7 +148,7 @@ export function SettingsProvider({ children }) {
     saveOnboarding,
   }), [
     profile, settings, hydrated,
-    saveProfile, saveFireGoal, saveFireSettings, toggleFireMeter, toggleInvestmentVisibility,
+    saveProfile, saveFirePlan, toggleFireMeter, toggleInvestmentVisibility,
     rememberPlatform, rememberCategory, removeCategory, removePlatform, saveOnboarding,
   ])
 

@@ -14,6 +14,7 @@ import { useSync } from './context/SyncProvider.jsx'
 import { useSettings } from './context/SettingsProvider.jsx'
 import { useFinance } from './context/FinanceProvider.jsx'
 import { usePortfolioSummary } from './hooks/usePortfolioSummary.js'
+import { useFireProjection } from './hooks/useFireProjection.js'
 // Only needed before the app is usable, so they are kept out of the main chunk.
 const LoginPage = lazy(() => import('./components/auth/LoginPage.jsx'))
 const OnboardingPage = lazy(() => import('./components/onboarding/OnboardingPage.jsx'))
@@ -55,7 +56,6 @@ function AppShell() {
   const { status: syncStatus, retry: retrySync } = useSync()
   const {
     profile,
-    fireGoal,
     fireMeterVisible,
     investmentVisibility,
     onboarded,
@@ -98,6 +98,9 @@ function AppShell() {
     totalPortfolioValue,
     values,
   } = summary
+
+  // The goal comes from the plan, so the meter and the FIRE tab always agree.
+  const fire = useFireProjection(globalPosition)
 
   // Aliases so the markup below reads the same as before.
   const savings = savingsRate
@@ -194,7 +197,7 @@ function AppShell() {
         {investmentVisibility.bonds && <a className={activePage === 'bonds' ? 'nav-link active' : 'nav-link'} href="#bonds" onClick={(event) => { event.preventDefault(); selectPortfolioPage('bonds') }}><span className="nav-icon"><Landmark size={18} /></span>{t.bonds}</a>}
         {investmentVisibility.savings && <a className={activePage === 'savings' ? 'nav-link active' : 'nav-link'} href="#savings" onClick={(event) => { event.preventDefault(); selectPortfolioPage('savings') }}><span className="nav-icon"><Wallet size={18} /></span>{t.savings}</a>}
         <a className={activePage === 'statistics' ? 'nav-link active' : 'nav-link'} href="#statistics" onClick={(event) => { event.preventDefault(); selectStatistics() }}><span className="nav-icon"><CalendarDays size={18} /></span>{t.statistics}</a>
-        <div className="sidebar-bottom">{fireMeterVisible && <FireMeterCompact position={globalPosition} goal={fireGoal} />}<button className="help-link" type="button"><CircleHelp size={17} /> {t.help}</button><div className="profile"><button className={activePage === 'profile' ? 'profile-button active-profile' : 'profile-button'} type="button" onClick={selectProfilePage}><Avatar profile={profile} /><div className="profile-meta"><strong>{profile.name || t.account}</strong><span>{t.profile}</span></div><Ellipsis size={18} className="profile-more" /></button></div></div>
+        <div className="sidebar-bottom">{fireMeterVisible && fire.target > 0 && <FireMeterCompact position={globalPosition} goal={fire.target} />}<button className="help-link" type="button"><CircleHelp size={17} /> {t.help}</button><div className="profile"><button className={activePage === 'profile' ? 'profile-button active-profile' : 'profile-button'} type="button" onClick={selectProfilePage}><Avatar profile={profile} /><div className="profile-meta"><strong>{profile.name || t.account}</strong><span>{t.profile}</span></div><Ellipsis size={18} className="profile-more" /></button></div></div>
       </aside>
 
       <nav className="mobile-nav" aria-label={t.yourSpace}>
@@ -222,7 +225,7 @@ function AppShell() {
             <div className="global-position-details"><div className="global-breakdown"><div><span>{t.trackedCash}</span><strong className={trackedCash < 0 ? 'negative-return' : ''}>{formatCurrency(trackedCash, language)}</strong></div><div><span>{t.globalETFValue}</span><strong>{formatCurrency(totalPortfolioValue, language)}</strong></div><button className="text-button" onClick={() => selectPortfolioPage('etfs')}><ChartLine size={15} /> {t.viewInvestments}<ArrowRight size={14} /></button></div><p className="global-position-note">{t.globalPositionNote}</p></div>
           </section>
 
-          {fireMeterVisible && <div className="fire-compact-mobile"><FireMeterCompact position={globalPosition} goal={fireGoal} /></div>}
+          {fireMeterVisible && fire.target > 0 && <div className="fire-compact-mobile"><FireMeterCompact position={globalPosition} goal={fire.target} /></div>}
 
           {hasVisibleInvestments && <section className="portfolio-overview"><div className="overview-section-heading"><h2>{t.portfolioSummary}</h2><p>{t.portfolioSummarySubtitle}</p></div><div className="portfolio-mini-grid">
             {[

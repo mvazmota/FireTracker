@@ -1,54 +1,38 @@
 import { useMemo } from 'react'
-import { CalendarClock, Flame, PiggyBank, Scale, TrendingUp, Wallet } from 'lucide-react'
+import { CalendarClock, Flame, PiggyBank, SlidersHorizontal, TrendingUp, Wallet } from 'lucide-react'
 import FireProjectionChart from './FireProjectionChart.jsx'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
-import { useFinance } from '../../context/FinanceProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
 import { usePortfolioSummary } from '../../hooks/usePortfolioSummary.js'
-import { compareGoal, estimateProjection, fireProjection, projectSeries, yearsToTarget } from '../../lib/fire.js'
+import { useFireProjection } from '../../hooks/useFireProjection.js'
+import { projectSeries } from '../../lib/fire.js'
 import { formatCurrency } from '../../lib/format.js'
 
-/** Where the 4% rule puts financial independence, and when. */
+/** Where the user's FIRE plan puts financial independence, and when. */
 export default function FirePage() {
   const { t, locale, language } = useI18n()
-  const { transactions } = useFinance()
-  const { fireGoal, fireEstimate, firePlan, saveFireGoal } = useSettings()
+  const { fireEstimate } = useSettings()
   const today = useMemo(() => new Date(), [])
   const { globalPosition } = usePortfolioSummary(today)
+  const projection = useFireProjection(globalPosition)
 
-  // Real numbers once there is history to average; the onboarding answers until then.
-  const fromData = useMemo(
-    () => fireProjection({ transactions, currentPosition: globalPosition, plan: firePlan, today }),
-    [transactions, globalPosition, firePlan, today],
-  )
-  const fromEstimate = useMemo(
-    () => estimateProjection({ estimate: fireEstimate, currentPosition: globalPosition, plan: firePlan, today }),
-    [fireEstimate, globalPosition, firePlan, today],
-  )
-  const projection = fromData.target > 0 ? fromData : fromEstimate
-
-  // The goal the user set, measured against the number their plan implies.
-  const comparison = compareGoal({ goal: fireGoal, projected: projection.target, withdrawalRate: projection.withdrawalRate })
-  const goalValue = comparison.goal > 0 ? comparison.goal : comparison.projected
+  // The plan owns the goal, so there is nothing to compare it against.
+  const goalValue = projection.target
   const ratePercent = Number((projection.withdrawalRate * 100).toFixed(2))
-  const goalYears = yearsToTarget({ current: projection.current, annualSavings: projection.savings, target: goalValue, realReturn: projection.realReturn })
-  const goalReached = goalValue > 0 && projection.current >= goalValue
+  const multiple = projection.withdrawalRate > 0 ? Math.round(1 / projection.withdrawalRate) : 0
+  const hasData = goalValue > 0
 
-  const horizon = goalYears == null ? 30 : Math.min(50, Math.ceil(goalYears) + 2)
+  const horizon = projection.years == null ? 30 : Math.min(50, Math.ceil(projection.years) + 2)
   const series = useMemo(
     () => projectSeries({ current: projection.current, annualSavings: projection.savings, years: horizon }),
     [projection.current, projection.savings, horizon],
   )
 
-  const hasData = projection.target > 0
   const progress = goalValue > 0 ? Math.min(100, (projection.current / goalValue) * 100) : 0
   const savingsRate = projection.income > 0 ? (projection.savings / projection.income) * 100 : 0
-  const years = goalYears == null ? null : Math.ceil(goalYears)
-  const targetDate = goalYears == null
-    ? null
-    : new Date(today.getFullYear(), today.getMonth() + Math.ceil(goalYears * 12), 1)
-  const targetDateLabel = targetDate
-    ? new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(targetDate)
+  const years = projection.years == null ? null : Math.ceil(projection.years)
+  const targetDateLabel = projection.targetDate
+    ? new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(projection.targetDate)
     : null
 
   const stats = [
@@ -69,14 +53,14 @@ export default function FirePage() {
 
       <section className="panel fire-hero">
         <div className="fire-hero-copy">
-          <p className="eyebrow">{t.fireHorizonGoal}</p>
-          {goalReached
+          <p className="eyebrow">{t.fireHorizon}</p>
+          {projection.reached
             ? <strong className="fire-hero-number">{t.fireReachedShort}</strong>
             : years == null
               ? <strong className="fire-hero-number">{t.fireOffTrackShort}</strong>
               : <strong className="fire-hero-number">{years}<span>{years === 1 ? t.yearToFire : t.yearsToFire}</span></strong>}
           <p className="fire-hero-note">
-            {goalReached ? t.fireReachedNote : years == null ? t.fireOffTrackNote : `${t.fireAround} ${targetDateLabel}`}
+            {projection.reached ? t.fireReachedNote : years == null ? t.fireOffTrackNote : `${t.fireAround} ${targetDateLabel}`}
           </p>
         </div>
         <div className="fire-hero-meter">
@@ -90,25 +74,15 @@ export default function FirePage() {
         </div>
       </section>
 
-      <section className="panel fire-compare">
-        <div className="panel-heading"><div><h2>{t.fireCompare}</h2><p>{t.fireCompareSubtitle}</p></div><span className="panel-icon"><Scale size={17} /></span></div>
+      <section className="panel fire-plan-summary">
+        <div className="panel-heading"><div><h2>{t.firePlanSummary}</h2><p>{t.firePlanSummarySubtitle}</p></div><span className="panel-icon"><SlidersHorizontal size={17} /></span></div>
         <p className="fire-plan-tag">{t.firePlanTag.replace('{strategy}', t.fireStrategies[projection.strategy]).replace('{rate}', ratePercent)}</p>
-        <div className="fire-compare-grid">
-          <div className="fire-compare-item">
-            <span className="fire-compare-label">{t.fireYourTarget}</span>
-            <strong>{formatCurrency(comparison.goal, language)}</strong>
-            <small>{t.fireCovers.replace('{amount}', formatCurrency(comparison.cover, language)).replace('{rate}', ratePercent)}</small>
-          </div>
-          <div className="fire-compare-item">
-            <span className="fire-compare-label">{t.fireYourNumber}</span>
-            <strong>{formatCurrency(comparison.projected, language)}</strong>
-            <small>{t.fireNumberNote.replace('{amount}', formatCurrency(projection.spendingToCover, language)).replace('{rate}', ratePercent)}</small>
-          </div>
+        <div className="fire-plan-figure">
+          <span>{t.firePlanNumber}</span>
+          <strong>{formatCurrency(goalValue, language)}</strong>
+          <small>{t.fireNumberNote.replace('{amount}', formatCurrency(projection.spendingToCover, language)).replace('{rate}', ratePercent)}</small>
         </div>
-        <p className={comparison.enough ? 'fire-verdict verdict-ok' : 'fire-verdict verdict-warn'}>
-          {comparison.enough ? t.fireGoalEnough : t.fireGoalShort.replace('{amount}', formatCurrency(comparison.projected, language))}
-        </p>
-        {comparison.gap !== 0 && comparison.projected > 0 && <button type="button" className="text-button fire-align-goal" onClick={() => saveFireGoal(comparison.projected)}>{t.fireUseAsGoal}</button>}
+        <p className="fire-plan-hint">{t.firePlanEditHint}</p>
         {projection.estimated
           ? <p className="visibility-note">{t.fireFromEstimate}</p>
           : fireEstimate?.spending > 0 && projection.months > 0
@@ -132,7 +106,7 @@ export default function FirePage() {
       <section className="panel fire-assumptions">
         <div className="panel-heading"><div><h2>{t.fireAssumptions}</h2><p>{t.fireAssumptionsSubtitle}</p></div><span className="panel-icon"><Flame size={17} /></span></div>
         <ul className="fire-assumption-list">
-          <li>{t.fireAssumptionRule}</li>
+          <li>{t.fireAssumptionRule.replace('{rate}', ratePercent).replace('{multiple}', multiple)}</li>
           <li>{t.fireAssumptionReturn.replace('{rate}', `${(projection.realReturn * 100).toFixed(0)}%`)}</li>
           <li>{t.fireAssumptionInvest}</li>
           <li>{t.fireAssumptionData.replace('{months}', projection.months).replace('{window}', Math.min(12, projection.months))}</li>

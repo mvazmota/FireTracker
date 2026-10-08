@@ -224,18 +224,3 @@ export function fireCalculator({ income = 0, monthlySpending = 0, netWorth = 0, 
 
   return { annualIncome, annualSpending, netWorth: startingNetWorth, target, savings, savingsRate, years, covered, canProject }
 }
-
-/**
- * How the goal the user set compares with the number their spending implies.
- * `cover` is what that goal pays out each year at the withdrawal rate.
- */
-export function compareGoal({ goal, projected, withdrawalRate = WITHDRAWAL_RATE }) {
-  const target = Number(goal) || 0
-  return {
-    goal: roundMoney(target),
-    projected: roundMoney(projected),
-    cover: roundMoney(target * withdrawalRate),
-    gap: roundMoney(projected - target),
-    enough: projected > 0 && target >= projected,
-  }
-}

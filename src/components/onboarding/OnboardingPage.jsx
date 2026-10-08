@@ -30,7 +30,7 @@ const DEFAULT_SELECTED_INVESTMENTS = { etfs: true, crypto: false, p2p: false, bo
  */
 export default function OnboardingPage() {
   const { t, language, changeLanguage } = useI18n()
-  const { profile, fireGoal, saveProfile, saveOnboarding } = useSettings()
+  const { profile, saveProfile, saveOnboarding } = useSettings()
   const [step, setStep] = useState(0)
   const [categories, setCategories] = useState(() => ({ expense: [...DEFAULT_CATEGORIES.expense], income: [...DEFAULT_CATEGORIES.income] }))
   const [customCategories, setCustomCategories] = useState({ expense: [], income: [] })
@@ -39,11 +39,9 @@ export default function OnboardingPage() {
   const [customPlatforms, setCustomPlatforms] = useState([])
   const [platformDraft, setPlatformDraft] = useState('')
   const [visibility, setVisibility] = useState(() => ({ ...DEFAULT_SELECTED_INVESTMENTS }))
-  const [goalInput, setGoalInput] = useState(String(fireGoal))
   const [incomeInput, setIncomeInput] = useState('')
   const [spendingInput, setSpendingInput] = useState('')
   const [netWorthInput, setNetWorthInput] = useState('')
-  const [goalTouched, setGoalTouched] = useState(false)
   const [avatar, setAvatar] = useState(profile.avatar || '')
   const [photoError, setPhotoError] = useState('')
   const fileInput = useRef(null)
@@ -116,7 +114,6 @@ export default function OnboardingPage() {
       categories,
       platforms,
       investmentVisibility: visibility,
-      fireGoal: Number(goalInput) > 0 ? Number(goalInput) : fireGoal,
       // The net worth is left out on purpose: it is a sketch of the journey, not
       // something the app tracks, so it must not follow the user into the FIRE tab.
       fireEstimate: hasEstimate ? {
@@ -130,7 +127,6 @@ export default function OnboardingPage() {
   const categoriesReady = categories.expense.length >= MIN_CATEGORIES.expense && categories.income.length >= MIN_CATEGORIES.income
   const platformsReady = platforms.length > 0
   const investmentsReady = Object.values(visibility).some(Boolean)
-  const goalValid = goalInput.trim() === '' || (Number.isFinite(Number(goalInput)) && Number(goalInput) > 0)
 
   // Everything the calculator shows, including the 25× rule behind the goal.
   const {
@@ -151,11 +147,6 @@ export default function OnboardingPage() {
     : years == null
       ? t.fireCalculatorNever
       : wholeYears === 1 ? t.fireCalculatorYear : t.fireCalculatorYears.replace('{years}', wholeYears)
-
-  // The goal follows the suggestion until it is edited by hand.
-  useEffect(() => {
-    if (!goalTouched && suggestedGoal > 0) setGoalInput(String(suggestedGoal))
-  }, [suggestedGoal, goalTouched])
 
   return <div className="onboarding-page">
     <div className="login-language">
@@ -201,12 +192,9 @@ export default function OnboardingPage() {
               <p className={canProject && years == null ? 'fire-calculator-verdict verdict-alert' : 'fire-calculator-verdict'}>{verdict}</p>
             </>}
           </div>
-
-          <label className="field-label" htmlFor="onboarding-fire-goal">{t.goalAmount}</label>
-          <div className="amount-input"><span>€</span><input id="onboarding-fire-goal" type="number" min="1" step="1000" value={goalInput} onChange={(event) => { setGoalTouched(true); setGoalInput(event.target.value) }} /></div>
-          {!goalValid && <p className="form-error">{t.goalError}</p>}
+          {hasSpending && <p className="onboarding-hint onboarding-units-hint">{t.fireStartingPoint}</p>}
         </div>
-        <button type="button" className="submit-button onboarding-wide" disabled={!goalValid} onClick={() => setStep(1)}>{t.continue} <ArrowRight size={16} /></button>
+        <button type="button" className="submit-button onboarding-wide" onClick={() => setStep(1)}>{t.continue} <ArrowRight size={16} /></button>
       </> : step === 1 ? <>
         <h1 id="onboarding-title">{t.onboardingCategoriesTitle}<span>.</span></h1>
         <p className="onboarding-sub">{t.onboardingCategoriesSubtitle}</p>

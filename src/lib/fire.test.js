@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { monthKey } from './dates.js'
-import { DEFAULT_FIRE_PLAN, WITHDRAWAL_RATE, annualAverages, compareGoal, estimateProjection, fireCalculator, fireProjection, fireTarget, normalizePlan, planForStrategy, projectSeries, yearsToTarget } from './fire.js'
+import { DEFAULT_FIRE_PLAN, WITHDRAWAL_RATE, annualAverages, estimateProjection, fireCalculator, fireProjection, fireTarget, normalizePlan, planForStrategy, projectSeries, yearsToTarget } from './fire.js'
 
 const TODAY = new Date(2026, 5, 15)
 
@@ -198,27 +198,6 @@ describe('estimateProjection', () => {
     const projection = estimateProjection({ estimate, currentPosition: 600000, today: TODAY })
     expect(projection.reached).toBe(true)
     expect(projection.years).toBe(0)
-  })
-})
-
-describe('compareGoal', () => {
-  it('flags a goal that is short of what the spending implies', () => {
-    const comparison = compareGoal({ goal: 300000, projected: 418700 })
-    expect(comparison.enough).toBe(false)
-    expect(comparison.cover).toBe(12000)
-    expect(comparison.gap).toBe(118700)
-  })
-
-  it('accepts a goal that covers the spending', () => {
-    expect(compareGoal({ goal: 500000, projected: 418700 }).enough).toBe(true)
-  })
-
-  it('treats an exact match as enough', () => {
-    expect(compareGoal({ goal: 418700, projected: 418700 }).enough).toBe(true)
-  })
-
-  it('never claims to be enough without a projection to compare against', () => {
-    expect(compareGoal({ goal: 300000, projected: 0 }).enough).toBe(false)
   })
 })
 

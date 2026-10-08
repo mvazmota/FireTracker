@@ -3,7 +3,7 @@ import { useAuth } from './AuthProvider.jsx'
 import { api } from '../lib/api.js'
 import { dateKey } from '../lib/dates.js'
 import { threeYearSimulation } from '../lib/simulation.js'
-import { DEFAULT_FIRE_GOAL, DEFAULT_VISIBILITY, PLATFORM_SUGGESTIONS } from '../lib/constants.js'
+import { DEFAULT_VISIBILITY, PLATFORM_SUGGESTIONS } from '../lib/constants.js'
 import { categorySuggestions } from '../data/categories.js'
 
 const DataContext = createContext(null)
@@ -35,7 +35,6 @@ function simulationPayload() {
     profile: { name: 'Demo', avatar: '', createdAt: dateKey(new Date()) },
     settings: {
       language: 'en',
-      fireGoal: DEFAULT_FIRE_GOAL,
       fireMeterVisible: true,
       investmentVisibility: DEFAULT_VISIBILITY,
       platforms: PLATFORM_SUGGESTIONS,

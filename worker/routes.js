@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { ASSET_TABLES, RECURRING, TRANSACTIONS, clearUserRows, listForUser, removeById, roundCents, runBatched, upsert, upsertStatement } from './tables.js'
 
-const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireGoal', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'categories', 'onboarded', 'fireEstimate', 'firePlan']
+const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'categories', 'onboarded', 'fireEstimate', 'firePlan']
 
 const jsonOrNull = (value) => (value == null ? null : JSON.stringify(value))
 const parseOrNull = (value) => {
@@ -20,7 +20,6 @@ async function loadSettings(db, userId) {
     profile: { name: row.name ?? '', avatar: row.avatar ?? '', createdAt: row.createdAt ?? '' },
     settings: {
       language: row.language ?? undefined,
-      fireGoal: row.fireGoal ?? undefined,
       fireMeterVisible: row.fireMeterVisible == null ? undefined : Boolean(row.fireMeterVisible),
       investmentVisibility: parseOrNull(row.investmentVisibility) ?? undefined,
       platforms: parseOrNull(row.platforms) ?? undefined,
@@ -39,7 +38,6 @@ async function saveSettings(db, userId, body) {
     avatar: body?.profile?.avatar ?? existing?.avatar ?? '',
     createdAt: body?.profile?.createdAt ?? existing?.createdAt ?? new Date().toISOString().slice(0, 10),
     language: body?.settings?.language ?? existing?.language ?? 'en',
-    fireGoal: roundCents(body?.settings?.fireGoal ?? existing?.fireGoal ?? 300000),
     fireMeterVisible: body?.settings?.fireMeterVisible ?? (existing?.fireMeterVisible == null ? true : Boolean(existing.fireMeterVisible)),
     investmentVisibility: body?.settings?.investmentVisibility ?? parseOrNull(existing?.investmentVisibility) ?? null,
     platforms: body?.settings?.platforms ?? parseOrNull(existing?.platforms) ?? null,
@@ -54,7 +52,6 @@ async function saveSettings(db, userId, body) {
     merged.avatar,
     merged.createdAt,
     merged.language,
-    merged.fireGoal,
     merged.fireMeterVisible ? 1 : 0,
     jsonOrNull(merged.investmentVisibility),
     jsonOrNull(merged.platforms),
