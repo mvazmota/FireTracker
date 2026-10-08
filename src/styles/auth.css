@@ -53,7 +53,18 @@
 .onboarding-fire { text-align: left; margin-bottom: 22px; }
 .onboarding-fire .field-label { margin-bottom: 8px; }
 .onboarding-fire .amount-input { margin-bottom: 10px; }
-.onboarding-fire-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1px solid #f0f2ef; }
+.fire-calculator { margin: 4px 0 18px; padding: 14px 16px; border: 1px solid #e4ece3; border-radius: 12px; background: #f7faf6; }
+.fire-calculator-empty { margin: 0; color: #8a958d; font-size: 13px; line-height: 1.5; }
+.fire-calculator-head { display: flex; flex-direction: column; gap: 2px; }
+.fire-calculator-head span { color: #8a958d; font-size: 12px; font-weight: 600; }
+.fire-calculator-head strong { color: #2d3c33; font: 700 26px 'Manrope', sans-serif; letter-spacing: -0.8px; }
+.fire-calculator-head small { color: #98a29b; font-size: 12px; }
+.fire-calculator-rows { display: grid; gap: 6px; margin: 12px 0 0; padding-top: 12px; border-top: 1px solid #e8efe7; }
+.fire-calculator-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.fire-calculator-row span { color: #7d8982; font-size: 13px; }
+.fire-calculator-row strong { color: #3f6b4a; font: 700 14px 'Manrope', sans-serif; }
+.fire-calculator-verdict { margin: 12px 0 0; color: #3f7351; font-size: 13px; font-weight: 600; line-height: 1.5; }
+.fire-calculator-verdict.verdict-alert { color: #a2662f; }
 .onboarding-chip { padding: 8px 13px; border: 1px solid #e2e9e2; border-radius: 999px; background: #fff; color: #5c6b60; font-size: 14px; font-weight: 600; transition: .15s; }
 .onboarding-chip:hover { border-color: #c3d6c5; background: #f4f8f3; }
 .onboarding-chip.chip-on { border-color: #8fb894; background: #eaf3ea; color: #3f6b4a; }
@@ -62,8 +73,6 @@
 .onboarding-actions { display: flex; gap: 10px; }
 .onboarding-actions .submit-button { flex: 1; height: 44px; margin-top: 0; }
 .onboarding-actions .ghost-button { height: 44px; }
-.onboarding-title-row { display: flex; align-items: center; justify-content: center; gap: 9px; }
-.onboarding-optional { padding: 3px 9px; border-radius: 999px; background: #eef4ee; color: #5f8a6b; font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
 .onboarding-learn-more { display: inline-flex; align-items: center; gap: 5px; margin: -10px 0 16px; color: #4f7d5c; font-size: 13px; font-weight: 600; text-decoration: none; }
 .onboarding-learn-more:hover { text-decoration: underline; }
 .onboarding-avatar-preview { display: grid; place-items: center; margin: 0 0 18px; }

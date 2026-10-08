@@ -55,6 +55,12 @@ In development run the two servers together, and run Vite on **port 5199**
   **contain transactions**, not months elapsed — elapsed months understate
   spending and flatter the FIRE date. Transfers into investments or savings
   count as saving, not spending, because the 4% rule only covers living costs.
+- **The FIRE projection starts from `projection.current`**, never from the
+  tracked position directly. While there is no history the projection is built
+  from the onboarding answers, and `current` is then the starting capital the
+  user stated. Once transactions exist it is the tracked global position. Any
+  screen showing FIRE progress — the FIRE tab and the sidebar meter — has to
+  agree on which one it means.
 - **Recurring transactions are generated on the client, lazily, on app load** —
   there is no cron. Occurrence ids are deterministic
   (`recurring-<ruleId>-<month>`) so generation is idempotent, and

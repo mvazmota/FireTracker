@@ -154,6 +154,10 @@ describe('fireProjection', () => {
     expect(projection.targetDate).toBeNull()
     expect(projection.estimated).toBe(false)
   })
+
+  it('starts from the tracked position', () => {
+    expect(fireProjection({ transactions: [], currentPosition: 42000, today: TODAY }).current).toBe(42000)
+  })
 })
 
 describe('estimateProjection', () => {
@@ -181,6 +185,32 @@ describe('estimateProjection', () => {
     const projection = estimateProjection({ estimate: null, currentPosition: 0, today: TODAY })
     expect(projection.target).toBe(0)
     expect(projection.years).toBeNull()
+  })
+
+  it('starts from the capital the user says they already have', () => {
+    const without = estimateProjection({ estimate, currentPosition: 0, today: TODAY })
+    const withCapital = estimateProjection({ estimate: { ...estimate, startingCapital: 100000 }, currentPosition: 0, today: TODAY })
+    expect(withCapital.years).toBeLessThan(without.years)
+    expect(withCapital.current).toBe(100000)
+  })
+
+  it('falls back to the tracked position when no capital was stated', () => {
+    const tracked = estimateProjection({ estimate, currentPosition: 100000, today: TODAY })
+    const fromZero = estimateProjection({ estimate, currentPosition: 0, today: TODAY })
+    expect(tracked.years).toBeLessThan(fromZero.years)
+    expect(tracked.current).toBe(100000)
+  })
+
+  it('treats a stated capital of zero as no capital', () => {
+    const stated = estimateProjection({ estimate: { ...estimate, startingCapital: 0 }, currentPosition: 50000, today: TODAY })
+    const tracked = estimateProjection({ estimate, currentPosition: 50000, today: TODAY })
+    expect(stated.years).toBe(tracked.years)
+  })
+
+  it('reports the goal as already reached when the capital covers it', () => {
+    const projection = estimateProjection({ estimate: { ...estimate, startingCapital: 600000 }, currentPosition: 0, today: TODAY })
+    expect(projection.reached).toBe(true)
+    expect(projection.years).toBe(0)
   })
 })
 

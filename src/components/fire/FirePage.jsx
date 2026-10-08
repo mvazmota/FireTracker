@@ -30,17 +30,19 @@ export default function FirePage() {
   // The goal the user set, measured against the number their spending implies.
   const comparison = compareGoal({ goal: fireGoal, projected: projection.target })
   const goalValue = comparison.goal > 0 ? comparison.goal : comparison.projected
-  const goalYears = yearsToTarget({ current: globalPosition, annualSavings: projection.savings, target: goalValue, realReturn: projection.realReturn })
-  const goalReached = goalValue > 0 && globalPosition >= goalValue
+  // `projection.current` is the tracked position once there is history, and the
+  // stated starting capital while the projection is still an estimate.
+  const goalYears = yearsToTarget({ current: projection.current, annualSavings: projection.savings, target: goalValue, realReturn: projection.realReturn })
+  const goalReached = goalValue > 0 && projection.current >= goalValue
 
   const horizon = goalYears == null ? 30 : Math.min(50, Math.ceil(goalYears) + 2)
   const series = useMemo(
-    () => projectSeries({ current: globalPosition, annualSavings: projection.savings, years: horizon }),
-    [globalPosition, projection.savings, horizon],
+    () => projectSeries({ current: projection.current, annualSavings: projection.savings, years: horizon }),
+    [projection.current, projection.savings, horizon],
   )
 
   const hasData = projection.target > 0
-  const progress = goalValue > 0 ? Math.min(100, (globalPosition / goalValue) * 100) : 0
+  const progress = goalValue > 0 ? Math.min(100, (projection.current / goalValue) * 100) : 0
   const savingsRate = projection.income > 0 ? (projection.savings / projection.income) * 100 : 0
   const years = goalYears == null ? null : Math.ceil(goalYears)
   const targetDate = goalYears == null
@@ -51,7 +53,7 @@ export default function FirePage() {
     : null
 
   const stats = [
-    { key: 'position', icon: <Wallet size={16} />, tint: 'savings-tint', label: t.currentPosition, value: formatCurrency(globalPosition, language), note: `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(progress)}% ${t.ofGoal}` },
+    { key: 'position', icon: <Wallet size={16} />, tint: 'savings-tint', label: t.currentPosition, value: formatCurrency(projection.current, language), note: `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(progress)}% ${t.ofGoal}` },
     { key: 'savings', icon: <PiggyBank size={16} />, tint: 'etf-tint', label: t.annualSavings, value: formatCurrency(projection.savings, language), note: `${savingsRate.toFixed(0)}% ${t.ofIncome}` },
     { key: 'spending', icon: <TrendingUp size={16} />, tint: 'p2p-tint', label: t.annualSpending, value: formatCurrency(projection.expenses, language), note: `${projection.months} ${projection.months === 1 ? t.monthOfData : t.monthsOfData}` },
     { key: 'monthly', icon: <Flame size={16} />, tint: 'fire-tint', label: t.fireMonthlySavings, value: formatCurrency(projection.savings / 12, language), note: t.fireMonthlySavingsNote },
@@ -83,7 +85,7 @@ export default function FirePage() {
             <span style={{ width: `${progress}%` }} />
           </div>
           <div className="fire-progress-legend">
-            <span>{formatCurrency(globalPosition, language)}</span>
+            <span>{formatCurrency(projection.current, language)}</span>
             <span>{formatCurrency(goalValue, language)}</span>
           </div>
         </div>

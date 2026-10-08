@@ -6,7 +6,7 @@ import { categorySuggestions } from '../../data/categories.js'
 import { INVESTMENT_TYPES } from '../../data/investmentTypes.js'
 import { PLATFORM_SUGGESTIONS } from '../../lib/constants.js'
 import { resizeImageFile } from '../../lib/image.js'
-import { WITHDRAWAL_RATE } from '../../lib/fire.js'
+import { fireTarget, yearsToTarget } from '../../lib/fire.js'
 import { formatCurrency } from '../../lib/format.js'
 import Avatar from '../ui/Avatar.jsx'
 import AnimalAvatar, { ANIMAL_LABEL_KEYS, ANIMAL_PRESETS, animalAvatarValue, animalId } from '../ui/AnimalAvatar.jsx'
@@ -22,15 +22,15 @@ const DEFAULT_SELECTED_PLATFORMS = ['Bank account']
 const DEFAULT_SELECTED_INVESTMENTS = { etfs: true, crypto: false, p2p: false, bonds: false, savings: false }
 
 /**
- * First-run setup: a new account has no categories and no platforms, so we ask
- * for them before the app is usable, then for the investment spaces to show,
- * an optional FIRE goal, and finally an optional profile picture. The choice
- * steps are suggestion-driven to keep it quick, and categories can be typed in
- * as well.
+ * First-run setup. It opens on the FIRE calculator, because the number it works
+ * out is the point of the app, then asks for the categories, platforms and
+ * investment spaces the rest of the app needs, and finally for a profile
+ * picture. The choice steps are suggestion-driven to keep it quick, and
+ * categories and platforms can be typed in as well.
  */
 export default function OnboardingPage() {
   const { t, language, changeLanguage } = useI18n()
-  const { profile, fireGoal, fireMeterVisible, saveProfile, saveOnboarding } = useSettings()
+  const { profile, fireGoal, saveProfile, saveOnboarding } = useSettings()
   const [step, setStep] = useState(0)
   const [categories, setCategories] = useState(() => ({ expense: [...DEFAULT_CATEGORIES.expense], income: [...DEFAULT_CATEGORIES.income] }))
   const [customCategories, setCustomCategories] = useState({ expense: [], income: [] })
@@ -40,10 +40,9 @@ export default function OnboardingPage() {
   const [platformDraft, setPlatformDraft] = useState('')
   const [visibility, setVisibility] = useState(() => ({ ...DEFAULT_SELECTED_INVESTMENTS }))
   const [goalInput, setGoalInput] = useState(String(fireGoal))
-  const [showFire, setShowFire] = useState(fireMeterVisible)
   const [incomeInput, setIncomeInput] = useState('')
   const [spendingInput, setSpendingInput] = useState('')
-  const [rateInput, setRateInput] = useState('')
+  const [capitalInput, setCapitalInput] = useState('')
   const [goalTouched, setGoalTouched] = useState(false)
   const [avatar, setAvatar] = useState(profile.avatar || '')
   const [photoError, setPhotoError] = useState('')
@@ -112,17 +111,17 @@ export default function OnboardingPage() {
 
   function finish() {
     if (avatar !== (profile.avatar || '')) saveProfile({ ...profile, avatar })
-    const hasEstimate = incomeInput.trim() !== '' || spendingInput.trim() !== '' || rateInput.trim() !== ''
+    const hasEstimate = incomeInput.trim() !== '' || spendingInput.trim() !== '' || capitalInput.trim() !== ''
     saveOnboarding({
       categories,
       platforms,
       investmentVisibility: visibility,
       fireGoal: Number(goalInput) > 0 ? Number(goalInput) : fireGoal,
-      fireMeterVisible: showFire,
       fireEstimate: hasEstimate ? {
-        income: Number(incomeInput) || 0,
-        spending: Number(spendingInput) || 0,
-        savingsRate: rateInput.trim() === '' ? (impliedRate ?? 0) : Number(rateInput),
+        income,
+        spending,
+        savingsRate: canProject ? Math.round(savingsRate) : 0,
+        startingCapital: capital,
       } : undefined,
     })
   }
@@ -130,13 +129,26 @@ export default function OnboardingPage() {
   const categoriesReady = categories.expense.length >= MIN_CATEGORIES.expense && categories.income.length >= MIN_CATEGORIES.income
   const platformsReady = platforms.length > 0
   const investmentsReady = Object.values(visibility).some(Boolean)
-  const goalValid = !showFire || goalInput.trim() === '' || (Number.isFinite(Number(goalInput)) && Number(goalInput) > 0)
+  const goalValid = goalInput.trim() === '' || (Number.isFinite(Number(goalInput)) && Number(goalInput) > 0)
+
+  const income = Number(incomeInput) || 0
+  const spending = Number(spendingInput) || 0
+  const capital = Number(capitalInput) || 0
+  const hasSpending = spending > 0
+  // Both are needed before the pace of saving means anything.
+  const canProject = hasSpending && income > 0
 
   // 25× what they spend a year is the number the 4% rule points at.
-  const suggestedGoal = Number(spendingInput) > 0 ? Math.round(Number(spendingInput) / WITHDRAWAL_RATE) : 0
-  const impliedRate = Number(incomeInput) > 0 && spendingInput.trim() !== ''
-    ? Math.max(0, Math.min(100, Math.round(((Number(incomeInput) - Number(spendingInput)) / Number(incomeInput)) * 100)))
-    : null
+  const suggestedGoal = fireTarget(spending)
+  const annualSavings = canProject ? income - spending : 0
+  const savingsRate = canProject ? (annualSavings / income) * 100 : 0
+  const years = canProject ? yearsToTarget({ current: capital, annualSavings, target: suggestedGoal }) : null
+  const wholeYears = years == null ? null : Math.ceil(years)
+  const verdict = !canProject
+    ? t.fireCalculatorNeedIncome
+    : years == null
+      ? t.fireCalculatorNever
+      : wholeYears === 1 ? t.fireCalculatorYear : t.fireCalculatorYears.replace('{years}', wholeYears)
 
   // The goal follows the suggestion until it is edited by hand.
   useEffect(() => {
@@ -159,6 +171,39 @@ export default function OnboardingPage() {
       <p className="onboarding-step">{t.stepLabel} {step + 1}/5</p>
 
       {step === 0 ? <>
+        <h1 id="onboarding-title">{t.onboardingFireTitle}<span>.</span></h1>
+        <p className="onboarding-sub">{t.onboardingFireSubtitle}</p>
+        <a className="onboarding-learn-more" href="https://www.investopedia.com/terms/f/financial-independence-retire-early-fire.asp" target="_blank" rel="noopener noreferrer">{t.learnMore} <ExternalLink size={13} /></a>
+        <div className="onboarding-fire">
+          <div className="form-row">
+            <div><label className="field-label" htmlFor="onboarding-fire-income">{t.fireIncomeLabel}</label><div className="amount-input"><span>€</span><input id="onboarding-fire-income" type="number" min="0" step="1000" placeholder="30000" value={incomeInput} onChange={(event) => setIncomeInput(event.target.value)} /></div></div>
+            <div><label className="field-label" htmlFor="onboarding-fire-spend">{t.fireSpendLabel}</label><div className="amount-input"><span>€</span><input id="onboarding-fire-spend" type="number" min="0" step="1000" placeholder="20000" value={spendingInput} onChange={(event) => setSpendingInput(event.target.value)} /></div></div>
+          </div>
+          <label className="field-label" htmlFor="onboarding-fire-capital">{t.fireCapitalLabel}</label>
+          <div className="amount-input"><span>€</span><input id="onboarding-fire-capital" type="number" min="0" step="1000" placeholder="0" value={capitalInput} onChange={(event) => setCapitalInput(event.target.value)} /></div>
+          <p className="onboarding-hint">{t.fireCapitalHint}</p>
+
+          <div className="fire-calculator">
+            {!hasSpending ? <p className="fire-calculator-empty">{t.fireCalculatorEmpty}</p> : <>
+              <div className="fire-calculator-head">
+                <span>{t.fireCalculatorNumber}</span>
+                <strong>{formatCurrency(suggestedGoal, language)}</strong>
+                <small>{t.fireTargetNote.replace('{amount}', formatCurrency(spending, language))}</small>
+              </div>
+              {canProject && <div className="fire-calculator-rows">
+                <div className="fire-calculator-row"><span>{t.fireCalculatorSaving}</span><strong>{formatCurrency(annualSavings, language)}</strong></div>
+                <div className="fire-calculator-row"><span>{t.fireCalculatorRate}</span><strong>{savingsRate.toFixed(0)}%</strong></div>
+              </div>}
+              <p className={canProject && years == null ? 'fire-calculator-verdict verdict-alert' : 'fire-calculator-verdict'}>{verdict}</p>
+            </>}
+          </div>
+
+          <label className="field-label" htmlFor="onboarding-fire-goal">{t.goalAmount}</label>
+          <div className="amount-input"><span>€</span><input id="onboarding-fire-goal" type="number" min="1" step="1000" value={goalInput} onChange={(event) => { setGoalTouched(true); setGoalInput(event.target.value) }} /></div>
+          {!goalValid && <p className="form-error">{t.goalError}</p>}
+        </div>
+        <button type="button" className="submit-button onboarding-wide" disabled={!goalValid} onClick={() => setStep(1)}>{t.continue} <ArrowRight size={16} /></button>
+      </> : step === 1 ? <>
         <h1 id="onboarding-title">{t.onboardingCategoriesTitle}<span>.</span></h1>
         <p className="onboarding-sub">{t.onboardingCategoriesSubtitle}</p>
         {['expense', 'income'].map((type) => <div className="onboarding-group" key={type}>
@@ -172,8 +217,11 @@ export default function OnboardingPage() {
           </div>
         </div>)}
         {!categoriesReady && <p className="onboarding-hint">{t.onboardingCategoriesHint}</p>}
-        <button type="button" className="submit-button onboarding-wide" disabled={!categoriesReady} onClick={() => setStep(1)}>{t.continue} <ArrowRight size={16} /></button>
-      </> : step === 1 ? <>
+        <div className="onboarding-actions">
+          <button type="button" className="ghost-button" onClick={() => setStep(0)}><ArrowLeft size={16} /> {t.back}</button>
+          <button type="button" className="submit-button" disabled={!categoriesReady} onClick={() => setStep(2)}>{t.continue} <ArrowRight size={16} /></button>
+        </div>
+      </> : step === 2 ? <>
         <h1 id="onboarding-title">{t.onboardingPlatformsTitle}<span>.</span></h1>
         <p className="onboarding-sub">{t.onboardingPlatformsSubtitle}</p>
         <div className="onboarding-chips onboarding-chips-platforms">
@@ -185,10 +233,10 @@ export default function OnboardingPage() {
         </div>
         {!platformsReady && <p className="onboarding-hint">{t.onboardingPlatformsHint}</p>}
         <div className="onboarding-actions">
-          <button type="button" className="ghost-button" onClick={() => setStep(0)}><ArrowLeft size={16} /> {t.back}</button>
-          <button type="button" className="submit-button" disabled={!platformsReady} onClick={() => setStep(2)}>{t.continue} <ArrowRight size={16} /></button>
+          <button type="button" className="ghost-button" onClick={() => setStep(1)}><ArrowLeft size={16} /> {t.back}</button>
+          <button type="button" className="submit-button" disabled={!platformsReady} onClick={() => setStep(3)}>{t.continue} <ArrowRight size={16} /></button>
         </div>
-      </> : step === 2 ? <>
+      </> : step === 3 ? <>
         <h1 id="onboarding-title">{t.onboardingInvestmentsTitle}<span>.</span></h1>
         <p className="onboarding-sub">{t.onboardingInvestmentsSubtitle}</p>
         <div className="onboarding-chips onboarding-chips-investments">
@@ -196,34 +244,8 @@ export default function OnboardingPage() {
         </div>
         {!investmentsReady && <p className="onboarding-hint">{t.onboardingInvestmentsHint}</p>}
         <div className="onboarding-actions">
-          <button type="button" className="ghost-button" onClick={() => setStep(1)}><ArrowLeft size={16} /> {t.back}</button>
-          <button type="button" className="submit-button" disabled={!investmentsReady} onClick={() => setStep(3)}>{t.continue} <ArrowRight size={16} /></button>
-        </div>
-      </> : step === 3 ? <>
-        <div className="onboarding-title-row"><h1 id="onboarding-title">{t.onboardingFireTitle}<span>.</span></h1><span className="onboarding-optional">{t.optional}</span></div>
-        <p className="onboarding-sub">{t.onboardingFireSubtitle}</p>
-        <a className="onboarding-learn-more" href="https://www.investopedia.com/terms/f/financial-independence-retire-early-fire.asp" target="_blank" rel="noopener noreferrer">{t.learnMore} <ExternalLink size={13} /></a>
-        <div className="onboarding-fire">
-          <div className="form-row">
-            <div><label className="field-label" htmlFor="onboarding-fire-income">{t.fireIncomeLabel}</label><div className="amount-input"><span>€</span><input id="onboarding-fire-income" type="number" min="0" step="1000" placeholder="30000" value={incomeInput} onChange={(event) => setIncomeInput(event.target.value)} /></div></div>
-            <div><label className="field-label" htmlFor="onboarding-fire-spend">{t.fireSpendLabel}</label><div className="amount-input"><span>€</span><input id="onboarding-fire-spend" type="number" min="0" step="1000" placeholder="20000" value={spendingInput} onChange={(event) => setSpendingInput(event.target.value)} /></div></div>
-          </div>
-          <label className="field-label" htmlFor="onboarding-fire-rate">{t.fireRateLabel}</label>
-          <div className="amount-input"><input id="onboarding-fire-rate" type="number" min="0" max="100" step="1" placeholder="30" value={rateInput} onChange={(event) => setRateInput(event.target.value)} /><span>%</span></div>
-          {impliedRate != null && rateInput.trim() === '' && <p className="onboarding-hint">{t.fireRateHint.replace('{rate}', impliedRate)}</p>}
-          {suggestedGoal > 0 && <p className="onboarding-hint">{t.fireSuggested.replace('{amount}', formatCurrency(suggestedGoal, language))}</p>}
-
-          <div className="onboarding-fire-toggle">
-            <div className="visibility-label"><strong>{t.fireMeterSettings}</strong><span>{t.showFireMeter}</span></div>
-            <button type="button" className={showFire ? 'visibility-switch switch-on' : 'visibility-switch'} role="switch" aria-checked={showFire} aria-label={t.showFireMeter} onClick={() => setShowFire((current) => !current)}><span /></button>
-          </div>
-          <label className="field-label" htmlFor="onboarding-fire-goal">{t.goalAmount}</label>
-          <div className={showFire ? 'amount-input' : 'amount-input amount-input-off'}><span>€</span><input id="onboarding-fire-goal" type="number" min="1" step="1000" value={goalInput} disabled={!showFire} onChange={(event) => { setGoalTouched(true); setGoalInput(event.target.value) }} /></div>
-          {!goalValid && <p className="form-error">{t.goalError}</p>}
-        </div>
-        <div className="onboarding-actions">
           <button type="button" className="ghost-button" onClick={() => setStep(2)}><ArrowLeft size={16} /> {t.back}</button>
-          <button type="button" className="submit-button" disabled={!goalValid} onClick={() => setStep(4)}>{t.continue} <ArrowRight size={16} /></button>
+          <button type="button" className="submit-button" disabled={!investmentsReady} onClick={() => setStep(4)}>{t.continue} <ArrowRight size={16} /></button>
         </div>
       </> : <>
         <h1 id="onboarding-title">{t.onboardingAvatarTitle}<span>.</span></h1>

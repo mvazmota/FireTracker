@@ -24,8 +24,8 @@ euros.
 - **FIRE tab** — projects the pot you need (25× your yearly spending), when you
   reach the goal you set, and how your target compares with the number your
   actual spending implies.
-- **Onboarding** — a five-step first run that seeds your categories, platforms,
-  investment types and a first FIRE goal.
+- **Onboarding** — a five-step first run that opens with a FIRE calculator and
+  seeds your categories, platforms, investment types and first FIRE goal.
 - **Profile** — display name, avatar, language, FIRE goal, per-type visibility
   and account deletion.
 

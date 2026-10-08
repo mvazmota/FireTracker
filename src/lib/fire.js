@@ -112,6 +112,10 @@ function buildProjection({ income, expenses, savings, saved = 0, months, current
     saved,
     months,
     estimated,
+    // The position the projection starts from. It is the tracked position once
+    // there is history, and the stated starting capital while the projection is
+    // still built from the onboarding answers.
+    current: currentPosition,
     target,
     years,
     reached,
@@ -131,13 +135,17 @@ export function fireProjection({ transactions, currentPosition, today = new Date
  * A projection built from the answers given during onboarding, for use before
  * there is any transaction history worth averaging.
  */
-export function estimateProjection({ estimate, currentPosition, today = new Date(), realReturn = REAL_RETURN, withdrawalRate = WITHDRAWAL_RATE }) {
+export function estimateProjection({ estimate, currentPosition = 0, today = new Date(), realReturn = REAL_RETURN, withdrawalRate = WITHDRAWAL_RATE }) {
   const income = Number(estimate?.income) || 0
   const expenses = Number(estimate?.spending) || 0
   const rate = Number(estimate?.savingsRate)
   // A stated savings rate wins; otherwise it is whatever income minus spending leaves.
   const savings = Number.isFinite(rate) && rate >= 0 ? roundMoney(income * (rate / 100)) : roundMoney(income - expenses)
-  return buildProjection({ income, expenses, savings, saved: savings, months: 0, currentPosition, today, realReturn, withdrawalRate, estimated: true })
+  // What the user says they already have invested leads while there is no history
+  // to go on; without it we fall back to whatever the app has tracked.
+  const stated = Number(estimate?.startingCapital)
+  const current = Number.isFinite(stated) && stated > 0 ? stated : currentPosition
+  return buildProjection({ income, expenses, savings, saved: savings, months: 0, currentPosition: current, today, realReturn, withdrawalRate, estimated: true })
 }
 
 /**
