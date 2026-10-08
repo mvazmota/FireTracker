@@ -120,6 +120,8 @@
 /* Settings: stack the paired panels and the category columns on narrow screens */
 @media (max-width: 1120px) {
   .settings-pair { grid-template-columns: minmax(0, 1fr); }
+  .fire-hero { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .fire-hero-number { font-size: 34px; }
 }
 @media (max-width: 760px) {
   .manage-columns { grid-template-columns: minmax(0, 1fr); gap: 0; }
