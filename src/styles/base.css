@@ -13,9 +13,9 @@
 
 * { box-sizing: border-box; }
 .error-boundary { max-width: 520px; margin: 12vh auto; padding: 28px; border: 1px solid #e9ede8; border-radius: 12px; background: #fff; color: #35433a; text-align: center; font-family: 'DM Sans', sans-serif; }
-.error-boundary h1 { margin: 0 0 10px; font: 700 20px 'Manrope', sans-serif; }
-.error-boundary p { margin: 0 0 18px; color: #8a958d; font-size: 13px; }
-.error-boundary button { height: 38px; padding: 0 16px; border: 0; border-radius: 7px; background: #356b53; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+.error-boundary h1 { margin: 0 0 10px; font: 700 22px 'Manrope', sans-serif; }
+.error-boundary p { margin: 0 0 18px; color: #8a958d; font-size: 15px; }
+.error-boundary button { height: 38px; padding: 0 16px; border: 0; border-radius: 7px; background: #356b53; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
 body { margin: 0; min-width: 360px; min-height: 100vh; }
 button, input, select { font: inherit; }
 button { cursor: pointer; }
