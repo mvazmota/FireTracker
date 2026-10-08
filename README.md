@@ -78,6 +78,7 @@ history the first time it is opened.
 | --- | --- | --- |
 | `demo@email.com` | `1234` | Three years of history with every asset type in play |
 | `tiago@email.com` | `1234` | 22 and one year into adult life in Portugal: €2,000 a month, €200 of it into an S&P 500 ETF |
+| `diogo@email.com` | `1234` | 28 and three years in: €2,200 a month plus an allowance every six months, €400 into an S&P 500 ETF and half of each allowance into bitcoin |
 
 ## Project structure
 

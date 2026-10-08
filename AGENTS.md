@@ -151,13 +151,16 @@ git push origin main
   account means describing a person, not writing another generator. The account
   rows come from a migration; the data is generated the first time the account
   is opened. Everything varying is seeded rather than random, so a persona always
-  produces the same history. A persona's salary is seeded as a *recurring rule*
-  plus its past occurrences, so the app's own generator keeps paying it — and an
-  opening balance is an income dated before the tracked year, which counts as
-  cash without being read as income by the FIRE averages. The app has no real
-  opening-balance field; that would be the better fix.
-- Do not delete a demo account (`demo@email.com`, `tiago@email.com`). Migrations
-  create them and `DataProvider` fills them; the live demo depends on them.
+  produces the same history. A persona's income lines either recur — seeded as a
+  *recurring rule* plus its past occurrences, so the app's own generator keeps
+  paying it — or land in chosen months, which is how allowances and bonuses
+  work and how an investment can take a share of one. An opening balance is an
+  income dated before the tracked history, which counts as cash without being
+  read as income by the FIRE averages. The app has no real opening-balance
+  field; that would be the better fix.
+- Do not delete a demo account (`demo@email.com`, `tiago@email.com`,
+  `diogo@email.com`). Migrations create them and `DataProvider` fills them; the
+  live demo depends on them.
 - Do not hand-edit `worker/db/auth-schema.sql`; regenerate it.
 - Do not remove the guard that blocks deleting a category in use.
 - Do not convert money to integer cents.

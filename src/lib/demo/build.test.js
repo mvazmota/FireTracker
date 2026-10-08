@@ -100,6 +100,67 @@ describe('buildDemoPayload for a described persona', () => {
   })
 })
 
+describe('buildDemoPayload for a seasonal persona', () => {
+  const diogo = demoPersonaFor('diogo@email.com')
+  const payload = buildDemoPayload(diogo, TODAY)
+
+  it('covers three years', () => {
+    expect(new Set(payload.transactions.map((item) => item.date.slice(0, 7))).size).toBe(36)
+  })
+
+  it('pays a salary every month, from the rule', () => {
+    const salaries = payload.transactions.filter((item) => item.title === 'Monthly salary')
+    expect(salaries).toHaveLength(36)
+    expect(salaries.every((item) => item.amount === 2200)).toBe(true)
+    expect(salaries.every((item) => item.sourceType === 'recurring')).toBe(true)
+    expect(payload.recurring).toHaveLength(1)
+    expect(payload.recurring[0].lastGeneratedMonth).toBe('2026-10')
+  })
+
+  it('pays an allowance every six months', () => {
+    const allowances = payload.transactions.filter((item) => /allowance/.test(item.title))
+    expect(allowances).toHaveLength(6)
+    expect(allowances.every((item) => item.amount === 2200)).toBe(true)
+  })
+
+  it('invests 400 a month in the ETF', () => {
+    const buys = payload.transactions.filter((item) => item.title === 'ETF purchase · VUAA')
+    expect(buys).toHaveLength(36)
+    expect(buys.every((item) => item.amount === 400)).toBe(true)
+  })
+
+  it('buys bitcoin with half of every allowance', () => {
+    const buys = payload.transactions.filter((item) => item.title === 'Crypto purchase · BTC')
+    expect(buys).toHaveLength(6)
+    expect(buys.every((item) => item.amount === 1100)).toBe(true)
+  })
+
+  it('holds both an ETF and bitcoin', () => {
+    expect(payload.etfs).toHaveLength(1)
+    expect(payload.crypto).toHaveLength(1)
+    expect(payload.crypto[0].units).toBeGreaterThan(0)
+    expect(payload.crypto[0].history).toHaveLength(36)
+    expect(payload.settings.investmentVisibility.crypto).toBe(true)
+    expect(payload.settings.investmentVisibility.p2p).toBe(false)
+  })
+
+  it('prices bitcoin on its own curve rather than an ETF one', () => {
+    expect(payload.crypto[0].currentPrice).toBeGreaterThan(20000)
+  })
+
+  it('lets the saving rate swing across the year', () => {
+    const byMonth = {}
+    for (const item of payload.transactions) {
+      const month = item.date.slice(0, 7)
+      byMonth[month] = byMonth[month] || { income: 0, spending: 0 }
+      if (item.type === 'income') byMonth[month].income += item.amount
+      else if (item.category !== 'Investment') byMonth[month].spending += item.amount
+    }
+    const rates = Object.values(byMonth).filter((month) => month.income > 0).map((month) => (month.income - month.spending) / month.income)
+    expect(Math.max(...rates) - Math.min(...rates)).toBeGreaterThan(0.3)
+  })
+})
+
 describe('buildDemoPayload for the showcase persona', () => {
   it('still returns the three-year simulation', () => {
     const payload = buildDemoPayload(demoPersonaFor('demo@email.com'), TODAY)
