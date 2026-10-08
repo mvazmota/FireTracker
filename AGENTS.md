@@ -37,9 +37,11 @@ In development run the two servers together, and run Vite on **port 5199**
 - `worker/tables.js` maps client object shapes onto D1 columns. When you add a
   column, update its `columns`/`toRow`/`fromRow` entry *and* the matching
   client shape.
-- Client state is two providers, both hydrated from `GET /api/state`:
+- Client state is a chain of providers composed in `src/app/AppProviders.jsx`,
+  where **order matters**: `AuthProvider` (session), `SyncProvider` (save status
+  and retry), `DataProvider` (loads `GET /api/state` and owns it), then
   `SettingsProvider` (profile, FIRE goal, visibility, platforms, categories) and
-  `FinanceProvider` (transactions, assets, every mutation).
+  `FinanceProvider` (transactions, assets, every mutation) on top.
 
 ## Rules that are not obvious from the code
 
@@ -109,9 +111,11 @@ git push origin main
 ## Boundaries
 
 - Do not push or deploy unless explicitly asked.
-- Do not delete the demo account (`demo@email.com`, seeded by
-  `0002_demo_account.sql`). The live demo depends on it. Its password is `1234`
-  and is public by design.
+- Do not delete the demo account (`demo@email.com`). Migration
+  `0002_demo_account.sql` creates it and `DataProvider` fills it with the
+  simulation the first time it is opened empty, so wiping its data is
+  recoverable but deleting the account is not. Its password is `1234` and is
+  public by design.
 - Do not hand-edit `worker/db/auth-schema.sql`; regenerate it.
 - Do not remove the guard that blocks deleting a category in use.
 - Do not convert money to integer cents.
