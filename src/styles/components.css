@@ -179,6 +179,7 @@
 .bulk-input-invalid { border-color: #cf8a7c !important; background: #fdf6f5; }
 .bulk-empty { padding: 26px 12px; color: #98a19a; font-size: 13px; text-align: center; }
 .bulk-add-row { margin-top: 10px; }
+.bulk-copy-note { margin: -6px 0 12px; color: #8a958d; font-size: 13px; }
 .bulk-entry-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #edf0ec; color: #68766d; font-size: 12px; }
 .bulk-count { font-weight: 600; }
 .bulk-total { white-space: nowrap; }

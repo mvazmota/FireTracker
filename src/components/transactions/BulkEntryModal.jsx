@@ -1,9 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Plus, X } from 'lucide-react'
-import { dateKey, monthKey } from '../../lib/dates.js'
+import { dateKey, monthKey, parseTransactionDate } from '../../lib/dates.js'
 import { formatCurrency } from '../../lib/format.js'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
+import { useFinance } from '../../context/FinanceProvider.jsx'
+
+/** Moves a timestamp into another month, keeping the time of day. The day is clamped to the target month's length (a 31st in January becomes the 28th/29th in February). */
+function shiftToMonth(timestamp, month) {
+  const [datePart, timePart = '12:00:00'] = timestamp.split('T')
+  const day = Number(datePart.slice(8, 10))
+  const [year, monthNumber] = month.split('-').map(Number)
+  const lastDay = new Date(year, monthNumber, 0).getDate()
+  return `${month}-${String(Math.min(day, lastDay)).padStart(2, '0')}T${timePart}`
+}
 
 function makeRow(defaults) {
   return {
@@ -28,6 +38,7 @@ function rowErrors(row) {
 
 export default function BulkEntryModal({ selectedMonth, onClose, onSave }) {
   const { categories, platforms } = useSettings()
+  const { transactions } = useFinance()
   const { t, language } = useI18n()
   const now = new Date()
   const initialDate = monthKey(selectedMonth) === monthKey(now) ? dateKey(now) : `${monthKey(selectedMonth)}-01`
@@ -39,6 +50,7 @@ export default function BulkEntryModal({ selectedMonth, onClose, onSave }) {
   const [rows, setRows] = useState(() => [makeRow({ category: categories.expense[0] || '', type: 'expense', date: initialDate, platform: '' })])
   const [showErrors, setShowErrors] = useState(false)
   const [focusId, setFocusId] = useState(null)
+  const [copyNote, setCopyNote] = useState(null)
 
   useEffect(() => {
     if (!focusId) return
@@ -68,6 +80,24 @@ export default function BulkEntryModal({ selectedMonth, onClose, onSave }) {
 
   function removeRow(id) {
     setRows((current) => current.filter((row) => row.id !== id))
+  }
+
+  function copyLastMonth() {
+    const selectedKey = monthKey(selectedMonth)
+    const [year, monthNumber] = selectedKey.split('-').map(Number)
+    const previousMonth = monthKey(new Date(year, monthNumber - 2, 1))
+    const lastMonth = transactions.filter((tx) => monthKey(parseTransactionDate(tx.date)) === previousMonth)
+    if (!lastMonth.length) return setCopyNote(t.bulkCopyEmpty)
+    setRows(lastMonth.map((tx) => ({
+      id: crypto.randomUUID(),
+      title: tx.title,
+      category: tx.category,
+      type: tx.type,
+      amount: String(tx.amount),
+      date: shiftToMonth(tx.date, selectedKey),
+      platform: tx.platform || '',
+    })))
+    setCopyNote(null)
   }
 
   function submit(event) {
@@ -133,7 +163,9 @@ export default function BulkEntryModal({ selectedMonth, onClose, onSave }) {
               </select>
             </div>
           </label>
+          <button className="text-button" type="button" onClick={copyLastMonth}>{t.bulkCopyLastMonth}</button>
         </div>
+        {copyNote && <p className="bulk-copy-note">{copyNote}</p>}
 
         <form onSubmit={submit}>
           <div className="bulk-entry-table-wrap">
