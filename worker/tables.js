@@ -35,9 +35,9 @@ const toBool = (value) => (value == null ? null : value ? 1 : 0)
 export const ASSET_TABLES = {
   etfs: {
     table: 'etfs',
-    columns: ['id', 'symbol', 'name', 'platform', 'units', 'averageCost', 'currentPrice', 'history', 'isDemo'],
-    toRow: (r) => [r.id, r.symbol, r.name, r.platform ?? null, r.units, r.averageCost, r.currentPrice, toJson(r.history), toBool(r.isDemo)],
-    fromRow: (r) => ({ id: r.id, symbol: r.symbol, name: r.name, platform: r.platform ?? undefined, units: r.units, averageCost: r.averageCost, currentPrice: r.currentPrice, history: fromJson(r.history) ?? [], isDemo: Boolean(r.isDemo) }),
+    columns: ['id', 'isin', 'symbol', 'name', 'platform', 'units', 'averageCost', 'currentPrice', 'history', 'isDemo'],
+    toRow: (r) => [r.id, r.isin ?? null, r.symbol, r.name, r.platform ?? null, r.units, r.averageCost, r.currentPrice, toJson(r.history), toBool(r.isDemo)],
+    fromRow: (r) => ({ id: r.id, isin: r.isin ?? undefined, symbol: r.symbol, name: r.name, platform: r.platform ?? undefined, units: r.units, averageCost: r.averageCost, currentPrice: r.currentPrice, history: fromJson(r.history) ?? [], isDemo: Boolean(r.isDemo) }),
   },
   crypto: {
     table: 'crypto',

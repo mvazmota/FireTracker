@@ -20,7 +20,8 @@ euros.
 - **ETFs by ISIN** — add a holding with just its ISIN, broker, amount and date.
   The app looks up the fund, the price on that day, the units that implies and
   the monthly history since, so there is no price to type in and no monthly
-  value to record.
+  value to record. Clicking a holding expands its fund details: issuer, fund
+  size, whether it accumulates or distributes, the dividend and when it launched.
 - **Global position** — tracked cash plus every asset, charted over 3, 6, 12,
   24 months or all recorded history.
 - **Statistics** — annual cash flow, spending by category and investment

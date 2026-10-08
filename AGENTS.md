@@ -87,6 +87,13 @@ In development run the two servers together, and run Vite on **port 5199**
   finds the rest — and a listing is only usable if it is quoted in EUR **and**
   actually has closes behind it. One ISIN maps to dozens of listings; the app
   picks the euro one rather than converting at an invented rate.
+- **Fund facts come from Yahoo's fundamentals, which need a cookie and a crumb**
+  (`yahooCrumb` in `worker/etf.js`): two extra requests, once per fund, for the
+  issuer, fund size, dividend and inception. Distribution policy is not a field
+  Yahoo exposes — it is read from the fund's name and cross-checked against the
+  yield. **The annual cost (TER) is not available from any free source tested**:
+  Yahoo returns it empty and justETF has it but only by scraping, which was not
+  done. `etf_catalog.ter` exists and the details row shows it when it is set.
 - **FIRE maths** (`src/lib/fire.js`): the annual average divides by the number of
   months that **contain transactions**, not months elapsed — elapsed months
   understate spending and flatter the FIRE date. Transfers into investments or

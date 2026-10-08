@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { fetchPrices, isIsin, readCatalog, readPrices, resolveIsin, writeCatalog, writePrices } from './etf.js'
+import { fetchFundFacts, fetchPrices, isIsin, readCatalog, readPrices, resolveIsin, writeCatalog, writePrices } from './etf.js'
 import { ASSET_TABLES, RECURRING, TRANSACTIONS, clearUserRows, listForUser, removeById, roundCents, runBatched, upsert, upsertStatement } from './tables.js'
 
 const SETTINGS_COLUMNS = ['name', 'avatar', 'createdAt', 'language', 'fireMeterVisible', 'investmentVisibility', 'platforms', 'categories', 'onboarded', 'fireEstimate', 'firePlan', 'birthYear', 'country']
@@ -179,8 +179,19 @@ api.get('/etf/lookup', async (c) => {
   try {
     const found = await resolveIsin(isin)
     if (!found) return c.json({ error: 'not_found' }, 404)
-    await writeCatalog(c.env.DB, found)
-    return c.json(found)
+
+    // The fund facts are a bonus: a holding works without them, so a failure
+    // here must not fail the lookup.
+    let facts = null
+    try {
+      facts = await fetchFundFacts(found.symbol, found.name)
+    } catch {
+      facts = null
+    }
+
+    const entry = { ...found, ...(facts || {}) }
+    await writeCatalog(c.env.DB, entry)
+    return c.json(entry)
   } catch {
     // The feed is undocumented and can fail; the client falls back to manual entry.
     return c.json({ error: 'lookup_failed' }, 502)

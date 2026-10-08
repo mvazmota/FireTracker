@@ -2,9 +2,11 @@ import InvestmentAllocation from './InvestmentAllocation.jsx'
 import InvestmentHistoryModal from './InvestmentHistoryModal.jsx'
 import InvestmentModal from './InvestmentModal.jsx'
 import EtfLookupModal from './EtfLookupModal.jsx'
-import { useState } from 'react'
+import FundFacts from './FundFacts.jsx'
+import { Fragment, useState } from 'react'
 import { Bitcoin, ChartLine, Pencil, Plus, Search, TrendingUp, Wallet, X } from 'lucide-react'
 import { formatCurrency, formatPercent } from '../../lib/format.js'
+import { api } from '../../lib/api.js'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
 import { useSettings } from '../../context/SettingsProvider.jsx'
 export default function InvestmentsPage({ holdings, onSave, onDelete, assetType = 'etf' }) {
@@ -21,6 +23,8 @@ export default function InvestmentsPage({ holdings, onSave, onDelete, assetType 
   const [historyRecord, setHistoryRecord] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [showLookup, setShowLookup] = useState(false)
+  const [expandedId, setExpandedId] = useState(null)
+  const [facts, setFacts] = useState({})
   const totalInvested = holdings.reduce((sum, holding) => sum + holding.units * holding.averageCost, 0)
   const marketValue = holdings.reduce((sum, holding) => sum + holding.units * holding.currentPrice, 0)
   const unrealised = marketValue - totalInvested
@@ -42,6 +46,23 @@ export default function InvestmentsPage({ holdings, onSave, onDelete, assetType 
     setHistoryRecord(null)
   }
 
+  /**
+   * Opens a holding's fund details, fetching them the first time. They come from
+   * the same cached lookup the ISIN form uses, so expanding a row costs a D1
+   * read rather than a call to the feed.
+   */
+  async function toggleRow(holding) {
+    const next = expandedId === holding.id ? null : holding.id
+    setExpandedId(next)
+    if (!next || !holding.isin || facts[holding.isin]) return
+    try {
+      const found = await api.lookupEtf(holding.isin)
+      setFacts((current) => ({ ...current, [holding.isin]: found }))
+    } catch {
+      setFacts((current) => ({ ...current, [holding.isin]: { unavailable: true } }))
+    }
+  }
+
   return (
     <div className="page-content investments-page">
       <section className="welcome-row"><div><p className="eyebrow">{t.portfolioEyebrow}</p><h1>{pageHeading}<span>.</span></h1><p className="welcome-sub">{pageSubtitle}</p></div><div className="welcome-actions">{!isCrypto && <button className="ghost-button" onClick={() => setShowLookup(true)}><Search size={17} /> {t.addEtfByIsin}</button>}<button className="primary-button" onClick={() => setShowModal(true)}><Plus size={18} strokeWidth={2.4} /> {addLabel}</button></div></section>
@@ -53,7 +74,7 @@ export default function InvestmentsPage({ holdings, onSave, onDelete, assetType 
       </section>
       <section className="insights-grid investment-insights"><InvestmentAllocation holdings={holdings} emptyLabel={emptyHeading} /><article className="panel manual-pricing-panel"><span className="manual-pricing-icon">{isCrypto ? <Bitcoin size={18} /> : <ChartLine size={18} />}</span><div><strong>{language === 'pt' ? 'Acompanha ao teu ritmo' : 'Your portfolio, your pace'}</strong><p>{t.manualPrices}</p></div><span className="manual-pricing-tag">MANUAL</span></article></section>
       <section className="panel holdings-panel"><div className="transactions-heading"><div><h2>{listHeading}</h2><p>{t.holdingsSubtitle}</p></div><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {addLabel}</button></div>
-        {holdings.length ? <div className="holdings-table-wrap"><table className="holdings-table"><thead><tr><th>{t.symbol}</th><th>{t.platform}</th><th>{t.units}</th><th>{t.avgCost}</th><th>{t.currentPrice}</th><th>{t.value}</th><th>{t.return}</th><th><span className="sr-only">{t.history}</span></th></tr></thead><tbody>{holdings.map((holding) => { const invested = holding.units * holding.averageCost; const value = holding.units * holding.currentPrice; const gain = value - invested; const percentage = invested ? (gain / invested) * 100 : 0; return <tr key={holding.id}><td><button className="holding-fund" onClick={() => setEditingHolding(holding)} aria-label={`${t.editRecord}: ${holding.symbol}`}><span className="holding-symbol">{holding.symbol}</span><span className="holding-name">{holding.name}{holding.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span></button></td><td><span className="platform-pill">{holding.platform || t.noPlatform}</span></td><td>{numberFormat.format(holding.units)}</td><td>{formatCurrency(holding.averageCost, language)}</td><td>{formatCurrency(holding.currentPrice, language)}</td><td className="holding-value">{formatCurrency(value, language)}</td><td><span className={gain >= 0 ? 'holding-return positive-return' : 'holding-return negative-return'}>{gain >= 0 ? '+' : '−'}{formatCurrency(Math.abs(gain), language)}<small>{formatPercent(percentage, language)}</small></span></td><td><div className="transaction-actions"><button className="history-row" onClick={() => setHistoryRecord(holding)} aria-label={`${t.history}: ${holding.symbol}`} title={t.history}><ChartLine size={15} /></button><button className="edit-row" onClick={() => setEditingHolding(holding)} aria-label={`${t.editRecord}: ${holding.symbol}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(holding.id)} aria-label={`${t.removeRecord}: ${holding.symbol}`} title={t.delete}><X size={15} /></button></div></td></tr> })}</tbody></table></div> : <div className="empty-transactions"><span className="empty-icon">{isCrypto ? <Bitcoin size={21} /> : <ChartLine size={21} />}</span><strong>{emptyHeading}</strong><p>{emptyMessage}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {addLabel}</button></div>}
+        {holdings.length ? <div className="holdings-table-wrap"><table className="holdings-table"><thead><tr><th>{t.symbol}</th><th>{t.platform}</th><th>{t.units}</th><th>{t.avgCost}</th><th>{t.currentPrice}</th><th>{t.value}</th><th>{t.return}</th><th><span className="sr-only">{t.history}</span></th></tr></thead><tbody>{holdings.map((holding) => { const invested = holding.units * holding.averageCost; const value = holding.units * holding.currentPrice; const gain = value - invested; const percentage = invested ? (gain / invested) * 100 : 0; return <Fragment key={holding.id}><tr><td><button className="holding-fund" onClick={() => toggleRow(holding)} aria-expanded={expandedId === holding.id} aria-label={t.etfFundDetails}><span className="holding-symbol">{holding.symbol}</span><span className="holding-name">{holding.name}{holding.isDemo && <i className="sample-chip">{t.sampleData}</i>}</span></button></td><td><span className="platform-pill">{holding.platform || t.noPlatform}</span></td><td>{numberFormat.format(holding.units)}</td><td>{formatCurrency(holding.averageCost, language)}</td><td>{formatCurrency(holding.currentPrice, language)}</td><td className="holding-value">{formatCurrency(value, language)}</td><td><span className={gain >= 0 ? 'holding-return positive-return' : 'holding-return negative-return'}>{gain >= 0 ? '+' : '−'}{formatCurrency(Math.abs(gain), language)}<small>{formatPercent(percentage, language)}</small></span></td><td><div className="transaction-actions"><button className="history-row" onClick={() => setHistoryRecord(holding)} aria-label={`${t.history}: ${holding.symbol}`} title={t.history}><ChartLine size={15} /></button><button className="edit-row" onClick={() => setEditingHolding(holding)} aria-label={`${t.editRecord}: ${holding.symbol}`} title={t.edit}><Pencil size={15} /></button><button className="delete-row" onClick={() => onDelete(holding.id)} aria-label={`${t.removeRecord}: ${holding.symbol}`} title={t.delete}><X size={15} /></button></div></td></tr>{expandedId === holding.id && <tr className="holding-details"><td colSpan={8}><FundFacts facts={facts[holding.isin]} isin={holding.isin} /></td></tr>}</Fragment> })}</tbody></table></div> : <div className="empty-transactions"><span className="empty-icon">{isCrypto ? <Bitcoin size={21} /> : <ChartLine size={21} />}</span><strong>{emptyHeading}</strong><p>{emptyMessage}</p><button className="text-button" onClick={() => setShowModal(true)}><Plus size={15} /> {addLabel}</button></div>}
       </section>
       <footer className="page-footer"><span>{t.manualPrices}</span><span>{t.footerMonth} <span className="footer-heart">♥</span></span></footer>
       {(showModal || editingHolding) && <InvestmentModal holding={editingHolding} onClose={closeModal} onSave={saveHolding} assetType={assetType} />}

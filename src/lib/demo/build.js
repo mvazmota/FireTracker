@@ -170,6 +170,7 @@ function personaPayload(persona, today) {
     if (!table || !(position.units > 0)) continue
     holdings[table].push({
       id: position.line.id,
+      isin: position.line.isin,
       symbol: position.line.symbol,
       name: position.line.name,
       platform: position.line.platform,
