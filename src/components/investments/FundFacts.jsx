@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useI18n } from '../../i18n/LanguageProvider.jsx'
-import { formatRate } from '../../lib/format.js'
 import { api } from '../../lib/api.js'
 
 /**
@@ -78,7 +77,6 @@ export default function FundFacts({ facts, isin }) {
     { key: 'issuer', label: t.etfIssuer, value: facts.issuer },
     { key: 'size', label: t.etfFundSize, value: facts.fundSize ? `€${compact.format(facts.fundSize)}` : null },
     { key: 'distribution', label: t.etfDistribution, value: facts.distribution ? (facts.distribution === 'accumulating' ? t.etfAccumulating : t.etfDistributing) : null },
-    { key: 'dividend', label: t.etfDividend, value: facts.dividendYield != null ? formatRate(facts.dividendYield * 100, language) : null },
     { key: 'inception', label: t.etfInception, value: facts.inception },
   ].filter((row) => row.value)
 
