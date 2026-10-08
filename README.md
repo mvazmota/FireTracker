@@ -17,6 +17,10 @@ euros.
 - **Investments** — ETFs, crypto, P2P lending, bonds and savings accounts, each
   with its own screen, cost basis and value history. Any type can be hidden
   without deleting its data.
+- **Overview** — the month organised into what was spent, what was earned and
+  what was invested, each a tab with its own breakdown and charts. The balance
+  and saving rate sit above the tabs, because they are the relationship
+  between earning and spending.
 - **ETFs by ISIN** — the only way to add one. Type the ISIN and the fund appears
   in the form — issuer, fund size, whether it accumulates or distributes, and when
   it launched — before anything is saved. The annual cost is the one fact no free

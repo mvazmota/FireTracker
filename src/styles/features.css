@@ -95,6 +95,24 @@
 .portfolio-mini-card:hover .portfolio-mini-title svg { transform: translateX(2px); }
 .portfolio-mini-card > strong { display: block; overflow: hidden; margin-top: 10px; color: #304137; font: 700 19px 'Manrope', sans-serif; letter-spacing: -.4px; text-overflow: ellipsis; white-space: nowrap; }
 .portfolio-mini-foot { display: block; overflow: hidden; margin-top: 4px; color: #98a29b; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.overview-relationship { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 15px; }
+.overview-tabs { display: flex; gap: 4px; margin-top: 18px; padding: 4px; border: 1px solid #e9ede8; border-radius: 9px; background: #f6f8f5; }
+.overview-tab { display: inline-flex; align-items: center; justify-content: center; flex: 1; gap: 7px; padding: 9px 12px; border: 0; border-radius: 6px; background: transparent; color: #7d8a81; font-size: 13px; font-weight: 600; transition: background .16s, color .16s, box-shadow .16s; }
+.overview-tab svg { color: #9aa69e; transition: color .16s; }
+.overview-tab:hover { color: #3f7052; }
+.overview-tab:hover svg { color: #3f7052; }
+.overview-tab.active { background: #fff; color: #376b4f; box-shadow: 0 1px 3px #283c3017; }
+.overview-tab.active svg { color: #3f7052; }
+.tab-panel { margin-top: 16px; }
+.delta-chip { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.delta-good { background: #edf5ee; color: #4c805c; }
+.delta-bad { background: #f9efec; color: #bf745e; }
+.income-trend-chart { display: flex; align-items: flex-end; gap: 18px; height: 190px; padding: 8px 4px 0; }
+.income-trend-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; flex: 1; height: 100%; min-width: 0; }
+.income-trend-value { margin-bottom: 5px; color: #7d8a81; font-size: 10px; font-weight: 600; white-space: nowrap; }
+.income-trend-track { display: flex; align-items: flex-end; width: 100%; max-width: 46px; height: 130px; }
+.income-trend-bar { width: 100%; border-radius: 5px 5px 2px 2px; background: linear-gradient(180deg, #7fbf95, #5a9a72); }
+.income-trend-col .chart-label { fill: none; color: #a1aaa4; }
 .fixed-income-note { margin: 14px 0; min-height: 146px; }
 .fixed-income-table { min-width: 850px; }
 .fixed-subline { display: block; margin: 3px 0 0 57px; color: #9aa39d; font-size: 10px; }

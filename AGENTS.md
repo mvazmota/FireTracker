@@ -45,6 +45,13 @@ In development run the two servers together, and run Vite on **port 5199**
 
 ## Rules that are not obvious from the code
 
+- **The overview is organised around the three things a month of money is** —
+  what was spent, what was earned and what was invested. `OverviewPage` holds a
+  tab for each, and the balance and saving rate sit *above* the tabs because they
+  are the relationship between earning and spending, not part of either. Each tab
+  shows its own breakdown and charts; the spending and earning tabs carry a
+  "vs last month" delta, coloured by whether the direction is good (spending down
+  is good, earning up is good).
 - **Money is stored as REAL euros, not integer cents.** Round *totals* at the
   boundaries — `roundMoney` on the client, `roundCents` in the Worker.
   `MONEY_COLUMNS` in `worker/tables.js` lists which columns are totals.
