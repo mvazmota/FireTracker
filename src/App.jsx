@@ -65,6 +65,7 @@ function AppShell() {
     bondHoldings,
     savingsAccounts,
     saveTransaction,
+    saveTransactions,
     removeTransaction,
     savePortfolioRecord,
     removePortfolioRecord,
