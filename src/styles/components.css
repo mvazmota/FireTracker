@@ -184,3 +184,23 @@
 .bulk-count { font-weight: 600; }
 .bulk-total { white-space: nowrap; }
 .bulk-entry-footer .bulk-save { width: auto; min-width: 130px; margin-top: 0; }
+
+/* Import modal */
+.import-modal { width: min(100%, 900px); }
+.import-source { color: #a2aaa4; }
+.import-error { margin: 0 0 12px; }
+.import-entry-table { min-width: 700px; }
+.import-entry-head, .import-entry-row { display: grid; grid-template-columns: 128px minmax(150px, 1.8fr) minmax(130px, 1fr) 100px 112px 34px; gap: 8px; align-items: center; padding: 0 12px; }
+.import-entry-head { position: sticky; top: 0; z-index: 1; min-height: 34px; background: #f4f7f3; color: #a2aaa4; font-size: 10px; font-weight: 700; letter-spacing: .75px; }
+.import-entry-head span:nth-child(4) { text-align: right; }
+.import-entry-row { min-height: 40px; border-top: 1px solid #f0f2ef; }
+.import-entry-row input { width: 100%; height: 30px; padding: 0 8px; border: 1px solid #e7ece7; border-radius: 5px; background: #fff; color: #4b584f; font-size: 12px; }
+.import-entry-row input:focus { border-color: #8fb894; outline: none; }
+.import-entry-row .select-wrap { width: 100%; height: 30px; margin-bottom: 0; padding: 0 8px; }
+.import-entry-row .select-wrap select { appearance: auto; font-size: 12px; }
+.import-entry-row .import-amount { text-align: right; }
+.import-needs-category { background: #fdf6ec; }
+.import-missing { color: #b07d3f; font-weight: 600; }
+.import-ready { display: inline-flex; align-items: center; gap: 5px; color: #4f7d5b; font-weight: 600; }
+.submit-button:disabled { opacity: .5; cursor: not-allowed; }
+.submit-button:disabled:hover { background: var(--green); transform: none; }

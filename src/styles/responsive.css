@@ -135,6 +135,7 @@
 /* Bulk entry modal */
 @media (max-width: 760px) {
   .bulk-entry-modal { padding: 18px; }
+  .import-modal { padding: 18px; }
   .bulk-entry-toolbar { padding: 10px; }
   .bulk-entry-footer { align-items: flex-start; flex-direction: column; }
   .bulk-entry-footer .bulk-save { width: 100%; }
