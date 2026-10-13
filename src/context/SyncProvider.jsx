@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 
 const SyncContext = createContext(null)
 
@@ -11,16 +11,22 @@ export function SyncProvider({ children }) {
   const [pending, setPending] = useState(0)
   const [failed, setFailed] = useState([])
 
+  // Writes run one after another. Several endpoints replace a whole row, so two
+  // overlapping writes could lose the earlier one's fields.
+  const queue = useRef(Promise.resolve())
+
   /** Runs a write, counting it while in flight and queueing it if it fails. */
   const run = useCallback((operation) => {
     setPending((count) => count + 1)
-    return Promise.resolve()
+    const next = queue.current
       .then(operation)
       .catch(() => {
-        setFailed((queue) => [...queue, operation])
+        setFailed((list) => [...list, operation])
         return null
       })
       .finally(() => setPending((count) => count - 1))
+    queue.current = next
+    return next
   }, [])
 
   const retry = useCallback(() => {

@@ -73,11 +73,17 @@ export function SettingsProvider({ children }) {
     setHydrated(true)
   }, [data, user?.name, applySettings])
 
-  /** Applies a settings patch locally, then persists the whole object. */
-  const persist = useCallback((patch) => {
+  /**
+   * Applies a settings patch locally, then persists the whole object. The
+   * profile can ride along so a step that changes both writes once: the server
+   * replaces the whole row, so two requests to it would race and the loser
+   * would wipe the winner's fields.
+   */
+  const persist = useCallback((patch, profilePatch) => {
     const next = { ...settingsRef.current, ...patch }
     applySettings(next)
-    run(() => api.putSettings({ settings: next }))
+    if (profilePatch) setProfile(profilePatch)
+    run(() => api.putSettings({ ...(profilePatch ? { profile: profilePatch } : {}), settings: next }))
   }, [applySettings, run])
 
   const saveProfile = useCallback((next) => {
@@ -128,7 +134,7 @@ export function SettingsProvider({ children }) {
   }, [persist])
 
   /** Finishes onboarding with everything the user picked. */
-  const saveOnboarding = useCallback(({ categories, platforms, investmentVisibility, fireMeterVisible, fireEstimate, birthYear, country }) => {
+  const saveOnboarding = useCallback(({ categories, platforms, investmentVisibility, fireMeterVisible, fireEstimate, birthYear, country, profile: profilePatch }) => {
     persist({
       categories,
       platforms,
@@ -138,7 +144,7 @@ export function SettingsProvider({ children }) {
       birthYear: Number.isFinite(Number(birthYear)) && birthYear ? Number(birthYear) : null,
       country: country || null,
       onboarded: true,
-    })
+    }, profilePatch)
   }, [persist])
 
   const value = useMemo(() => ({

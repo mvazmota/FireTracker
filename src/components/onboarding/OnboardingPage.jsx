@@ -30,8 +30,8 @@ const DEFAULT_SELECTED_INVESTMENTS = { etfs: true, crypto: false, p2p: false, bo
  * categories and platforms can be typed in as well.
  */
 export default function OnboardingPage() {
-  const { t, language, changeLanguage } = useI18n()
-  const { profile, saveProfile, saveOnboarding } = useSettings()
+  const { t, language, locale, changeLanguage } = useI18n()
+  const { profile, saveOnboarding } = useSettings()
   const [step, setStep] = useState(0)
   const [categories, setCategories] = useState(() => ({ expense: [...DEFAULT_CATEGORIES.expense], income: [...DEFAULT_CATEGORIES.income] }))
   const [customCategories, setCustomCategories] = useState({ expense: [], income: [] })
@@ -111,7 +111,6 @@ export default function OnboardingPage() {
   }
 
   function finish() {
-    if (avatar !== (profile.avatar || '')) saveProfile({ ...profile, avatar })
     const hasEstimate = incomeInput.trim() !== '' || spendingInput.trim() !== ''
     saveOnboarding({
       categories,
@@ -126,6 +125,9 @@ export default function OnboardingPage() {
       } : undefined,
       birthYear: Number(birthYearInput) || null,
       country: countryInput || null,
+      // Sent with the settings so the step is one write; a separate profile
+      // request would race it and could wipe the categories and platforms.
+      profile: avatar !== (profile.avatar || '') ? { ...profile, avatar } : null,
     })
   }
 
